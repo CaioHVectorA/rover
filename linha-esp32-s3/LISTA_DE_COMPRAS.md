@@ -1,45 +1,55 @@
-# 🛒 Lista de Compras - Robô Móvel ESP32-S3 CAM
+# 🛒 Lista de Compras - Robô Móvel ESP32-S3 CAM + Nano V3 + VR
 
-Lista consolidada de componentes para o robô com tração 4WD, visão em tempo real Pan/Tilt, iluminação e saída sonora.
+Lista de componentes para a arquitetura baseada no microcontrolador **ESP32-S3 CAM N16R8** (Visão Wi-Fi, Câmera OV5640 5MP e Web Server) em conjunto com o **Arduino Nano V3** (Co-processador em tempo real para controle de 4 motores e 2 servos Pan/Tilt), tração 4WD com rodas de alta aderência, sensor de orientação VR (MPU-6050), sinalização luminosa e sonora.
 
-> 📚 **Documentos Relacionados:**
-> * 🗺️ [**`ROADMAP.md`**](file:///home/usuario/Documentos/rover/ROADMAP.md): Canvas do MVP e cronograma de fases de montagem e software.
-> * 🧠 [**`MEMORIA_DO_PROJETO.md`**](file:///home/usuario/Documentos/rover/MEMORIA_DO_PROJETO.md): Diário de decisões e histórico das conversas.
-> * 🏠 [**`README.md`**](file:///home/usuario/Documentos/rover/README.md): Visão geral do projeto.
-
----
-
-## 1. Mercado Livre (Cérebro & Visão)
-
-Placa principal adquirida individualmente no Mercado Livre:
-
-| Componente | Produto | Qtd | Link |
-|---|---|:---:|---|
-| **Cérebro + Câmera 5MP** | Placa ESP32-S3 CAM (N16R8 - 16MB Flash / 8MB PSRAM) + Câmera OV5640 5MP com USB-C | 1 | [Abrir no Mercado Livre](https://www.mercadolivre.com.br/p/MLB2061307865?matt_tool=38524122&pdp_filters=item_id:MLB5139266661) |
+> 📚 **Planilhas Excel Geradas:**
+> * 📄 [**`LISTA_DE_COMPRAS_ROVER_ESP32.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/linha-esp32-s3/LISTA_DE_COMPRAS_ROVER_ESP32.xlsx) (Planilha minimalista na pasta do ESP32).
+> * 📄 [**`LISTA_DE_COMPRAS_ROVER_ESP32_RESTAURADA.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER_ESP32_RESTAURADA.xlsx) (Cópia minimalista na raiz do projeto).
 
 ---
 
-## 2. Pedido Principal: RoboCore (`robocore.net`)
+## 1. Pedido Principal: RoboCore (`robocore.net`)
 
-Todos os itens mecânicos, motores, servos, alimentação e periféricos reunidos em um único pedido na **RoboCore**:
+Carrinho composto por **23 unidades (15 linhas de produtos)**:
 
-| Subsistema | Componente Sugerido na Loja | Qtd | Fase no Roadmap | Finalidade no Robô |
-|---|---|:---:|:---:|---|
-| **Mecânica Pan/Tilt** | Micro Servo 9g SG90 (com cruzetas e parafusos) | 2 | **Fases 1, 2 e 3 (MVP)** | Movimento horizontal (Pan) e vertical (Tilt) |
-| **Mecânica Pan/Tilt** | Suporte Pan-Tilt 2 Eixos para Micro Servo 9g | 1 | **Fase 2 (MVP)** | Estrutura articulada onde a placa/câmera é fixada |
-| **Tração** | Micromotor DC com Caixa de Redução metálica (~100 a 200 RPM, eixo D de 3mm) | 4 | **Fases 1, 2 e 3 (MVP)** | Tração independente nas 4 rodas (Skid-steer) |
-| **Tração** | Rodas de Borracha de Alta Aderência (ex: linha StickyMAX para eixo 3mm) | 4 | **Fase 2 (MVP)** | Rodas emborrachadas de silicone/borracha de alto atrito |
-| **Tração** | Suportes em "L" para fixação de Micromotores | 4 | **Fase 2 (MVP)** | Fixação dos micromotores ao chassi |
-| **Ponte H** | Módulo Driver de Motor DC / Ponte H (L9110 / MX1616 ou L298N) | 1 | **Fases 1, 2 e 3 (MVP)** | Controle de velocidade (PWM) e direção dos 4 motores |
-| **Regulação** | Módulo Regulador Step-Down DC-DC (LM2596 ou XL4015 ajustável) | 1 | **Fases 1, 2 e 3 (MVP)** | Converte 7.4V das baterias em 5.0V estáveis para o ESP32 e Servos |
-| **Alimentação** | Suporte para 2 Baterias 18650 com rabicho | 1 | **Fases 1, 2 e 3 (MVP)** | Conexão das células em série (7.4V nominal) |
-| **Alimentação** | Baterias 18650 Li-Ion Recarregáveis | 2 | **Fases 1, 2 e 3 (MVP)** | Células de alimentação do sistema |
-| **Som** | Buzzer Passivo ou Ativo 5V | 1 | *Fase 4 (Pós-MVP)* | Saída sonora para bips de inicialização, alarme e status |
-| **Iluminação** | Módulo / Barra de LED RGB Endereçável WS2812B (Neopixel) | 1 | *Fase 4 (Pós-MVP)* | Efeitos coloridos usando apenas 1 pino GPIO do ESP32 |
-| **Acessórios** | Chave Gangorra Liga/Desliga + Cartela de Fios Jumpers (M-F e F-F) | 1 | **Fases 1, 2 e 3 (MVP)** | Chave geral e cabeamento flexível |
+| Item | Produto | Qtd | Preço Unit. | Subtotal | Link Direto na Loja |
+|:---:|---|:---:|:---:|:---:|---|
+| 1 | Micro Servo 9g SG90 (TowerPro) | 2 | R$ 13,67 | R$ 27,34 | [Abrir na RoboCore](https://www.robocore.net/atuador/micro-servo-9g-sg90-towerpro) |
+| 2 | Micro Motor com Redução Metálica 6V 100RPM (Eixo D 3mm) | 4 | R$ 29,90 | R$ 119,60 | [Abrir na RoboCore](https://www.robocore.net/motor-caixas-de-reducao/micro-motor-com-caixa-de-reducao-6v-100rpm) |
+| 3 | StickyMAX - Roda S20 Macia (Silicone vulcanizado c/ cubo 3mm) | 4 | R$ 39,90 | R$ 159,60 | [Abrir na RoboCore](https://www.robocore.net/roda/roda-stickymax-s20-22mm) |
+| 4 | Suporte para Micro Motores (Par Branco) | 2 pares (4 un) | R$ 9,90 | R$ 19,80 | [Abrir na RoboCore](https://www.robocore.net/item-mecanico/suporte-para-micro-motores) |
+| 5 | Módulo Driver Ponte H - L298N (Driver 1: Motores Esq.) | 1 | R$ 14,90 | R$ 14,90 | [Abrir na RoboCore](https://www.robocore.net/driver-motor/driver-motor-ponte-h-l298n) |
+| 6 | Módulo Driver Ponte H - L298N (Driver 2: Motores Dir.) | 1 | R$ 14,90 | R$ 14,90 | [Abrir na RoboCore](https://www.robocore.net/driver-motor/driver-motor-ponte-h-l298n) |
+| 7 | Conversor DC/DC Step Down Mini 560 5V (até 5A síncrono) | 1 | R$ 7,50 | R$ 7,50 | [Abrir na RoboCore](https://www.robocore.net/regulador-de-tensao/conversor-dc-dc-step-down-mini-560-5v) |
+| 8 | Pack Bateria Li-Ion 7,4V 2500mAh c/ BMS Integrado | 1 | R$ 69,90 | R$ 69,90 | [Abrir na RoboCore](https://www.robocore.net/baterias-fontes/pack-bateria-li-ion-7_4v-2500mah-com-bms) |
+| 9 | Cabo JST-RCY 2 pinos Fêmea (Rabicho p/ Bateria) | 1 | R$ 1,90 | R$ 1,90 | [Abrir na RoboCore](https://www.robocore.net/cabo/cabo-jst-rcy-2-pinos-femea) |
+| 10 | Módulo Buzzer 5V Passivo (Suporta PWM/Tons) | 1 | R$ 4,90 | R$ 4,90 | [Abrir na RoboCore](https://www.robocore.net/atuador/modulo-buzzer-5v-passivo) |
+| 11 | Módulo WS2812 LED RGB Endereçável (Barra 8 LEDs) | 1 | R$ 9,90 | R$ 9,90 | [Abrir na RoboCore](https://www.robocore.net/led/modulo-ws2812-led-enderecavel-8-leds) |
+| 12 | Chave Gangorra KCD1-101 2T (Liga/Desliga) | 1 | R$ 1,50 | R$ 1,50 | [Abrir na RoboCore](https://www.robocore.net/botao-chave/chave-gangorra-kcd1-101-2t) |
+| 13 | Jumpers Fêmea-Fêmea x40 Unidades | 1 | R$ 6,90 | R$ 6,90 | [Abrir na RoboCore](https://www.robocore.net/cabo/jumpers-femea-femea-x40-unidades) |
+| 14 | Jumpers Macho-Macho x40 Cabos | 1 | R$ 7,90 | R$ 7,90 | [Abrir na RoboCore](https://www.robocore.net/cabo/jumpers-macho-macho-x40-cabos) |
+| 15 | Placa Arduino Nano V3 + Cabo USB | 1 | R$ 28,90 | R$ 28,90 | [Abrir na RoboCore](https://www.robocore.net/placa-arduino/placa-nano-v3-com-cabo-usb-para-arduino) |
+
+### 💰 Totais RoboCore (Itens 1 a 15):
+* **Subtotal dos Produtos:** R$ 495,44
+* **Total com Desconto no PIX (5% off):** **`R$ 470,67`**
+* **Total no Cartão de Crédito:** **`R$ 495,44`** (em até **3x de R$ 165,15 sem juros**)
 
 ---
 
-## 💡 Observações Importantes de Montagem
-1. **Pan & Tilt:** Como a câmera é integrada ao ESP32-S3 CAM, a placa inteira (~16g) é montada na base superior do suporte Pan/Tilt com os fios descendo em chicote flexível com alívio de tensão.
-2. **Alimentação:** A alimentação de 5V dos servos **deve vir da saída do Step-Down**, nunca direto do pino 5V da placa ESP32 (para evitar *brownout* e reinicializações).
+## 2. Mercado Livre (ESP32-S3 CAM, Cartão MicroSD & Giroscópio VR)
+
+| Item | Componente | Produto | Qtd | Preço Estimado | Link Direto do Produto |
+|:---:|---|---|:---:|:---:|---|
+| 16 | **Cérebro Wi-Fi + Câmera** | Placa ESP32-S3 CAM N16R8 (16MB Flash, 8MB PSRAM) + Câmera OV5640 5MP | 1 | R$ 119,00 | [Abrir Produto no ML](https://www.mercadolivre.com.br/p/MLB2061307865?matt_tool=38524122&pdp_filters=item_id:MLB5139266661) |
+| 17 | **Armazenamento Local** | Cartão MicroSD 32GB SanDisk Ultra A1 (FAT32 p/ ESP32-CAM) | 1 | R$ 49,90 | [Abrir Produto no ML](https://www.mercadolivre.com.br/cartao-de-memoria-micro-sd-sandisk-ultra-32gb-120mbs-c10-a1/p/MLB20654826) |
+| 18 | **Giroscópio / VR (Head Tracking)** | Módulo GY-521 MPU-6050 (Acelerômetro + Giroscópio 6DOF) | 1 | R$ 19,90 | [Abrir Produto no ML](https://www.mercadolivre.com.br/modulo-acelerometro-giroscopio-mpu6050-gy521/up/MLBU4448831937) |
+
+* **Subtotal Mercado Livre (Itens 16 a 18):** R$ 188,80
+
+---
+
+## 💵 Custo Total Geral Estimado (Linha ESP32-S3 CAM)
+
+* **Total Geral com RoboCore no PIX (-5%) + Mercado Livre:** **`R$ 659,47`**
+* **Total Geral no Cartão de Crédito (3x sem juros na RoboCore) + Mercado Livre:** **`R$ 684,24`**
