@@ -2,9 +2,8 @@
 
 Lista de componentes para a arquitetura baseada no microcontrolador **ESP32-S3 CAM N16R8** (Visão Wi-Fi, Câmera OV5640 5MP e Web Server) em conjunto com o **Arduino Nano V3** (Co-processador em tempo real para controle de 4 motores e 2 servos Pan/Tilt), tração 4WD com rodas de alta aderência, sensor de orientação VR (MPU-6050), sinalização luminosa e sonora.
 
-> 📚 **Planilhas Excel Geradas:**
-> * 📄 [**`LISTA_DE_COMPRAS_ROVER_ESP32.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/linha-esp32-s3/LISTA_DE_COMPRAS_ROVER_ESP32.xlsx) (Planilha minimalista na pasta do ESP32).
-> * 📄 [**`LISTA_DE_COMPRAS_ROVER_ESP32_RESTAURADA.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER_ESP32_RESTAURADA.xlsx) (Cópia minimalista na raiz do projeto).
+> 📚 **Planilha Excel Gerada:**
+> * 📄 [**`LISTA_DE_COMPRAS_ROVER.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER.xlsx) (Aba: **Rover ESP32-S3** - editável e com fórmulas automáticas).
 
 ---
 

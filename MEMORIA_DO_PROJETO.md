@@ -128,14 +128,22 @@ Este documento serve como a **memória viva e persistente** de todas as nossas c
   2. **Arduino Nano V3 como Co-processador:** O Nano assume o controle PWM dos 4 motores (2x Drivers L298N) e dos 2 servos SG90 via comunicação serial USB com a Pi 3.
   3. **Câmera CSI vs Webcam USB:** Avaliação confirmou a superioridade da Câmera CSI Rev 1.3 (3g, cabo flat sem torque mecânico nos servos, encoder H.264 direto no hardware Broadcom).
   4. **Atualização do Carrinho RoboCore via Script Python:** Carrinho atualizado para **25 itens (17 linhas)** incluindo a Câmera Pi CSI Rev 1.3 e o suporte Pan/Tilt comercial sob medida. Subtotal: **R$ 552,24** (ou **R$ 524,63 no PIX**).
-  5. **Planilhas Excel Geradas:** Criada a planilha minimalista [**`LISTA_DE_COMPRAS_ROVER_PI.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER_PI.xlsx).
+  5. **Planilhas Excel Geradas:** Criada a planilha minimalista [**`LISTA_DE_COMPRAS_ROVER.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER.xlsx).
+
+### 🗓️ Sessão 8: Unificação das Planilhas em Arquivo Único com 2 Abas
+* **Decisão do Usuário & Ação Executada:**
+  1. **Consolidação em Arquivo Único:** Atendendo ao pedido do usuário de manter apenas duas planilhas, todas as listas de compras foram consolidadas no arquivo único [**`LISTA_DE_COMPRAS_ROVER.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER.xlsx).
+  2. **Estrutura com 2 Planilhas (Abas):**
+     * 📑 **Aba 1 (`Rover ESP32-S3`):** 18 itens (15 RoboCore + 3 Mercado Livre), com fórmulas automáticas de subtotal, desconto PIX (-5%) e total geral estimado (R$ 659,47).
+     * 📑 **Aba 2 (`Rover Raspberry Pi 3`):** 20 itens (17 RoboCore + 3 Mercado Livre), com fórmulas automáticas de subtotal, desconto PIX (-5%) e total geral estimado (R$ 1.003,43).
+  3. **Limpeza do Repositório:** Remoção definitiva das planilhas intermediárias e duplicadas (`_RESTAURADA`, `_ATUALIZADA`, `_FINAL`, etc.), mantendo a raiz do projeto limpa e organizada.
 
 ---
 
 ## 📝 5. Próximos Passos Imediatos
 - [x] Mapear os links e códigos exatos dos produtos na RoboCore para fechar o carrinho de compras.
 - [x] Atualizar o carrinho de compras na RoboCore para a arquitetura Raspberry Pi 3 (25 itens).
-- [x] Gerar planilha consolidada XLSX minimalista (`LISTA_DE_COMPRAS_ROVER_PI.xlsx`).
+- [x] Consolidar as compras em planilha XLSX única com 2 abas (`LISTA_DE_COMPRAS_ROVER.xlsx`).
 - [ ] Elaborar o esquema elétrico de pinagem Raspberry Pi 3 + Arduino Nano + 2x L298N + Step-Down 5V.
 - [ ] Configurar imagem Raspberry Pi OS Lite com OverlayFS (Read-Only) e streamer WebRTC.
 

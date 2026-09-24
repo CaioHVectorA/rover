@@ -3,7 +3,7 @@
 Lista consolidada de componentes para o robô com **Raspberry Pi 3** (Cérebro Linux & Streaming WebRTC), **Arduino Nano V3** (Controle em tempo real de 4 motores e 2 servos Pan/Tilt), **Giroscópio MPU-6050** (VR Head Tracking), iluminação e saída sonora.
 
 > 📚 **Planilha Excel Gerada:**
-> * 📄 [**`LISTA_DE_COMPRAS_ROVER_PI_FINAL.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER_PI_FINAL.xlsx) (Planilha minimalista, sem cabeçalhos complexos, editável e com fórmulas).
+> * 📄 [**`LISTA_DE_COMPRAS_ROVER.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER.xlsx) (Aba: **Rover Raspberry Pi 3** - editável e com fórmulas automáticas).
 
 ---
 

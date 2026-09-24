@@ -19,9 +19,11 @@ Todos os documentos foram sincronizados e estão interligados para consulta:
 
 | Documento | Descrição e Finalidade |
 |---|---|
-| 🗺️ [**`ROADMAP.md`**](file:///home/usuario/Documentos/rover/ROADMAP.md) | **Canvas do MVP, fluxo visual em Mermaid e cronograma em 5 fases** (desde a bancada até a teleoperação de longa distância via internet). |
-| 🧠 [**`MEMORIA_DO_PROJETO.md`**](file:///home/usuario/Documentos/rover/MEMORIA_DO_PROJETO.md) | **Memória viva e diário de decisões:** Histórico das conversas, solução mecânica do Pan/Tilt com placa montada, prevenção de *brownout* e boas práticas elétricas. |
-| 🛒 [**`linha-esp32-s3/LISTA_DE_COMPRAS.md`**](file:///home/usuario/Documentos/rover/linha-esp32-s3/LISTA_DE_COMPRAS.md) | **Lista consolidada de compras:** Placa ESP32-S3 no Mercado Livre e kit de peças mecânicas, tração, servos e energia na RoboCore. |
+| 🗺️ [**`ROADMAP.md`**](file:///c:/Users/caihe/Documents/develop/rover/ROADMAP.md) | **Canvas do MVP, fluxo visual em Mermaid e cronograma em 5 fases** (desde a bancada até a teleoperação de longa distância via internet). |
+| 🧠 [**`MEMORIA_DO_PROJETO.md`**](file:///c:/Users/caihe/Documents/develop/rover/MEMORIA_DO_PROJETO.md) | **Memória viva e diário de decisões:** Histórico das conversas, especificações e soluções de engenharia. |
+| 📊 [**`LISTA_DE_COMPRAS_ROVER.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER.xlsx) | **Planilha Excel consolidada com 2 abas:** Orçamentos completos e fórmulas para o *Rover ESP32-S3* e *Rover Raspberry Pi 3*. |
+| 🛒 [**`linha-esp32-s3/LISTA_DE_COMPRAS.md`**](file:///c:/Users/caihe/Documents/develop/rover/linha-esp32-s3/LISTA_DE_COMPRAS.md) | **Lista de compras (ESP32-S3):** Especificações e links diretos para a arquitetura ESP32-S3 CAM. |
+| 🛒 [**`linha-raspberry-pi/LISTA_DE_COMPRAS.md`**](file:///c:/Users/caihe/Documents/develop/rover/linha-raspberry-pi/LISTA_DE_COMPRAS.md) | **Lista de compras (Raspberry Pi 3):** Especificações e links diretos para a arquitetura Raspberry Pi 3 + Nano. |
 
 ---
 
