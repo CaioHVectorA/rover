@@ -13,9 +13,8 @@ Gerador da planilha unificada LISTA_DE_COMPRAS_ROVER.xlsx
       H: Opcional (0/1) - 0=Essencial, 1=Opcional (editável na planilha)
       I: Link Direto - link clicável para o produto
   - Subtotais 100% dinâmicos via fórmulas SUMIF/SUM:
-      Total Essencial: =SUMIF(H$2:H${N}, 0, G$2:G${N})
-      Itens Opcionais: =SUMIF(H$2:H${N}, 1, G$2:G${N})
-      Total Geral:     =SUM(G$2:G${N})
+      Total Essencial (sem opcionais): =SUMIF(H$2:H${N}, 0, G$2:G${N})
+      Total Geral (com opcionais):     =SUM(G$2:G${N})
   - Formatação condicional no Excel: qualquer linha marcada com 1 na coluna H
     ganha destaque amarelo suave automaticamente.
 """
@@ -217,27 +216,18 @@ def style_sheet(ws, items):
 
     blank_row(ws, thin_border, num_cols=9)
 
-    # 1) Total Essencial: soma apenas itens com H == 0
+    # 1) Total Essencial: soma apenas itens com H == 0 (sem opcionais)
     total_row(
-        ws, '✅  Total Essencial (sem opcionais) – à vista no PIX',
+        ws, 'Total Essencial (sem opcionais) - à vista no PIX',
         f'=SUMIF(H$2:H${last_data_row}, 0, G$2:G${last_data_row})',
         total_ess_fill,
         Font(name=font_family, size=11, bold=True, color='375623'),
         thin_border, total_border, MONEY_FMT, is_last=False, num_cols=9
     )
 
-    # 2) Subtotal Opcionais: soma apenas itens com H == 1
+    # 2) Total Geral: soma de todos os subtotais (com opcionais)
     total_row(
-        ws, '⭐  Itens Opcionais (Buzzer, LEDs, Giroscópio)',
-        f'=SUMIF(H$2:H${last_data_row}, 1, G$2:G${last_data_row})',
-        optional_fill,
-        Font(name=font_family, size=10, bold=True, color='B8860B'),
-        thin_border, total_border, MONEY_FMT, is_last=False, num_cols=9
-    )
-
-    # 3) Total Geral: soma de todos os subtotais
-    total_row(
-        ws, '💰  TOTAL GERAL (com opcionais) – à vista no PIX',
+        ws, 'TOTAL GERAL (com opcionais) - à vista no PIX',
         f'=SUM(G$2:G${last_data_row})',
         total_all_fill,
         Font(name=font_family, size=12, bold=True, color='1F4E79'),
