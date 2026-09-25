@@ -19,12 +19,16 @@ As compras foram finalizadas com os seguintes itens e especificações físicas:
     * **Largura da banda:** **~12 mm**
     * **Furo de acoplamento:** **3 mm com perfil em D** (encaixe direto no eixo dos micromotores sem necessidade de parafusos adicionais)
     * **Pneu:** Silicone/borracha macia de altíssima aderência (padrão de mini sumô)
-  * **4x Motores:** Micromotores DC com **Caixa de Redução Metálica 6V 100 RPM (série N20 / GA12)**:
-    * **Dimensões do corpo:** ~12 mm (largura) x 10 mm (altura) x 26 mm (comprimento total)
-    * **Distância do centro do eixo à base do motor:** apenas **5 mm**
-    * **Eixo de saída:** Aço com **perfil em D de 3 mm de diâmetro** e ~9.5 mm de comprimento
-    * **Fixação:** 2 pares de suportes em "L" brancos (furação M2)
-    * **Vão livre do solo (Cálculo Geométrico):** $11\text{ mm (raio da roda)} - 5\text{ mm (raio motor)} = \mathbf{6\text{ mm}}$ de folga. Com fundo do chassi 3D de 1.5 mm a 2 mm, o vão livre real fica em **~4 mm a 4.5 mm**, padrão de robôs compactos e sumô.
+  * **4x Motores:** Motores DC com Caixa de Redução Metálica **série JGA-050 (JGA16-050)**:
+    * **Diâmetro do motor:** Cilíndrico de **16 mm de diâmetro** (raio = 8 mm)
+    * **Comprimento total:** ~30 mm a 35 mm (com caixa de redução toda metálica)
+    * **Eixo de saída:** Aço com **perfil em D de 3 mm de diâmetro** e ~9 mm a 10 mm de comprimento
+    * **Tensão nominal:** 6V a 12V (alimentado pelos 7.4V da bateria via TB6612FNG)
+    * **Análise Geométrica com Rodas de 22 mm:**
+      * Raio da roda de 22 mm = **11 mm** (altura do centro do eixo até o solo)
+      * Raio do motor JGA-050 = **8 mm** (do centro do eixo ao fundo da carcaça)
+      * **Vão livre sob o motor:** $11\text{ mm} - 8\text{ mm} = \mathbf{3\text{ mm}}$!
+      * **Diretriz de Design 3D:** O chassi não deve ter assoalho fechado por baixo do motor; o motor deve ser abraçado por cima e pelas laterais, mantendo os **3 mm de folga livres** para o solo.
 * **Placas de Controle:**
   * **ESP32-S3-CAM N16R8** (Mercado Livre - USB-C, 16MB Flash, 8MB PSRAM, Câmera 5MP OV5640)
   * **ESP32-CAM** (RoboCore - com câmera OV2640)
@@ -63,11 +67,12 @@ As compras foram finalizadas com os seguintes itens e especificações físicas:
      * `micromotor_reducao_metalica.png`: Foto do micromotor N20 com caixa de redução metálica e eixo D 3mm.
      * `suporte_pan_tilt_robocore.png`: Suporte comercial de 2 eixos para os servos SG90.
      * `pan_tilt_sg90_mechanism.jpg` e `esp32_cam_pan_tilt_assembled.jpg`: Montagens reais de referência da comunidade.
-7. **Estilo Visual, Rodas StickyMAX 22 mm e Geometria do Chassi:**
-   * **Rodas de 22 mm Confirmadas:** A roda StickyMAX S20 de 22 mm é a combinação nativa desenvolvida pela RoboCore para estes micromotores. O vão livre de ~4.5 mm é perfeito para piso liso/residencial e mantém o centro de gravidade colado no chão.
-   * **Chassi Fechado/Carenado em 3D:** Corpo baixo e compacto protegendo a eletrônica internamente.
-   * **Acomodação da Bateria 7.4V (19 mm):** O chassi se eleva no centro para abrigar a bateria entre os motores, mantendo as rodas nas laterais externas.
-   * Cabeça móvel totalmente encapsulada: o ESP32 fica 100% alojado internamente, ficando exposto apenas o círculo da lente da câmera e a barra de 8 LEDs RGB logo abaixo.
+7. **Estilo Visual, Rodas 22 mm e Motores JGA-050 (Desafio dos 3 mm de Vão Livre):**
+   * **Os motores JGA-050 cabem com as rodas de 22 mm, mas com folga justa de 3 mm:**
+     * $11\text{ mm (roda)} - 8\text{ mm (motor JGA)} = 3\text{ mm}$ do chão.
+     * **Solução na Impressão 3D:** O chassi abraça o motor de 16 mm por cima e pelos lados. A face inferior do motor fica exposta (sem plástico embaixo dele) para não "roubar" nenhum milímetro desses 3 mm.
+     * **Compatibilidade Futura:** Como o eixo do JGA-050 é padrão de 3 mm com chanfro em D, se no futuro o usuário quiser andar em pisos irregulares ou tapetes mais altos, basta desencaixar as rodas de 22 mm e colocar rodas de 32 mm, aumentando o vão livre de 3 mm para 8 mm sem refazer o robô.
+   * **Chassi Fechado/Carenado em 3D:** Corpo protegendo bateria e eletrônica internamente, com a cabeça móvel encapsulando o ESP32 (expondo apenas lente e barra de 8 LEDs).
 8. **Cinemática Definida (Pan na Base e Tilt no Topo):**
    * **Ordem:** O servo de Pan (giro horizontal) fica parafusado na base do chassi, e o servo de Tilt (inclinação vertical) fica no braço móvel segurando a cabeça da câmera.
    * **Vantagens de Engenharia:**
