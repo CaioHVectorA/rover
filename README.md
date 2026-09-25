@@ -2,8 +2,10 @@
 
 Projeto de um robô móvel com tração nas 4 rodas e câmera com mecanismo Pan/Tilt, controlado via ESP32.
 
-> **Nota para o Modelo / Memória do Projeto:**
-> Este documento registra estritamente o estado real do projeto e as decisões tomadas até o momento. Não invente esquemas elétricos prontos, pinagens finais ou códigos já testados, pois as peças acabaram de ser compradas e o projeto está na fase conceitual de case e mecânica.
+> **Regra Obrigatória para o Modelo / Memória Contínua do Projeto:**
+> Este documento deve ser **incrementado e atualizado a cada troca de mensagens**. A ideia é que ele vá crescendo organicamente conforme conversamos e conforme o projeto anda.
+> * Sempre registre aqui novas decisões, ideias validadas, respostas a dúvidas e o avanço real do projeto.
+> * Mantenha os registros estritamente fiéis ao que foi de fato conversado, decidido ou testado (sem inventar esquemas elétricos prontos, pinagens definitivas ou códigos como se já estivessem funcionando enquanto ainda estamos na fase de planejamento).
 
 ---
 
