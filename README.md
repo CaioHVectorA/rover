@@ -13,19 +13,24 @@ O desenvolvimento está focado na entrega rápida do **MVP (Produto Mínimo Viá
 
 ---
 
-## 📁 Documentos Ativos do Repositório
+## 📁 Documentos de Engenharia do Repositório
 
-Todos os documentos foram sincronizados e estão interligados para consulta:
+Todos os documentos estão sincronizados e organizados para consulta e desenvolvimento:
 
 | Documento | Descrição e Finalidade |
 |---|---|
-| 🗺️ [**`ROADMAP.md`**](file:///home/usuario/Documentos/rover/ROADMAP.md) | **Canvas do MVP, fluxo visual em Mermaid e cronograma em 5 fases** (desde a bancada até a teleoperação de longa distância via internet). |
-| 🧠 [**`MEMORIA_DO_PROJETO.md`**](file:///home/usuario/Documentos/rover/MEMORIA_DO_PROJETO.md) | **Memória viva e diário de decisões:** Histórico das conversas, solução mecânica do Pan/Tilt com placa montada, prevenção de *brownout* e boas práticas elétricas. |
-| 🛒 [**`linha-esp32-s3/LISTA_DE_COMPRAS.md`**](file:///home/usuario/Documentos/rover/linha-esp32-s3/LISTA_DE_COMPRAS.md) | **Lista consolidada de compras:** Placa ESP32-S3 no Mercado Livre e kit de peças mecânicas, tração, servos e energia na RoboCore. |
+| ⚡ [**`PROJETO_ELETRICA_E_PINAGEM.md`**](file:///home/usuario/Documentos/rover/PROJETO_ELETRICA_E_PINAGEM.md) | **Esquemático Elétrico & Distribuição de Energia:** Conexão da bateria 7.4V, chave gangorra, step-down 5V, driver TB6612FNG, pinagem dos GPIOs do ESP32-S3 e proteção contra brownouts. |
+| 🏎️ [**`PROJETO_MECANICA_E_CASE.md`**](file:///home/usuario/Documentos/rover/PROJETO_MECANICA_E_CASE.md) | **Case, Chassi & Mecânica do Pan/Tilt:** Estrutura em dois andares, posicionamento dos motores JGA-050, montagem da placa no berço do Pan/Tilt, alívio de cabos e integração dos controles. |
+| 🗺️ [**`ROADMAP.md`**](file:///home/usuario/Documentos/rover/ROADMAP.md) | **Canvas do MVP, fluxo visual em Mermaid e cronograma em 5 fases** (da bancada à pilotagem FPV via Wi-Fi e telepresença). |
+| 🧠 [**`MEMORIA_DO_PROJETO.md`**](file:///home/usuario/Documentos/rover/MEMORIA_DO_PROJETO.md) | **Memória viva e diário de decisões:** Histórico das conversas, justificativas técnicas e registro de hardware adquirido. |
 
 ---
 
-## ⚡ Estratégia de Compras
-1. **Mercado Livre:** [Placa ESP32-S3 CAM N16R8 (16MB Flash / 8MB PSRAM + Câmera 5MP OV5640 + USB-C)](https://www.mercadolivre.com.br/p/MLB2061307865?matt_tool=38524122&pdp_filters=item_id:MLB5139266661).
-2. **RoboCore (`robocore.net`):** Micromotores de redução metálica (~200 RPM), rodas emborrachadas StickyMAX, servos SG90, suporte Pan/Tilt, driver de motor, step-down, baterias 18650, buzzer e LEDs WS2812B.
-# rover
+## 🧰 Hardware Adquirido (Em Trânsito / Preparação de Bancada)
+1. **Controle & Visão:** ESP32-S3-CAM N16R8 (Câmera OV5640 5MP) + ESP32-CAM (RoboCore) + Arduino Nano V3.
+2. **Tração 4WD:** 4x Micromotores de redução metálica (série JGA-050) + Rodas de borracha de alta aderência + Suportes em L.
+3. **Ponte H:** Driver TB6612FNG (MOSFET duplo, eficiente e sem perda de tensão).
+4. **Visão Articulada:** Mecanismo Pan & Tilt 2 eixos acionado por 2 micro servos SG90.
+5. **Alimentação:** Pack Bateria Li-Ion 2S 7.4V 2500mAh com BMS integrado + Chave Gangorra + Regulador Step-Down 5.0V.
+6. **Sinalização:** Barra 8 LEDs RGB WS2812B + Módulo Buzzer passivo 5V.
+

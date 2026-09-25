@@ -3,8 +3,9 @@
 Este documento serve como a **memória viva e persistente** de todas as nossas conversas, decisões técnicas, escolha de componentes, fornecedores e soluções mecânicas/elétricas do robô móvel. Toda nova conversa relevante e decisão tomada será documentada e atualizada aqui.
 
 > 📚 **Documentos Relacionados:**
+> * ⚡ [**`PROJETO_ELETRICA_E_PINAGEM.md`**](file:///home/usuario/Documentos/rover/PROJETO_ELETRICA_E_PINAGEM.md): Esquemático elétrico, barramentos de energia, pinagem do TB6612FNG e ESP32-S3.
+> * 🏎️ [**`PROJETO_MECANICA_E_CASE.md`**](file:///home/usuario/Documentos/rover/PROJETO_MECANICA_E_CASE.md): Projeto do case de 2 andares, fixação mecânica do Pan/Tilt e alívio de cabos.
 > * 🗺️ [**`ROADMAP.md`**](file:///home/usuario/Documentos/rover/ROADMAP.md): Canvas do MVP, fluxo visual em Mermaid e cronograma em 5 fases.
-> * 🛒 [**`linha-esp32-s3/LISTA_DE_COMPRAS.md`**](file:///home/usuario/Documentos/rover/linha-esp32-s3/LISTA_DE_COMPRAS.md): Lista consolidada de componentes no Mercado Livre e RoboCore.
 > * 🏠 [**`README.md`**](file:///home/usuario/Documentos/rover/README.md): Visão geral do repositório.
 
 ---
@@ -122,22 +123,26 @@ Este documento serve como a **memória viva e persistente** de todas as nossas c
   4. **Planilha Excel Simples e Minimalista (`LISTA_DE_COMPRAS_ROVER_ESP32.xlsx`):** A planilha foi reformulada para ser ultra limpa, sem cabeçalhos pesados, sem banners decorativos e sem mesclagens complexas, permitindo edição direta e simples no Excel.
 * **Status do Carrinho RoboCore Atual:** **23 itens** | **Subtotal R$ 495,44** | **R$ 470,67 à vista no PIX** | **3x de R$ 165,15 sem juros**.
 
-### 🗓️ Sessão 7: Migração para Arquitetura Raspberry Pi 3 + Nano + Câmera CSI + 2 Drivers L298N
-* **Decisões de Engenharia & Ações Executadas:**
-  1. **Raspberry Pi 3 como Cérebro Principal:** O projeto adotou a Raspberry Pi 3 Model B para rodar Linux e streaming de vídeo WebRTC de ultrabaixa latência (<80ms).
-  2. **Arduino Nano V3 como Co-processador:** O Nano assume o controle PWM dos 4 motores (2x Drivers L298N) e dos 2 servos SG90 via comunicação serial USB com a Pi 3.
-  3. **Câmera CSI vs Webcam USB:** Avaliação confirmou a superioridade da Câmera CSI Rev 1.3 (3g, cabo flat sem torque mecânico nos servos, encoder H.264 direto no hardware Broadcom).
-  4. **Atualização do Carrinho RoboCore via Script Python:** Carrinho atualizado para **25 itens (17 linhas)** incluindo a Câmera Pi CSI Rev 1.3 e o suporte Pan/Tilt comercial sob medida. Subtotal: **R$ 552,24** (ou **R$ 524,63 no PIX**).
-  5. **Planilhas Excel Geradas:** Criada a planilha minimalista [**`LISTA_DE_COMPRAS_ROVER_PI.xlsx`**](file:///c:/Users/caihe/Documents/develop/rover/LISTA_DE_COMPRAS_ROVER_PI.xlsx).
+### 🗓️ Sessão 8: Finalização das Compras, Retorno Consolidado à Linha ESP32 & Foco em Case e Elétrica
+* **Status de Compras:** Compras concluídas com sucesso! As listas de compras e planilhas foram removidas do repositório para deixar o foco 100% na engenharia e preparação prévia.
+* **Componentes Efetivamente Adquiridos:**
+  * **Cérebro / Visão:** ESP32-S3-CAM (Mercado Livre) + ESP32-CAM (RoboCore).
+  * **Co-processador Opcional:** Arduino Nano V3.
+  * **Tração:** 4x Micromotores de redução metálica série JGA-050 + rodas emborrachadas + suportes em L.
+  * **Driver de Potência:** Driver duplo MOSFET TB6612FNG (eficiente, sem dissipador trambolho, perda de tensão desprezível).
+  * **Mecanismo Pan & Tilt:** 2x Micro Servos SG90 + suporte articulado 2 eixos.
+  * **Energia:** Pack Bateria Li-Ion 2S 7.4V 2500mAh com BMS integrado + Chave Gangorra + Step-Down 5V.
+  * **Sinais & Acessórios:** Barra 8 LEDs RGB WS2812B, Buzzer passivo 5V, cabos jumpers e conectores.
+* **Diretriz de Engenharia Definida:**
+  1. **Facilitação Elétrica Prévia:** Elaborado o guia completo de distribuição de potência ([`PROJETO_ELETRICA_E_PINAGEM.md`](file:///home/usuario/Documentos/rover/PROJETO_ELETRICA_E_PINAGEM.md)) para preparar conectores, chave geral, barramentos de 5V/GND e soldagem dos motores antes das peças chegarem.
+  2. **Concepção do Case & Integração Pan/Tilt:** Elaborado o projeto do chassi de 2 andares ([`PROJETO_MECANICA_E_CASE.md`](file:///home/usuario/Documentos/rover/PROJETO_MECANICA_E_CASE.md)), com a placa ESP32 embarcada no berço do Tilt (protegendo o cabo flat da câmera) e alça flexível de alívio de tensão nos cabos.
 
 ---
 
-## 📝 5. Próximos Passos Imediatos
-- [x] Mapear os links e códigos exatos dos produtos na RoboCore para fechar o carrinho de compras.
-- [x] Atualizar o carrinho de compras na RoboCore para a arquitetura Raspberry Pi 3 (25 itens).
-- [x] Gerar planilha consolidada XLSX minimalista (`LISTA_DE_COMPRAS_ROVER_PI.xlsx`).
-- [ ] Elaborar o esquema elétrico de pinagem Raspberry Pi 3 + Arduino Nano + 2x L298N + Step-Down 5V.
-- [ ] Configurar imagem Raspberry Pi OS Lite com OverlayFS (Read-Only) e streamer WebRTC.
-
-
-
+## 📝 5. Próximos Passos Imediatos (Enquanto as Peças Chegam)
+- [x] Remover listas de compras do repositório e consolidar a linha ESP32.
+- [x] Elaborar o esquema elétrico de pinagem com TB6612FNG, Step-Down 5V e Bateria 7.4V com BMS.
+- [x] Definir a arquitetura mecânica do Case e do mecanismo Pan & Tilt.
+- [ ] Montar a mini placa de distribuição de 5V e GND (barra de pinos).
+- [ ] Preparar o chicote da chave gangorra com conector JST para a bateria Li-Ion 7.4V.
+- [ ] Desenvolver e estruturar o firmware inicial do ESP32-S3 (Streamer MJPEG + WebSocket para controle diferencial e servos).

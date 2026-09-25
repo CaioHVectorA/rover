@@ -3,8 +3,9 @@
 Este documento estabelece o **plano de execução e marcos (milestones)** para o desenvolvimento do robô móvel. O foco primordial é a entrega rápida de um **MVP (Produto Mínimo Viável)** 100% funcional em rede Wi-Fi local antes de avançar para funcionalidades secundárias ou conexão de longa distância.
 
 > 📚 **Documentos Relacionados:**
-> * 🧠 [**`MEMORIA_DO_PROJETO.md`**](file:///home/usuario/Documentos/rover/MEMORIA_DO_PROJETO.md): Histórico completo de conversas, justificativas técnicas e soluções de engenharia.
-> * 🛒 [**`linha-esp32-s3/LISTA_DE_COMPRAS.md`**](file:///home/usuario/Documentos/rover/linha-esp32-s3/LISTA_DE_COMPRAS.md): Lista consolidada de componentes no Mercado Livre e RoboCore.
+> * ⚡ [**`PROJETO_ELETRICA_E_PINAGEM.md`**](file:///home/usuario/Documentos/rover/PROJETO_ELETRICA_E_PINAGEM.md): Esquemático elétrico, barramentos de energia, pinagem do TB6612FNG e ESP32-S3.
+> * 🏎️ [**`PROJETO_MECANICA_E_CASE.md`**](file:///home/usuario/Documentos/rover/PROJETO_MECANICA_E_CASE.md): Projeto do case de 2 andares, fixação mecânica do Pan/Tilt e alívio de cabos.
+> * 🧠 [**`MEMORIA_DO_PROJETO.md`**](file:///home/usuario/Documentos/rover/MEMORIA_DO_PROJETO.md): Histórico completo de conversas, decisões técnicas e registros de engenharia.
 > * 🏠 [**`README.md`**](file:///home/usuario/Documentos/rover/README.md): Visão geral do repositório.
 
 ---
@@ -17,16 +18,16 @@ Este documento estabelece o **plano de execução e marcos (milestones)** para o
 +------------------------------------+------------------------------------+-------------------------------+
 | 1. OBJETIVO DO MVP                 | 2. HARDWARE DO MVP                 | 3. PILHA DE SOFTWARE          |
 | • Robô 4WD comandado remotamente   | • ESP32-S3 CAM (N16R8 + OV5640)    | • Framework: Arduino/ESP-IDF  |
-| • Streaming contínuo de vídeo      | • 4x Micromotores + 4 Rodas        | • Web Server: AsyncWebServer  |
-| • Câmera com Pan & Tilt 2 eixos    | • Ponte H (L9110/MX1616 ou L298N)  | • Vídeo: Driver esp_camera    |
-| • Operação em Wi-Fi Local (<100ms) | • 2x Micro Servos 9g SG90          | • Interface: HTML5/JS Web App |
-|                                    | • Bateria 2S 18650 + Step-Down 5V  | • Comunicação: WebSockets     |
+| • Streaming contínuo de vídeo      | • 4x Micromotores JGA-050 + Rodas  | • Web Server: AsyncWebServer  |
+| • Câmera com Pan & Tilt 2 eixos    | • Driver TB6612FNG (MOSFET duplo)  | • Vídeo: Driver esp_camera    |
+| • Operação em Wi-Fi Local (<60ms)  | • 2x Micro Servos 9g SG90          | • Interface: HTML5/JS Web App |
+|                                    | • Li-Ion 7.4V 2500mAh + Step-Down  | • Comunicação: WebSockets     |
 +------------------------------------+------------------------------------+-------------------------------+
-| 4. INTERFACE DE CONTROLE (WEB APP) | 5. CRITÉRIO DE SUCESSO DO MVP      | 6. FASE SEGUINTE (PÓS-MVP)    |
+| 4. INTERFACE DE CONTROLE (WEB APP) | 5. CRITÉRIO DE SUCESSO DO MVP      | 6. RECURSOS COMPRADOS         |
 | • Joystick/botões na tela          | • Pilotagem fluida pelo celular    | • Iluminação RGB (WS2812B)    |
 | • Janela de vídeo ao vivo (MJPEG)  | • Câmera apontando em tempo real   | • Feedback sonoro (Buzzer)    |
-| • Sliders para Pan e Tilt          | • Zero travamentos ou brownouts    | • Teleoperação 4G / Longa     |
-| • Telemetria de sinal Wi-Fi        | • Sem quebra do flat da câmera     |   distância via internet      |
+| • Controle tátil para Pan e Tilt   | • Zero travamentos ou brownouts    | • Arduino Nano como co-proc.  |
+| • Telemetria de sinal Wi-Fi        | • Cabo flat da câmera protegido    |   opcional para tempo real    |
 +------------------------------------+------------------------------------+-------------------------------+
 ```
 
