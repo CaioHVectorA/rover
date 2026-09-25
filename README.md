@@ -50,16 +50,21 @@ As compras foram finalizadas com os seguintes itens:
 5. **Integração Carrinho + Pan/Tilt:**
    * O objetivo principal agora é fazer o carrinho se movimentar juntamente com a movimentação da câmera nos eixos Pan e Tilt.
 6. **Galeria Visual de Inspirações ([`inspiracoes/`](file:///home/usuario/Documentos/rover/inspiracoes/INSPIRACOES_CASE_E_PAN_TILT.md)):**
-   * Pasta `/inspiracoes` criada com imagens de referência reais e renders conceituais em 3D:
-     * `01_case_camera_esp32_s3.jpg`: Case 3D para o ESP32-S3 com lente OV5640, abertura USB-C, ventilação, suporte do servo e slot frontal para a barra de 8 LEDs RGB.
-     * `02_mecanismo_pan_tilt_sg90.jpg`: Mecanismo articulado de 2 eixos com servos SG90 e alça flexível de alívio nos fios.
-     * `03_chassi_carrinho_4wd_completo.jpg`: Visão do rover 4WD completo em dois andares com bateria embutida, chave gangorra e a torreta Pan/Tilt na dianteira.
-     * Fotos de montagens reais da comunidade maker com ESP32-CAM e SG90.
+   * Pasta `/inspiracoes` criada com imagens de referência e renders 3D conceituais.
+7. **Estilo Visual e Carcaça Fechada (`04_chassi_fechado_sumo.jpg`):**
+   * Chassi fechado/carenado em impressão 3D: eletrônica, bateria e motores protegidos internamente, sem fios ou placas expostas.
+   * Rodas de borracha compactas estilo sumô (alta aderência).
+   * Cabeça móvel totalmente encapsulada: o ESP32 fica 100% alojado internamente, ficando exposto apenas o círculo da lente da câmera e a barra de 8 LEDs RGB logo abaixo.
+8. **Cinemática Definida (Pan na Base e Tilt no Topo):**
+   * **Ordem:** O servo de Pan (giro horizontal) fica parafusado na base do chassi, e o servo de Tilt (inclinação vertical) fica no braço móvel segurando a cabeça da câmera.
+   * **Vantagens de Engenharia:**
+     * Menor peso móvel: o servo de Tilt levanta apenas a caixinha da câmera (não precisa levantar o peso de outro motor).
+     * Horizonte estável: ao virar para os lados mesmo com a câmera inclinada para baixo, o horizonte não tomba na diagonal (evita efeito indesejado de roll).
 
 ---
 
 ## 🎯 Foco Atual (Brainstorm & Discussão)
 
-* **Definição da Geometria do Case 3D:** Escolher entre um case estilo "torreta" exposta ou estilo "cockpit" semi-embutido no chassi do robô.
-* **Sistema Pan & Tilt:** Integrar os encaixes dos 2 servos SG90 ao chassi 4WD de forma firme e com alívio nos fios flexíveis.
-* **Facilitação da Elétrica:** Pensar na melhor forma de organizar a fiação, chaves e conectores antes das peças chegarem.
+* **Encaixes e Abertura do Case Fechado:** Como dividir a carcaça 3D (ex: tampa superior removível para manutenção interna e troca/recarga da bateria).
+* **Fixação dos 4 Motores JGA-050:** Projeto dos berços internos para os motores de redução metálica no chassi fechado.
+* **Facilitação da Elétrica:** Distribuição dos conectores e fiação interna antes da chegada das peças.

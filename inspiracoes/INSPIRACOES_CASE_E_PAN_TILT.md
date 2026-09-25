@@ -4,6 +4,18 @@ Esta pasta reúne **imagens de referência e conceitos visuais** para guiar a mo
 
 ---
 
+## 🏆 CONCEITO PRINCIPAL ALINHADO: Chassi Fechado + Rodas Sumô + Cabeça Encapsulada
+
+![Chassi Fechado com Rodas Sumo](/home/usuario/Documentos/rover/inspiracoes/04_chassi_fechado_sumo.jpg)
+
+* **Design Aprovado:**
+  * **Carcaça Fechada (Carenagem):** Eletrônica, bateria 7.4V e motores protegidos internamente. Visual limpo e industrial, sem fios soltos nem placas expostas.
+  * **Rodas de Borracha Tipo Sumô:** Rodas compactas de alta aderência (estilo StickyMAX).
+  * **Cabeça Móvel Encapsulada:** O ESP32 fica 100% alojado dentro da cabeça. Apenas o círculo da lente da câmera e a barra de 8 LEDs RGB logo abaixo ficam expostos.
+  * **Ordem dos Servos:** **Pan na base** (giro horizontal) e **Tilt no topo** (inclinação vertical).
+
+---
+
 ## 📸 1. Conceito do Case da Câmera (ESP32-S3 + Lente + 8 LEDs RGB)
 
 ![Case da Câmera ESP32-S3](/home/usuario/Documentos/rover/inspiracoes/01_case_camera_esp32_s3.jpg)
