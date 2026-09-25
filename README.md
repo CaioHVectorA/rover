@@ -14,15 +14,17 @@ Projeto de um robô móvel com tração nas 4 rodas e câmera com mecanismo Pan/
 As compras foram finalizadas com os seguintes itens e especificações físicas:
 
 * **Tração & Rodas (Dimensões Físicas):**
-  * **4x Rodas:** Modelo **32 mm de Diâmetro** (Borracha/Silicone macia de alta aderência, padrão sumô/StickyMAX 32mm):
-    * **Diâmetro externo:** **32 mm** (garante vão livre do solo de ~8 mm a 10 mm, evitando que a barriga do robô raspe no chão)
-    * **Furo de acoplamento:** **3 mm com perfil em D** (encaixe direto no eixo dos motores JGA-050)
-    * **Pneu:** Borracha/silicone macio de alta tração em pisos lisos
-  * **4x Motores:** Micromotores DC com **Caixa de Redução Metálica série JGA-050 (JGA16-050)**:
-    * **Diâmetro do motor:** Cilíndrico de **16 mm de diâmetro** (mais torque e robustez que o N20 tradicional)
-    * **Comprimento total:** ~30 mm a 35 mm (com caixa de redução toda metálica)
-    * **Eixo de saída:** Metálico com **perfil em D de 3 mm de diâmetro** e ~9 mm a 10 mm de comprimento
-    * **Tensão nominal:** 6V a 12V (compatível com a bateria Li-Ion 7.4V)
+  * **4x Rodas:** Modelo **StickyMAX S20 Macia - 22 mm (RoboCore)**:
+    * **Diâmetro externo:** **22 mm** (Raio = 11 mm do centro do eixo ao solo)
+    * **Largura da banda:** **~12 mm**
+    * **Furo de acoplamento:** **3 mm com perfil em D** (encaixe direto no eixo dos micromotores sem necessidade de parafusos adicionais)
+    * **Pneu:** Silicone/borracha macia de altíssima aderência (padrão de mini sumô)
+  * **4x Motores:** Micromotores DC com **Caixa de Redução Metálica 6V 100 RPM (série N20 / GA12)**:
+    * **Dimensões do corpo:** ~12 mm (largura) x 10 mm (altura) x 26 mm (comprimento total)
+    * **Distância do centro do eixo à base do motor:** apenas **5 mm**
+    * **Eixo de saída:** Aço com **perfil em D de 3 mm de diâmetro** e ~9.5 mm de comprimento
+    * **Fixação:** 2 pares de suportes em "L" brancos (furação M2)
+    * **Vão livre do solo (Cálculo Geométrico):** $11\text{ mm (raio da roda)} - 5\text{ mm (raio motor)} = \mathbf{6\text{ mm}}$ de folga. Com fundo do chassi 3D de 1.5 mm a 2 mm, o vão livre real fica em **~4 mm a 4.5 mm**, padrão de robôs compactos e sumô.
 * **Placas de Controle:**
   * **ESP32-S3-CAM N16R8** (Mercado Livre - USB-C, 16MB Flash, 8MB PSRAM, Câmera 5MP OV5640)
   * **ESP32-CAM** (RoboCore - com câmera OV2640)
@@ -61,10 +63,10 @@ As compras foram finalizadas com os seguintes itens e especificações físicas:
      * `micromotor_reducao_metalica.png`: Foto do micromotor N20 com caixa de redução metálica e eixo D 3mm.
      * `suporte_pan_tilt_robocore.png`: Suporte comercial de 2 eixos para os servos SG90.
      * `pan_tilt_sg90_mechanism.jpg` e `esp32_cam_pan_tilt_assembled.jpg`: Montagens reais de referência da comunidade.
-7. **Estilo Visual, Rodas de 32 mm e Motores JGA-050:**
-   * Chassi fechado/carenado em impressão 3D: eletrônica, bateria e motores protegidos internamente, sem fios ou placas expostas.
-   * **Adoção de Rodas de 32 mm (em vez de 22 mm):** A roda de 22 mm deixava o robô quase raspando o chassi no chão (vão livre de ~3 mm). Com 32 mm, o vão livre sobe para ~8 a 10 mm, permitindo vencer desníveis, tapetes e pequenos obstáculos com velocidade de cruzeiro mais agradável (~17 cm/s a 100 RPM).
-   * **Motores série JGA-050 (JGA16-050):** Diâmetro de 16 mm com caixa de redução metálica e eixo D de 3 mm. Oferece muito mais torque e durabilidade sob carga que os micromotores N20 menores.
+7. **Estilo Visual, Rodas StickyMAX 22 mm e Geometria do Chassi:**
+   * **Rodas de 22 mm Confirmadas:** A roda StickyMAX S20 de 22 mm é a combinação nativa desenvolvida pela RoboCore para estes micromotores. O vão livre de ~4.5 mm é perfeito para piso liso/residencial e mantém o centro de gravidade colado no chão.
+   * **Chassi Fechado/Carenado em 3D:** Corpo baixo e compacto protegendo a eletrônica internamente.
+   * **Acomodação da Bateria 7.4V (19 mm):** O chassi se eleva no centro para abrigar a bateria entre os motores, mantendo as rodas nas laterais externas.
    * Cabeça móvel totalmente encapsulada: o ESP32 fica 100% alojado internamente, ficando exposto apenas o círculo da lente da câmera e a barra de 8 LEDs RGB logo abaixo.
 8. **Cinemática Definida (Pan na Base e Tilt no Topo):**
    * **Ordem:** O servo de Pan (giro horizontal) fica parafusado na base do chassi, e o servo de Tilt (inclinação vertical) fica no braço móvel segurando a cabeça da câmera.
