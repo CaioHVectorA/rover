@@ -49,9 +49,12 @@ As compras foram finalizadas com os seguintes itens:
    * Não sobrecarregar a placa tentando alimentar servos direto dos pinos do microcontrolador.
 5. **Integração Carrinho + Pan/Tilt:**
    * O objetivo principal agora é fazer o carrinho se movimentar juntamente com a movimentação da câmera nos eixos Pan e Tilt.
-6. **Mapeamento de Inspirações de Cases 3D ([`inspiracoes/`](file:///home/usuario/Documentos/rover/inspiracoes/INSPIRACOES_CASE_E_PAN_TILT.md)):**
-   * Pasta `/inspiracoes` criada contendo referências do Printables, Thingiverse, MakerWorld e GrabCAD para placas ESP32-S3-WROOM / ESP32-CAM com micro servos SG90.
-   * Destaques mapeados: cases compactos snap-fit, ranhuras de ventilação para o chip S3, suporte direto para a cruzeta (servo horn) do SG90 e alojamento integrado para os LEDs WS2812B.
+6. **Galeria Visual de Inspirações ([`inspiracoes/`](file:///home/usuario/Documentos/rover/inspiracoes/INSPIRACOES_CASE_E_PAN_TILT.md)):**
+   * Pasta `/inspiracoes` criada com imagens de referência reais e renders conceituais em 3D:
+     * `01_case_camera_esp32_s3.jpg`: Case 3D para o ESP32-S3 com lente OV5640, abertura USB-C, ventilação, suporte do servo e slot frontal para a barra de 8 LEDs RGB.
+     * `02_mecanismo_pan_tilt_sg90.jpg`: Mecanismo articulado de 2 eixos com servos SG90 e alça flexível de alívio nos fios.
+     * `03_chassi_carrinho_4wd_completo.jpg`: Visão do rover 4WD completo em dois andares com bateria embutida, chave gangorra e a torreta Pan/Tilt na dianteira.
+     * Fotos de montagens reais da comunidade maker com ESP32-CAM e SG90.
 
 ---
 
