@@ -49,11 +49,14 @@ As compras foram finalizadas com os seguintes itens:
    * Não sobrecarregar a placa tentando alimentar servos direto dos pinos do microcontrolador.
 5. **Integração Carrinho + Pan/Tilt:**
    * O objetivo principal agora é fazer o carrinho se movimentar juntamente com a movimentação da câmera nos eixos Pan e Tilt.
+6. **Mapeamento de Inspirações de Cases 3D ([`inspiracoes/`](file:///home/usuario/Documentos/rover/inspiracoes/INSPIRACOES_CASE_E_PAN_TILT.md)):**
+   * Pasta `/inspiracoes` criada contendo referências do Printables, Thingiverse, MakerWorld e GrabCAD para placas ESP32-S3-WROOM / ESP32-CAM com micro servos SG90.
+   * Destaques mapeados: cases compactos snap-fit, ranhuras de ventilação para o chip S3, suporte direto para a cruzeta (servo horn) do SG90 e alojamento integrado para os LEDs WS2812B.
 
 ---
 
 ## 🎯 Foco Atual (Brainstorm & Discussão)
 
-* **Design do Case 3D:** Como modelar o chassi para acomodar a bateria, o TB6612FNG, os 4 motores e o mecanismo Pan/Tilt.
-* **Sistema Pan & Tilt:** Como posicionar e montar os servos para trabalhar em harmonia com o movimento do carrinho.
-* **Facilitação da Elétrica:** Pensar na melhor forma de organizar a fiação e conectores antes das peças chegarem, evitando gambiarras na montagem.
+* **Definição da Geometria do Case 3D:** Escolher entre um case estilo "torreta" exposta ou estilo "cockpit" semi-embutido no chassi do robô.
+* **Sistema Pan & Tilt:** Integrar os encaixes dos 2 servos SG90 ao chassi 4WD de forma firme e com alívio nos fios flexíveis.
+* **Facilitação da Elétrica:** Pensar na melhor forma de organizar a fiação, chaves e conectores antes das peças chegarem.
