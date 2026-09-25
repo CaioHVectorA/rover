@@ -11,29 +11,35 @@ Projeto de um robô móvel com tração nas 4 rodas e câmera com mecanismo Pan/
 
 ## 📦 Componentes Comprados (Aguardando Chegada)
 
-As compras foram finalizadas com os seguintes itens:
+As compras foram finalizadas com os seguintes itens e especificações físicas:
 
-* **Placas:**
-  * ESP32-S3-CAM (comprado no Mercado Livre)
-  * ESP32-CAM (comprado na RoboCore)
-  * Arduino Nano V3
-* **Tração:**
-  * 4x Micromotores de redução metálica (série JGA-050 ou similar)
-  * 4x Rodas com cubo e acabamento emborrachado
-  * Suportes de fixação dos motores
+* **Tração & Rodas (Dimensões Físicas):**
+  * **4x Rodas:** Modelo **StickyMAX S20 Macia (RoboCore)**:
+    * **Diâmetro externo:** **22 mm**
+    * **Largura da banda:** **~12 mm**
+    * **Furo de acoplamento:** **3 mm com perfil em D** (encaixe direto no eixo dos micromotores sem adaptadores)
+    * **Pneu:** Composto de silicone/borracha macia de altíssima aderência (padrão sumô e seguidor de linha)
+  * **4x Motores:** Micromotores DC com **Caixa de Redução Metálica 6V 100 RPM**:
+    * **Dimensões do corpo:** ~12 mm (L) x 10 mm (A) x 26 mm (C)
+    * **Eixo de saída:** Metálico com **perfil em D de 3 mm de diâmetro** e ~9.5 mm de comprimento
+    * **Fixação:** 2 pares de suportes em "L" brancos (furação M2)
+* **Placas de Controle:**
+  * **ESP32-S3-CAM N16R8** (Mercado Livre - USB-C, 16MB Flash, 8MB PSRAM, Câmera 5MP OV5640)
+  * **ESP32-CAM** (RoboCore - com câmera OV2640)
+  * **Arduino Nano V3** (com cabo mini-USB)
 * **Ponte H:**
-  * Driver duplo TB6612FNG (TB66)
-* **Visão / Mecanismo:**
-  * 2x Micro Servos SG90 para o Pan/Tilt
-* **Alimentação & Elétrica:**
-  * Pack Bateria Li-Ion 7.4V 2500mAh com BMS embutido
-  * Regulador Step-Down DC-DC
-  * Chave gangorra liga/desliga
-* **Sinalização & Feedback:**
-  * Barra com 8 LEDs RGB WS2812B
-  * Módulo Buzzer passivo 5V
-* **Acessórios:**
-  * Cabos, conectores e jumpers
+  * Driver duplo MOSFET **TB6612FNG** (~20 mm x 20 mm, suporta até 1.2A contínuo por canal e lógica 3.3V)
+* **Visão / Mecanismo Pan & Tilt:**
+  * 2x Micro Servos **SG90 9g** (dimensões: 22.8 mm x 12.2 mm x 28.5 mm, torque de 1.6 kg·cm)
+  * Suporte articulado de 2 eixos para os servos
+* **Alimentação & Energia:**
+  * **Pack Bateria Li-Ion 2S 7.4V 2500mAh com BMS integrado:** Dimensões aprox. **69 mm x 37 mm x 19 mm**, peso ~100g, com conector JST-RCY fêmea
+  * **Regulador Step-Down Mini 560 5V:** Placa ultracompacta (30 mm x 18 mm x 5.5 mm) que rebaixa 7.4V para 5.0V fixos com até 5A
+  * **Chave Geral Liga/Desliga:** Chave gangorra **KCD1-101 2T** (recorte para encaixe no painel 3D: **19 mm x 13 mm**)
+* **Sinalização & Acessórios:**
+  * Módulo **WS2812B com 8 LEDs RGB endereçáveis** (barra estreita de ~53 mm x 10 mm)
+  * Módulo **Buzzer passivo 5V** (diâmetro ~12 mm)
+  * Jumpers Fêmea-Fêmea e Macho-Macho (40 de cada)
 
 ---
 
@@ -49,11 +55,15 @@ As compras foram finalizadas com os seguintes itens:
    * Não sobrecarregar a placa tentando alimentar servos direto dos pinos do microcontrolador.
 5. **Integração Carrinho + Pan/Tilt:**
    * O objetivo principal agora é fazer o carrinho se movimentar juntamente com a movimentação da câmera nos eixos Pan e Tilt.
-6. **Galeria Visual de Inspirações ([`inspiracoes/`](file:///home/usuario/Documentos/rover/inspiracoes/INSPIRACOES_CASE_E_PAN_TILT.md)):**
-   * Pasta `/inspiracoes` criada com imagens de referência e renders 3D conceituais.
-7. **Estilo Visual e Carcaça Fechada (`04_chassi_fechado_sumo.jpg`):**
+6. **Galeria de Fotos dos Componentes Reais ([`inspiracoes/`](file:///home/usuario/Documentos/rover/inspiracoes/INSPIRACOES_CASE_E_PAN_TILT.md)):**
+   * Pasta `/inspiracoes` atualizada exclusivamente com **fotos reais dos produtos adquiridos e montagens reais**:
+     * `roda_stickymax_s20_22mm.png`: Foto de alta resolução da roda de sumô StickyMAX S20 (22mm).
+     * `micromotor_reducao_metalica.png`: Foto do micromotor N20 com caixa de redução metálica e eixo D 3mm.
+     * `suporte_pan_tilt_robocore.png`: Suporte comercial de 2 eixos para os servos SG90.
+     * `pan_tilt_sg90_mechanism.jpg` e `esp32_cam_pan_tilt_assembled.jpg`: Montagens reais de referência da comunidade.
+7. **Estilo Visual e Carcaça Fechada:**
    * Chassi fechado/carenado em impressão 3D: eletrônica, bateria e motores protegidos internamente, sem fios ou placas expostas.
-   * Rodas de borracha compactas estilo sumô (alta aderência).
+   * Rodas de borracha compactas estilo sumô (alta aderência, diâmetro 22 mm).
    * Cabeça móvel totalmente encapsulada: o ESP32 fica 100% alojado internamente, ficando exposto apenas o círculo da lente da câmera e a barra de 8 LEDs RGB logo abaixo.
 8. **Cinemática Definida (Pan na Base e Tilt no Topo):**
    * **Ordem:** O servo de Pan (giro horizontal) fica parafusado na base do chassi, e o servo de Tilt (inclinação vertical) fica no braço móvel segurando a cabeça da câmera.
