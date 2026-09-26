@@ -1,0 +1,10 @@
+# Arquivos de trava do LibreOffice
+.~lock.*#
+
+# Arquivos temporários e compilação Python
+__pycache__/
+*.pyc
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db

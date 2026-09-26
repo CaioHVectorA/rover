@@ -1,48 +1,58 @@
-# 🎨 Galeria Visual de Inspirações & Componentes Reais
+# 🎨 Galeria Visual de Inspirações & Referências de Design
 
-Esta pasta reúne **fotos reais dos componentes comprados** e **referências reais da comunidade maker** para orientar as dimensões e a modelagem do case e suporte em 3D.
+Esta pasta reúne exclusivamente **fotos reais dos componentes adquiridos** e **referências estéticas e mecânicas da comunidade maker** para inspirar o design da carenagem fechada e do suporte Pan/Tilt.
+
+> **Nota de Organização:**
+> Para desenhos técnicos de engenharia com cotas milimétricas, plantas e esquemas elétricos oficiais, consulte a pasta [`imagens_importantes/`](file:///home/usuario/Documentos/rover/imagens_importantes/ESPECIFICACOES_TECNICAS.md).
 
 ---
 
-## 🛞 1. Rodas StickyMAX S20 Macia (Sumô)
+## 🛞 1. Rodas StickyMAX S20 Macia - 22 mm (Sumô)
+
+Foto real do kit adquirido da RoboCore:
 
 ![Roda StickyMAX S20](/home/usuario/Documentos/rover/inspiracoes/roda_stickymax_s20_22mm.png)
 
-* **Especificações Reais:**
-  * **Diâmetro Externo:** **22 mm**
-  * **Largura da Banda:** ~12 mm
-  * **Encaixe do Eixo:** Furo de **3 mm em D** (encaixa com precisão no eixo dos micromotores)
-  * **Composto:** Silicone/borracha macia de altíssima aderência (padrão de robôs de sumô e seguidores de linha)
+* **Aspecto Visual & Aplicação:**
+  * Pneu macio de alta aderência (silicone/borracha de sumô).
+  * Já inclui cubo usinado de alumínio com parafuso de fixação M3.
+  * Proporciona visual de robô tático rebaixado e perfil agressivo.
 
 ---
 
-## ⚙️ 2. Micromotores de Redução Metálica 100 RPM
+## ⚙️ 2. Motor JGA16-050 com Caixa de Redução Metálica (16 mm)
 
-![Micromotor com Caixa de Reducao Metalica](/home/usuario/Documentos/rover/inspiracoes/micromotor_reducao_metalica.png)
+Foto real do motor adquirido da RoboCore (Substituindo o antigo N20):
 
-* **Especificações Reais:**
-  * **Dimensões do Corpo:** ~12 mm (largura) x 10 mm (altura) x 26 mm (comprimento)
-  * **Eixo:** Eixo metálico com perfil **D de 3 mm de diâmetro** (~9.5 mm de comprimento)
-  * **Caixa de Redução:** Toda em engrenagens de latão/aço (robusta e durável)
-  * **Suportes:** Fixação frontal por 2 parafusos M2
+![Motor JGA16-050 RoboCore](/home/usuario/Documentos/rover/inspiracoes/motor_jga16_050_robocore.png)
+
+* **Aspecto Visual & Robustez:**
+  * Corpo cilíndrico robusto de 16 mm de diâmetro.
+  * Caixa de redução com engrenagens 100% em metal e eixo D de 3 mm em aço.
+  * Muito mais resistente e com maior durabilidade e torque do que os micromotores N20 plásticos/frágeis.
 
 ---
 
-## 🔄 3. Mecanismo Pan & Tilt com Servos SG90
+## 🔄 3. Mecanismo Pan & Tilt de 2 Eixos com Servos SG90
+
+Componente real adquirido e referência de montagem dos servos:
 
 ![Suporte Pan Tilt RoboCore](/home/usuario/Documentos/rover/inspiracoes/suporte_pan_tilt_robocore.png)
 
 ![Montagem com Servos SG90](/home/usuario/Documentos/rover/inspiracoes/pan_tilt_sg90_mechanism.jpg)
 
-* **Especificações Reais:**
-  * 2x Micro Servos 9g SG90 (dimensões: 22.8 x 12.2 x 28.5 mm cada)
-  * **Eixo Pan (Base):** Giro horizontal de 0° a 180°
-  * **Eixo Tilt (Topo):** Inclinação vertical segurando o case da câmera
+* **Conceito de Montagem:**
+  * Eixo Pan na base para giro horizontal de 180° sem inclinar o horizonte da imagem.
+  * Eixo Tilt no topo para inclinação vertical elevando apenas a cabeça da câmera.
 
 ---
 
-## 📸 4. Referência Real da Câmera Embarcada no Pan/Tilt
+## 📸 4. Referência Real da Cabeça da Câmera Embarcada
+
+Exemplo de projeto maker com a placa de câmera integrada no suporte articulado:
 
 ![ESP32-CAM no Pan Tilt](/home/usuario/Documentos/rover/inspiracoes/esp32_cam_pan_tilt_assembled.jpg)
 
-* Exemplo real com a placa microcontroladora montada no suporte móvel, mantendo o cabo flat da câmera protegido e os fios descendo em alça flexível de alívio.
+* **Ideia de Design para o Rover:**
+  * A cabeça impressa em 3D envolverá a placa ESP32 por completo, expondo na face frontal apenas a lente circular e a fita com os 8 LEDs RGB WS2812B.
+  * Pela traseira da cabeça saem apenas os 4 fios do chicote flexível em direção ao interior do chassi, sem nenhum emaranhado de cabos à mostra.
