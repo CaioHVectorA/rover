@@ -11,7 +11,7 @@ Esta pasta reúne exclusivamente **fotos reais dos componentes adquiridos** e **
 
 Foto real do kit adquirido da RoboCore:
 
-![Roda StickyMAX S20](/home/usuario/Documentos/rover/inspiracoes/roda_stickymax_s20_22mm.png)
+![Roda StickyMAX S20](./roda_stickymax_s20_22mm.png)
 
 * **Aspecto Visual & Aplicação:**
   * Pneu macio de alta aderência (silicone/borracha de sumô).
@@ -24,7 +24,7 @@ Foto real do kit adquirido da RoboCore:
 
 Foto real do motor adquirido da RoboCore (Substituindo o antigo N20):
 
-![Motor JGA16-050 RoboCore](/home/usuario/Documentos/rover/inspiracoes/motor_jga16_050_robocore.png)
+![Motor JGA16-050 RoboCore](./motor_jga16_050_robocore.png)
 
 * **Aspecto Visual & Robustez:**
   * Corpo cilíndrico robusto de 16 mm de diâmetro.
@@ -37,9 +37,9 @@ Foto real do motor adquirido da RoboCore (Substituindo o antigo N20):
 
 Componente real adquirido e referência de montagem dos servos:
 
-![Suporte Pan Tilt RoboCore](/home/usuario/Documentos/rover/inspiracoes/suporte_pan_tilt_robocore.png)
+![Suporte Pan Tilt RoboCore](./suporte_pan_tilt_robocore.png)
 
-![Montagem com Servos SG90](/home/usuario/Documentos/rover/inspiracoes/pan_tilt_sg90_mechanism.jpg)
+![Montagem com Servos SG90](./pan_tilt_sg90_mechanism.jpg)
 
 * **Conceito de Montagem:**
   * Eixo Pan na base para giro horizontal de 180° sem inclinar o horizonte da imagem.
@@ -51,7 +51,7 @@ Componente real adquirido e referência de montagem dos servos:
 
 Exemplo de projeto maker com a placa de câmera integrada no suporte articulado:
 
-![ESP32-CAM no Pan Tilt](/home/usuario/Documentos/rover/inspiracoes/esp32_cam_pan_tilt_assembled.jpg)
+![ESP32-CAM no Pan Tilt](./esp32_cam_pan_tilt_assembled.jpg)
 
 * **Ideia de Design para o Rover:**
   * A cabeça impressa em 3D envolverá a placa ESP32 por completo, expondo na face frontal apenas a lente circular e a fita com os 8 LEDs RGB WS2812B.

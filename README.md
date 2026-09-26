@@ -277,6 +277,39 @@ Diretrizes permanentes documentadas no repositório para agentes de IA:
 
 ---
 
+## 📚 14. Base de Conhecimento de Redes & Vídeo ([`knowledge/`](file:///home/usuario/Documentos/rover/knowledge/))
+
+Artigos técnicos aprofundados sobre arquitetura de redes e otimização para controle em tempo real do robô:
+
+* [**Protocolos de Rede no Robô: HTTP vs. WebSocket vs. WebRTC**](file:///home/usuario/Documentos/rover/knowledge/http_vs_websocket_redes.md):
+  * **Não é FPV:** Arquitetura de teleoperação estritamente digital em redes IP (Wi-Fi local ou celular 4G/LTE).
+  * Análise das três abordagens de rede: **HTTP/1.1** (REST e MJPEG), **WebSocket** (Full-Duplex TCP) e **WebRTC/RTSP** (UDP Datagramas).
+  * Como cada protocolo se comporta tanto nos comandos de pilotagem quanto no streaming de vídeo.
+  * Por que o WebSocket se consolidou como a arquitetura campeã no ESP32: equilibra latência mínima (**5-18 ms** em comandos e **40-65 ms** em vídeo com descarte de frames) sem sobrecarregar a CPU com criptografia pesada DTLS/ICE do WebRTC.
+  * **Matriz de Trade-offs Completa:** Tabela comparando lado a lado transporte, overhead, latências, comportamento em perdas de pacotes no 4G/CGNAT e consumo de memória RAM do microcontrolador.
+* [**Streaming de Vídeo de Baixa Latência**](file:///home/usuario/Documentos/rover/knowledge/streaming_video_baixa_latencia.md):
+  * Diagramas e comparativos visuais de engenharia:
+    * [`topologia_redes_wifi_local_vs_4g_remoto.png`](file:///home/usuario/Documentos/rover/knowledge/images/topologia_redes_wifi_local_vs_4g_remoto.png): Comparativo direto entre Wi-Fi Local (LAN direta) e Teleoperação 4G (com servidor Relay na nuvem para contornar CGNAT).
+    * [`fluxo_streaming_mjpeg_buffer_vs_drop.png`](file:///home/usuario/Documentos/rover/knowledge/images/fluxo_streaming_mjpeg_buffer_vs_drop.png): Por que o descarte de frames atrasados (*Drop-Frame*) é mandatório no 4G para não pilotar o robô "olhando para o passado".
+    * [`comparativo_visual_resolucoes_esp32.png`](file:///home/usuario/Documentos/rover/knowledge/images/comparativo_visual_resolucoes_esp32.png): Painel real 2x2 simulando a exibição em tela de celular/PC para QQVGA, QVGA, CIF e VGA.
+    * [`comparativo_zoom_detalhe.png`](file:///home/usuario/Documentos/rover/knowledge/images/comparativo_zoom_detalhe.png): Zoom de 300% na pata da cadeira e no piso mostrando o grau exato de pixelização de borda em cada resolução.
+  * Por que o ESP32 usa MJPEG por hardware dos sensores OV2640/OV5640 em vez de H.264.
+  * Tabela de resoluções (QQVGA a UXGA), tamanhos de frame, FPS e latência (destaque para **QVGA 320x240 @ 25-30fps** como ideal para teleoperação e **CIF 400x296** para maior definição).
+  * Otimizações de firmware: desativação do Wi-Fi Power Save (`WIFI_PS_NONE`), eliminação do algoritmo de Nagle (`TCP_NODELAY`), duplo buffer na PSRAM e separação de núcleos no FreeRTOS.
+
+---
+
+## 💻 15. Códigos de Teste & Firmware de Bancada ([`codes/`](file:///home/usuario/Documentos/rover/codes/))
+
+Repositório de códigos e testes práticos de validação antes da montagem final:
+
+* [**Teste de Comunicação Serial ESP32 ➔ Nano (LED)**](file:///home/usuario/Documentos/rover/codes/teste_serial_led_esp32_nano/README.md):
+  * Firmware do ESP32 ([`esp32_web_tx.ino`](file:///home/usuario/Documentos/rover/codes/teste_serial_led_esp32_nano/esp32_web_tx/esp32_web_tx.ino)) criando rede Wi-Fi direta (`Rover-Control-Test`) e servindo interface web moderna com dark mode.
+  * Firmware do Arduino Nano ([`nano_rx_led.ino`](file:///home/usuario/Documentos/rover/codes/teste_serial_led_esp32_nano/nano_rx_led/nano_rx_led.ino)) escutando na porta Serial física (pino RX / D0) a 115200 baud e chaveando o LED embutido D13.
+  * Validação física da arquitetura de comunicação distribuída usando apenas 2 jumpers na bancada.
+
+---
+
 ## 🎯 Próximos Passos (Modelagem CAD 3D)
 
 Com a eletrônica, pinagem e chicote 100% dimensionados, o próximo foco é o desenho das peças 3D:

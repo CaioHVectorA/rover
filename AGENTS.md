@@ -67,3 +67,4 @@ Mantenha a separação estrita entre documentos técnicos e referências conceit
 * Seja direto, prático e conciso.
 * Sempre utilize links clicáveis no padrão markdown (`[Nome do Arquivo](file:///caminho/completo)`).
 * Responda em Português (Brasil).
+* **Guia de Estilo Vivo ([`style.md`](file:///home/usuario/Documentos/rover/style.md)):** O agente deve manter e enriquecer continuamente o arquivo `style.md`, registrando o perfil de comunicação, ritmo das respostas e preferências do usuário, afinando o tom organicamente a cada conversa.
