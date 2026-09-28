@@ -307,6 +307,11 @@ Repositório de códigos e testes práticos de validação antes da montagem fin
   * Firmware do ESP32 ([`esp32_web_tx.ino`](file:///home/usuario/Documentos/rover/codes/teste_serial_led_esp32_nano/esp32_web_tx/esp32_web_tx.ino)) criando rede Wi-Fi direta (`Rover-Control-Test`) e servindo interface web moderna com dark mode.
   * Firmware do Arduino Nano ([`nano_rx_led.ino`](file:///home/usuario/Documentos/rover/codes/teste_serial_led_esp32_nano/nano_rx_led/nano_rx_led.ino)) escutando na porta Serial física (pino RX / D0) a 115200 baud e chaveando o LED embutido D13.
   * Validação física da arquitetura de comunicação distribuída usando apenas 2 jumpers na bancada.
+* [**Teste de Streaming de Vídeo Remoto ESP32 (WebSocket Relay)**](file:///home/usuario/Documentos/rover/codes/teste_streaming_remoto_esp32/README.md):
+  * Extensão do `CameraWebServer` para envio de imagens do ESP32 via cliente WebSocket para um Servidor Relay intermediário (Node.js).
+  * Permite visualizar a transmissão da câmera ao vivo de **qualquer outra rede ou internet celular 4G/LTE**, contornando o CGNAT da operadora.
+  * Servidor Relay ([`server.js`](file:///home/usuario/Documentos/rover/codes/teste_streaming_remoto_esp32/server/server.js)) em Node.js e Express/WebSockets com interface em dark mode e HUD de telemetria (FPS, banda, resolução, latência, descarte de frames).
+  * Firmware do ESP32 ([`esp32_camera_relay.ino`](file:///home/usuario/Documentos/rover/codes/teste_streaming_remoto_esp32/esp32_camera_relay/esp32_camera_relay.ino)) com suporte a ESP32-CAM e ESP32-S3-CAM (`camera_pins.h`).
 
 ---
 

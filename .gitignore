@@ -1,6 +1,10 @@
 # Arquivos de trava do LibreOffice
 .~lock.*#
 
+# Node.js
+node_modules/
+package-lock.json
+
 # Arquivos temporários e compilação Python
 __pycache__/
 *.pyc
