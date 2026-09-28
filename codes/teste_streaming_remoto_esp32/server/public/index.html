@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rover ESP32 - Live Video Stream (Relay Server)</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="title-group">
+        <h1>🤖 Rover Móvel ESP32</h1>
+        <p class="subtitle">Streaming de Vídeo em Tempo Real via WebSocket Relay (Baixa Latência)</p>
+      </div>
+      <div class="badges">
+        <div id="status-badge-esp" class="badge badge-offline">ESP32: Offline</div>
+        <div id="status-badge-relay" class="badge badge-connecting">Relay: Conectando...</div>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <div class="video-card">
+        <div class="video-wrapper">
+          <canvas id="video-canvas" width="640" height="480"></canvas>
+          <div id="video-placeholder" class="video-placeholder">
+            <div class="spinner"></div>
+            <p id="placeholder-text">Aguardando transmissão do ESP32...</p>
+          </div>
+          <div class="hud-overlay">
+            <span class="hud-item" id="hud-fps">FPS: 0</span>
+            <span class="hud-item" id="hud-res">Resolução: --</span>
+            <span class="hud-item" id="hud-size">Tamanho: 0 KB</span>
+            <span class="hud-item" id="hud-latency">Latência: -- ms</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="sidebar">
+        <div class="panel">
+          <h2>📊 Telemetria do Stream</h2>
+          <div class="stat-grid">
+            <div class="stat-box">
+              <span class="stat-label">Taxa de Quadros</span>
+              <span class="stat-value" id="stat-fps">0 FPS</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Quadros Recebidos</span>
+              <span class="stat-value" id="stat-total-frames">0</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Último Frame</span>
+              <span class="stat-value" id="stat-frame-size">0 KB</span>
+            </div>
+            <div class="stat-box">
+              <span class="stat-label">Banda Utilizada</span>
+              <span class="stat-value" id="stat-bandwidth">0 KB/s</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h2>🌐 Conexão Remota & 4G</h2>
+          <div class="info-box">
+            <p><strong>Como ver este vídeo em outra internet?</strong></p>
+            <ol class="instructions-list">
+              <li>Mantenha este servidor Relay rodando (em uma VPS na nuvem ou via <code>ngrok</code> / <code>localtunnel</code>).</li>
+              <li>Configure o ESP32 com a URL WebSocket pública: <code>wss://seu-servidor.com/ws?role=esp32</code>.</li>
+              <li>Acesse este site de qualquer celular, tablet ou PC via 4G ou Wi-Fi remoto!</li>
+            </ol>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <footer class="footer">
+      <p>Rover ESP32 4WD & Pan/Tilt &bull; Projeto de Teleoperação IP &bull; Protocolo WebSocket (Drop-Frame)</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

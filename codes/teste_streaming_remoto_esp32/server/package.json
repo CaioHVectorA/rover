@@ -1,0 +1,15 @@
+{
+  "name": "esp32-camera-relay-server",
+  "version": "1.0.0",
+  "description": "Servidor Web Relay para retransmissao de video em tempo real do ESP32-CAM via WebSockets (Baixa Latencia)",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test_relay.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "ws": "^8.18.0"
+  }
+}
