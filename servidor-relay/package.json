@@ -1,0 +1,25 @@
+{
+  "name": "rover-relay-fpv",
+  "version": "1.0.0",
+  "description": "Servidor Relay WebSocket e Painel HUD de Telepresença FPV para o Rover",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "rover",
+    "esp32-s3",
+    "websocket",
+    "fpv",
+    "telemetry"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

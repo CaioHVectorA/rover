@@ -78,7 +78,7 @@ flowchart TD
 
 ### 📍 Fase 1: Bancada & Validação Isolada (Zero Risco)
 *Objetivo: Testar cada módulo separadamente na mesa antes de parafusar no chassi.*
-* [ ] **1.1 Câmera no ESP32-S3:** Carregar o exemplo oficial `CameraWebServer` da Espressif no ESP32-S3 CAM, ajustar os pinos do modelo da placa e validar o streaming de vídeo no navegador do celular.
+* [x] **1.1 Câmera no ESP32-S3 & Conexão Wi-Fi:** Validar rádio Wi-Fi, estabilidade de alimentação (eliminação de resets de Brownout) e streaming de vídeo no ESP32-S3 CAM.
 * [ ] **1.2 Controle de Servos:** Criar um sketch simples em C++ variando o ângulo de 0° a 180° nos GPIOs dos servos para calibrar o ponto central (90°).
 * [ ] **1.3 Rotação dos Motores:** Ligar a ponte H na bancada e acionar os motores para frente, ré e viragem para verificar a polaridade correta dos fios.
 * [ ] **1.4 Tensão Segura:** Ajustar o trimpot do regulador Step-Down com multímetro exatamente em **5.00V** antes de conectar qualquer componente eletrônico.
@@ -122,9 +122,12 @@ flowchart TD
 
 ---
 
-### 📍 Fase 5: Conexão de Longa Distância & Telepresença (Pós-MVP)
-*Objetivo: Controlar o robô de qualquer lugar do planeta pela internet.*
-* [ ] **5.1 Arquitetura sem IP Público (Túnel Reverso):**
-  * Uso de túnel seguro (ex: ngrok, Cloudflare Tunnel, Husarnet ou Tailscale) para expor a interface web sem precisar abrir portas no roteador residencial.
-* [ ] **5.2 Conectividade Móvel:**
-  * Uso de roteador Wi-Fi 4G portátil embarcado no robô ou hotspot de celular para permitir pilotagem externa em ruas, pátios e parques.
+### 📍 Fase 5: Conexão de Longa Distância & Sistemas Distribuídos na Nuvem (Fly.io 🚀)
+*Objetivo: Controlar o robô de qualquer lugar do planeta pela internet com medição de latência.*
+* [ ] **5.1 Servidor Relay na Nuvem (Fly.io `gru`):**
+  * Deploy de servidor Node.js/WebSocket na região de São Paulo (`gru`) para receber o fluxo de vídeo e telemetria do robô via porta 443 HTTPS/WSS (ultrapassando qualquer firewall/CGNAT).
+* [ ] **5.2 Firmware Cliente do ESP32-S3 (Push Binário):**
+  * O ESP32-S3 atua como cliente ativo enviando pacotes binários brutos (Frame ID + Timestamp millis + Bytes JPEG) via WebSocket Seguro (`wss://`).
+* [ ] **5.3 Medição de Latência Fim-a-Fim (Two-Leg RTT):**
+  * Exibição no HUD do painel de controle da latência exata da rede do robô, da rede do piloto e do FPS real entregue.
+

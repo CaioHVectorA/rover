@@ -6,3 +6,10 @@
 __pycache__/
 *.py[cod]
 *$py.class
+
+# PlatformIO & Arduino builds
+.pio/
+.vscode/
+
+# Node.js
+node_modules/

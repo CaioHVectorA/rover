@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Rover FPV Telepresence Cockpit</title>
+  <style>
+    :root {
+      --bg-color: #080c10;
+      --card-bg: rgba(13, 20, 28, 0.85);
+      --accent-cyan: #00f0ff;
+      --accent-green: #00ff66;
+      --accent-red: #ff3344;
+      --accent-yellow: #ffb700;
+      --text-dim: #7f95aa;
+      --text-light: #e6f1ff;
+      --border-glow: rgba(0, 240, 255, 0.25);
+      --hud-font: 'JetBrains Mono', 'Consolas', 'Courier New', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-light);
+      font-family: var(--hud-font);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* --- TOPO: HUD DE TELEMETRIA --- */
+    header {
+      background: rgba(8, 12, 16, 0.95);
+      border-bottom: 1px solid var(--border-glow);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 10;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 15px;
+      letter-spacing: 1.5px;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+    }
+
+    .brand-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent-cyan);
+      box-shadow: 0 0 10px var(--accent-cyan);
+    }
+
+    .telemetry-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 12px;
+      flex-wrap: wrap;
+    }
+
+    .metric-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--card-bg);
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .metric-label {
+      color: var(--text-dim);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+    }
+
+    .status-online {
+      background: rgba(0, 255, 102, 0.15);
+      color: var(--accent-green);
+      border: 1px solid rgba(0, 255, 102, 0.4);
+    }
+
+    .status-offline {
+      background: rgba(255, 51, 68, 0.15);
+      color: var(--accent-red);
+      border: 1px solid rgba(255, 51, 68, 0.4);
+    }
+
+    .pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    /* --- ÁREA PRINCIPAL DO VÍDEO (VIEWPORT) --- */
+    main {
+      flex: 1;
+      position: relative;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    #stream-img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      display: block;
+      transition: opacity 0.2s ease;
+    }
+
+    .no-signal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle, rgba(13, 20, 28, 0.9) 0%, rgba(5, 8, 12, 0.98) 100%);
+      color: var(--text-dim);
+      gap: 16px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .no-signal-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0, 240, 255, 0.15);
+      border-top-color: var(--accent-cyan);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* --- MIRA HUD (RETÍCULO FPV) --- */
+    .crosshair-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      opacity: 0.45;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .crosshair-circle {
+      width: 60px;
+      height: 60px;
+      border: 1px dashed var(--accent-cyan);
+      border-radius: 50%;
+      position: relative;
+    }
+
+    .crosshair-center {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: var(--accent-cyan);
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 6px var(--accent-cyan);
+    }
+
+    .crosshair-line-h {
+      position: absolute;
+      width: 120px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+    }
+
+    .crosshair-line-v {
+      position: absolute;
+      height: 120px;
+      width: 1px;
+      background: linear-gradient(180deg, transparent, var(--accent-cyan), transparent);
+    }
+
+    /* --- OVERLAYS LATERAIS DE LATÊNCIA DETALHADA --- */
+    .hud-overlay-left {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-glow);
+      backdrop-filter: blur(8px);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .latency-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .latency-value {
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
+    .hud-overlay-right {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      background: var(--card-bg);
+      border: 1px solid var(--border-glow);
+      backdrop-filter: blur(8px);
+      padding: 12px 16px;
+      border-radius: 6px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .btn-action {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--accent-cyan);
+      color: var(--accent-cyan);
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-action:hover {
+      background: var(--accent-cyan);
+      color: #000;
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+    }
+
+    /* --- PAINEL INFERIOR DE CONTROLE E TECLAS --- */
+    footer {
+      background: rgba(8, 12, 16, 0.95);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text-dim);
+    }
+
+    .key-badge {
+      display: inline-block;
+      background: #1a2330;
+      border: 1px solid #33445c;
+      color: #fff;
+      padding: 1px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      margin: 0 2px;
+    }
+
+    /* Responsivo para Celular */
+    @media (max-width: 768px) {
+      .hud-overlay-left, .hud-overlay-right {
+        bottom: 60px;
+        font-size: 10px;
+        padding: 8px 10px;
+      }
+      .telemetry-bar {
+        font-size: 10px;
+        gap: 8px;
+      }
+      footer {
+        font-size: 9px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA DE TELEMETRIA SUPERIOR -->
+  <header>
+    <div class="brand">
+      <div class="brand-dot"></div>
+      ROVER FPV // TELEMETRIA
+    </div>
+
+    <div class="telemetry-bar">
+      <!-- Status do Servidor Relay -->
+      <div class="status-pill status-offline" id="relay-status">
+        <div class="pulse"></div>
+        <span id="relay-status-text">RELAY: CONECTANDO...</span>
+      </div>
+
+      <!-- Status do ESP32-S3 -->
+      <div class="status-pill status-offline" id="robot-status">
+        <div class="pulse"></div>
+        <span id="robot-status-text">ROBÔ: OFFLINE</span>
+      </div>
+
+      <!-- Taxa de Quadros (FPS) -->
+      <div class="metric-badge">
+        <span class="metric-label">FPS</span>
+        <span class="metric-value" id="fps-val" style="color: var(--accent-green)">0.0</span>
+      </div>
+
+      <!-- Bitrate -->
+      <div class="metric-badge">
+        <span class="metric-label">BITRATE</span>
+        <span class="metric-value" id="bitrate-val" style="color: var(--accent-cyan)">0 KB/S</span>
+      </div>
+
+      <!-- Resolução -->
+      <div class="metric-badge">
+        <span class="metric-label">RESOLUÇÃO</span>
+        <span class="metric-value" id="res-val">-- x --</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- VIEWPORT DE VÍDEO -->
+  <main id="viewport">
+    <img id="stream-img" alt="Fluxo FPV do Rover" style="display: none;">
+
+    <!-- Retículo Central FPV -->
+    <div class="crosshair-container" id="crosshair">
+      <div class="crosshair-line-h"></div>
+      <div class="crosshair-line-v"></div>
+      <div class="crosshair-circle">
+        <div class="crosshair-center"></div>
+      </div>
+    </div>
+
+    <!-- Mensagem de Espera / Sem Sinal -->
+    <div class="no-signal-overlay" id="no-signal">
+      <div class="no-signal-spinner"></div>
+      <div>
+        <h3 style="color: var(--text-light); margin-bottom: 6px;">AGUARDANDO TRANSMISSÃO DO ROVER</h3>
+        <p>O servidor relay está ativo. Ligue o ESP32-S3 com o firmware cliente para iniciar o streaming.</p>
+      </div>
+    </div>
+
+    <!-- HUD Latência Detalhada (Two-Leg RTT) -->
+    <div class="hud-overlay-left">
+      <div style="font-weight: 700; color: #fff; margin-bottom: 2px;">⏱️ MEDIÇÃO DE LATÊNCIA (RTT)</div>
+      <div class="latency-row">
+        <span>Robô &rarr; Nuvem (&Delta;t<sub>esp</sub>):</span>
+        <span class="latency-value" id="lat-robot">-- ms</span>
+      </div>
+      <div class="latency-row">
+        <span>Nuvem &rarr; Piloto (&Delta;t<sub>pilot</sub>):</span>
+        <span class="latency-value" id="lat-pilot">-- ms</span>
+      </div>
+      <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 2px 0;">
+      <div class="latency-row">
+        <span>Fim-a-Fim Estimado (&Delta;t<sub>total</sub>):</span>
+        <span class="latency-value" id="lat-total" style="color: var(--accent-yellow)">-- ms</span>
+      </div>
+    </div>
+
+    <!-- Controles Rápidos -->
+    <div class="hud-overlay-right">
+      <button class="btn-action" id="btn-fullscreen">Tela Cheia</button>
+      <div style="font-size: 10px; color: var(--text-dim); text-align: center;">
+        Gimbal: <span id="gimbal-val" style="color: #fff">Pan 90° | Tilt 90°</span>
+      </div>
+    </div>
+  </main>
+
+  <!-- RODAPÉ COM GUIA DE TECLAS -->
+  <footer>
+    <div>
+      🕹️ <b>Pilotagem:</b> <span class="key-badge">W</span><span class="key-badge">S</span> Frente/Ré &bull;
+      <span class="key-badge">A</span><span class="key-badge">D</span> Direção &bull;
+      <span class="key-badge">&uarr;</span><span class="key-badge">&darr;</span><span class="key-badge">&larr;</span><span class="key-badge">&rarr;</span> Pan/Tilt Câmera &bull;
+      <span class="key-badge">ESPAÇO</span> Parada Imediata
+    </div>
+    <div id="connection-mode">PROTOCOLO: WSS BINARY PUSH (FLY.IO GRU)</div>
+  </footer>
+
+  <script>
+    // --- ELEMENTOS DO DOM ---
+    const streamImg = document.getElementById('stream-img');
+    const noSignalOverlay = document.getElementById('no-signal');
+    const relayStatus = document.getElementById('relay-status');
+    const relayStatusText = document.getElementById('relay-status-text');
+    const robotStatus = document.getElementById('robot-status');
+    const robotStatusText = document.getElementById('robot-status-text');
+    const fpsVal = document.getElementById('fps-val');
+    const bitrateVal = document.getElementById('bitrate-val');
+    const resVal = document.getElementById('res-val');
+    const latRobot = document.getElementById('lat-robot');
+    const latPilot = document.getElementById('lat-pilot');
+    const latTotal = document.getElementById('lat-total');
+    const gimbalVal = document.getElementById('gimbal-val');
+    const btnFullscreen = document.getElementById('btn-fullscreen');
+
+    // --- VARIÁVEIS DE ESTADO E MÉTRICAS ---
+    let ws = null;
+    let currentObjectUrl = null;
+    let framesCount = 0;
+    let bytesCount = 0;
+    let lastFpsCalcTime = performance.now();
+    let pilotRttMs = 0;
+    let espRttMs = 0;
+
+    // Estado do Robô e Gimbal
+    let panAngle = 90;
+    let tiltAngle = 90;
+    let linearSpeed = 0;
+    let angularSpeed = 0;
+
+    // --- CONEXÃO WEBSOCKET DO PILOTO ---
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//${window.location.host}/ws/pilot`;
+
+      ws = new WebSocket(wsUrl);
+      ws.binaryType = 'arraybuffer';
+
+      ws.onopen = () => {
+        relayStatus.className = 'status-pill status-online';
+        relayStatusText.textContent = 'RELAY: CONECTADO';
+        // Inicia medição contínua de latência do piloto (Ping a cada 1s)
+        startPilotPing();
+      };
+
+      ws.onmessage = (event) => {
+        if (event.data instanceof ArrayBuffer) {
+          handleBinaryVideoFrame(event.data);
+        } else {
+          handleTextMessage(event.data);
+        }
+      };
+
+      ws.onclose = () => {
+        relayStatus.className = 'status-pill status-offline';
+        relayStatusText.textContent = 'RELAY: DESCONECTADO';
+        setRobotOnline(false);
+        // Reconexão automática em 2 segundos
+        setTimeout(connectWebSocket, 2000);
+      };
+
+      ws.onerror = (err) => {
+        console.error('Erro no WebSocket:', err);
+      };
+    }
+
+    // --- PROCESSAMENTO DE PACOTE DE VÍDEO BINÁRIO ---
+    function handleBinaryVideoFrame(buffer) {
+      framesCount++;
+      bytesCount += buffer.byteLength;
+
+      // Cabeçalho injetado pelo Relay (16 bytes):
+      // [0..3]: Frame ID (uint32)
+      // [4..7]: ESP timestamp millis (uint32)
+      // [8..15]: Server timestamp Date.now() (BigInt64)
+      // [16..N]: Bytes JPEG
+      if (buffer.byteLength > 16) {
+        const view = new DataView(buffer);
+        const frameId = view.getUint32(0, false);
+        const espTime = view.getUint32(4, false);
+        const serverTime = Number(view.getBigInt64(8, false));
+        const clientReceiveTime = Date.now();
+
+        // Fatia os bytes do JPEG após os 16 bytes de cabeçalho
+        const jpegBytes = new Uint8Array(buffer, 16);
+        const blob = new Blob([jpegBytes], { type: 'image/jpeg' });
+
+        if (currentObjectUrl) {
+          URL.revokeObjectURL(currentObjectUrl);
+        }
+        currentObjectUrl = URL.createObjectURL(blob);
+        streamImg.src = currentObjectUrl;
+
+        if (streamImg.style.display === 'none') {
+          streamImg.style.display = 'block';
+          noSignalOverlay.style.display = 'none';
+          setRobotOnline(true);
+        }
+
+        // Atualiza resolução quando a imagem carrega
+        if (streamImg.naturalWidth > 0) {
+          resVal.textContent = `${streamImg.naturalWidth} x ${streamImg.naturalHeight}`;
+        }
+      }
+    }
+
+    // --- MENSAGENS DE CONTROLE E TELEMETRIA ---
+    function handleTextMessage(text) {
+      try {
+        const data = JSON.parse(text);
+
+        if (data.type === 'pong') {
+          const now = performance.now();
+          pilotRttMs = Math.round(now - data.t);
+          updateLatencyDisplay();
+        } else if (data.type === 'robot_status') {
+          setRobotOnline(data.online);
+        } else if (data.type === 'initial_state') {
+          setRobotOnline(data.robotOnline);
+        } else if (data.type === 'server_stats') {
+          // Atualiza dados vindos do servidor se necessário
+        }
+      } catch (e) {
+        console.error('Erro ao processar JSON:', e);
+      }
+    }
+
+    function setRobotOnline(online) {
+      if (online) {
+        robotStatus.className = 'status-pill status-online';
+        robotStatusText.textContent = 'ROBÔ: TRANSMITINDO';
+      } else {
+        robotStatus.className = 'status-pill status-offline';
+        robotStatusText.textContent = 'ROBÔ: OFFLINE';
+        streamImg.style.display = 'none';
+        noSignalOverlay.style.display = 'flex';
+        fpsVal.textContent = '0.0';
+        bitrateVal.textContent = '0 KB/S';
+        resVal.textContent = '-- x --';
+        latRobot.textContent = '-- ms';
+        latTotal.textContent = '-- ms';
+      }
+    }
+
+    // --- MEDIÇÃO DE LATÊNCIA (PING / PONG) ---
+    function startPilotPing() {
+      setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({
+            type: 'ping',
+            t: performance.now()
+          }));
+        }
+      }, 1000);
+    }
+
+    function updateLatencyDisplay() {
+      const pilotHalfRtt = Math.round(pilotRttMs / 2);
+      latPilot.textContent = `${pilotHalfRtt} ms`;
+
+      // Simulação estimada do robô (será alimentada pelo ACK do ESP32 na Sessão 10)
+      if (robotStatusText.textContent.includes('TRANSMITINDO')) {
+        const estimatedEspHalf = 35; // Estimativa média Wi-Fi/Fibra
+        latRobot.textContent = `~${estimatedEspHalf} ms`;
+        latTotal.textContent = `${pilotHalfRtt + estimatedEspHalf} ms`;
+      }
+    }
+
+    // --- CÁLCULO LOCAL DE FPS E BITRATE (1 SEGUNDO) ---
+    setInterval(() => {
+      const now = performance.now();
+      const elapsed = (now - lastFpsCalcTime) / 1000;
+      if (elapsed >= 1.0) {
+        if (streamImg.style.display !== 'none') {
+          const fps = (framesCount / elapsed).toFixed(1);
+          const kbps = ((bytesCount * 8) / (elapsed * 1024)).toFixed(0);
+          fpsVal.textContent = fps;
+          bitrateVal.textContent = `${kbps} KB/S`;
+        }
+        framesCount = 0;
+        bytesCount = 0;
+        lastFpsCalcTime = now;
+      }
+    }, 1000);
+
+    // --- CONTROLE DE TELEOPERAÇÃO VIA TECLADO ---
+    const activeKeys = {};
+
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      activeKeys[e.key.toLowerCase()] = true;
+      processControlKeys();
+    });
+
+    window.addEventListener('keyup', (e) => {
+      activeKeys[e.key.toLowerCase()] = false;
+      processControlKeys();
+    });
+
+    function processControlKeys() {
+      // Movimentação do Chassi (WASD)
+      let v = 0;
+      let w = 0;
+      if (activeKeys['w']) v += 100;
+      if (activeKeys['s']) v -= 100;
+      if (activeKeys['a']) w -= 100;
+      if (activeKeys['d']) w += 100;
+
+      // Parada de Emergência
+      if (activeKeys[' ']) {
+        v = 0;
+        w = 0;
+      }
+
+      // Pan & Tilt da Câmera (Setas)
+      if (activeKeys['arrowleft']) panAngle = Math.min(180, panAngle + 5);
+      if (activeKeys['arrowright']) panAngle = Math.max(0, panAngle - 5);
+      if (activeKeys['arrowup']) tiltAngle = Math.min(180, tiltAngle + 5);
+      if (activeKeys['arrowdown']) tiltAngle = Math.max(0, tiltAngle - 5);
+
+      gimbalVal.textContent = `Pan ${panAngle}° | Tilt ${tiltAngle}°`;
+
+      // Envia pacote de comando via WebSocket
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'cmd',
+          v: v,
+          w: w,
+          pan: panAngle,
+          tilt: tiltAngle,
+          timestamp: Date.now()
+        }));
+      }
+    }
+
+    // --- MODO TELA CHEIA ---
+    btnFullscreen.addEventListener('click', () => {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => alert(err.message));
+      } else {
+        document.exitFullscreen();
+      }
+    });
+
+    // Inicialização ao carregar
+    connectWebSocket();
+  </script>
+</body>
+</html>

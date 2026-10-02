@@ -138,14 +138,52 @@ Este documento serve como a **memória viva e persistente** de todas as nossas c
      * 📑 **Aba 2 (`Rover Raspberry Pi 3`):** 20 itens (17 RoboCore + 3 Mercado Livre), com fórmulas automáticas de subtotal, desconto PIX (-5%) e total geral estimado (R$ 1.003,43).
   3. **Limpeza do Repositório:** Remoção definitiva das planilhas intermediárias e duplicadas (`_RESTAURADA`, `_ATUALIZADA`, `_FINAL`, etc.), mantendo a raiz do projeto limpa e organizada.
 
+### 🗓️ Sessão 9: Validação do ESP32-S3 em Wi-Fi e Arquitetura de Sistemas Distribuídos na Nuvem (Fly.io)
+* **Diagnósticos e Ações de Engenharia Executadas:**
+  1. **Solução do Reset de Boot / Brownout (`E BOD: Brownout detector was triggered`):**
+     * Identificado que o uso de `WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0)` (comum no ESP32 clássico) é **incompatível no ESP32-S3**, pois corrompe o registrador do RTC e força o reset contínuo (`rst:0x3 RTC_SW_SYS_RST`).
+     * A instrução foi completamente removida dos códigos em C++, estabilizando o boot e o rádio Wi-Fi.
+  2. **Validação de Conectividade Wi-Fi e Sinal (Rede `PET_ELETRICA`):**
+     * Criado o sketch de teste isolado [`testes/teste_wifi_esp32/teste_wifi_esp32.ino`](file:///c:/Users/caihe/Documents/develop/rover/testes/teste_wifi_esp32/teste_wifi_esp32.ino).
+     * O ESP32-S3 conectou com sucesso em apenas ~2.5s, obtendo IP `192.168.7.26` com excelente nível de sinal RSSI (**`-24 dBm` a `-31 dBm`**).
+  3. **Solução do Erro de Compilação na Arduino IDE (`multiple definition of camera_httpd / startCameraServer`):**
+     * Esclarecido que o nosso código [`testes/teste_camera_web_server/teste_camera_web_server.ino`](file:///c:/Users/caihe/Documents/develop/rover/testes/teste_camera_web_server/teste_camera_web_server.ino) é **All-in-One (Arquivo Único)**. O erro ocorria ao colar o código dentro do exemplo nativo de 4 abas da Arduino IDE mantendo o `app_httpd.cpp` ativo ao lado.
+  4. **Evolução de Arquitetura: Transição do Modelo LAN para Sistemas Distribuídos na Nuvem (Fly.io):**
+     * **Motivação:** No modelo LAN tradicional (ESP32 como Servidor HTTP passivo), o robô fica inacessível fora da rede local por conta de NAT, CGNAT e firewalls.
+     * **Novo Modelo Produtor-Consumidor (Push via WebSocket):**
+       * O ESP32-S3 atua como **Cliente Ativo**, abrindo uma conexão permanente via WebSocket Seguro (**`wss://` na porta 443**) para um servidor de relay distribuído na nuvem (**Fly.io** na região `gru` - São Paulo).
+       * **Payload Binário Ultra-Leve:** Envio de pacotes binários diretos (Frame ID 4B + Timestamp millis 4B + Bytes brutos JPEG = apenas 8 bytes de overhead por frame).
+       * **Medição Precisa de Latência Fim-a-Fim:** Implementação do protocolo *Two-Leg RTT (Round Trip Time)* para calcular em tempo real no HUD a latência do robô (`RTT_esp / 2`), do piloto (`RTT_piloto / 2`) e o FPS real de entrega.
+
+### 🗓️ Sessão 10: Implementação do Servidor Relay no Fly.io (gru) e Firmware Cliente ESP32-S3
+* **Ações de Engenharia Executadas:**
+  1. **Servidor Relay WebSocket de Baixa Latência ([`servidor-relay/`](file:///c:/Users/caihe/Documents/develop/rover/servidor-relay)):**
+     * Criado servidor em Node.js com apenas uma dependência (`ws`), com suporte nativo a retransmissão binária sem processamento inútil de pixels.
+     * Implementação do protocolo *Two-Leg RTT*: cálculo de $\Delta t_{esp}$ (via ACK binário de 9 bytes) e $\Delta t_{piloto}$ (via ping-pong periódico no WebSocket).
+     * Endpoint de healthcheck em `/health` e `/status` reportando estado do robô, pilotos conectados e uptime.
+  2. **Interface Web do Cockpit FPV ([`servidor-relay/public/index.html`](file:///c:/Users/caihe/Documents/develop/rover/servidor-relay/public/index.html)):**
+     * Interface moderna com tema escuro aeroespacial / HUD cyberpunk.
+     * Retículo central de mira FPV, indicadores de FPS dinâmico, Bitrate e Resolução.
+     * Painel de telemetria com breakdown da latência Robô $\to$ Nuvem, Nuvem $\to$ Piloto e Total Fim-a-Fim.
+     * Suporte a pilotagem por teclado (WASD, Setas de Pan/Tilt do gimbal e Espaço para parada de emergência).
+  3. **Infraestrutura em Nuvem (Fly.io):**
+     * Configurado `Dockerfile` (Node 20 Alpine) e `fly.toml` apontando para o datacenter de São Paulo (`gru`).
+     * Provisionado o app `rover-relay-fpv-sp` em `https://rover-relay-fpv-sp.fly.dev` com certificados SSL/TLS automáticos na porta 443.
+  4. **Firmware Cliente ESP32-S3 ([`testes/teste_camera_websocket_client`](file:///c:/Users/caihe/Documents/develop/rover/testes/teste_camera_websocket_client)):**
+     * Desenvolvido sketch [`teste_camera_websocket_client.ino`](file:///c:/Users/caihe/Documents/develop/rover/testes/teste_camera_websocket_client/teste_camera_websocket_client.ino) com conexão Wi-Fi na rede `PET_ELETRICA`, conexão segura `wss://rover-relay-fpv-sp.fly.dev/ws/robot`, push contínuo de frames JPEG alocados na Octal PSRAM e recepção de comandos de teleoperação.
+
 ---
 
 ## 📝 5. Próximos Passos Imediatos
 - [x] Mapear os links e códigos exatos dos produtos na RoboCore para fechar o carrinho de compras.
-- [x] Atualizar o carrinho de compras na RoboCore para a arquitetura Raspberry Pi 3 (25 itens).
-- [x] Consolidar as compras em planilha XLSX única com 2 abas (`LISTA_DE_COMPRAS_ROVER.xlsx`).
-- [ ] Elaborar o esquema elétrico de pinagem Raspberry Pi 3 + Arduino Nano + 2x L298N + Step-Down 5V.
-- [ ] Configurar imagem Raspberry Pi OS Lite com OverlayFS (Read-Only) e streamer WebRTC.
+- [x] Consolidar as compras em planilha XLSX única com 2 abas (`LISTA_DE_COMPRAS_ROVER.xlsx` / `COMPONENTES_DRONE_TERRESTRE.xlsx`).
+- [x] Validar estabilidade de Wi-Fi e solução de Brownout no ESP32-S3 CAM.
+- [x] Criar o projeto do servidor de relay em Node.js com Dockerfile e `fly.toml` configurado para a região `gru` (São Paulo).
+- [x] Fazer o deploy do servidor no Fly.io (`fly deploy` - app `rover-relay-fpv-sp`).
+- [x] Implementar o sketch cliente no ESP32-S3 (`teste_camera_websocket_client.ino`) conectando em `wss://`.
+- [ ] Gravar o sketch no ESP32-S3 e validar transmissão de vídeo ao vivo no painel web (inclusive em rede externa / 4G).
+- [ ] Integrar o controle PWM dos servos Pan/Tilt ao receber os comandos do piloto.
+
 
 
 
