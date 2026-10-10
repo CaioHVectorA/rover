@@ -107,10 +107,7 @@ As compras foram finalizadas com os seguintes itens e especificações físicas:
         4. *(Opcional)* `RX` do ESP32 $\leftarrow$ vindo do `TX` do Nano (apenas se houver telemetria)
       * O **Arduino Nano fica fixo dentro do chassi**, recebendo os comandos seriais e comandando os 6 pinos do TB6612FNG, os 2 servos SG90, buzzer e iluminação sem qualquer disputa de pinos com a câmera.
 
-## 🔌 12. Arquitetura Eletrônica & Planilha Oficial de Pinagem ([`tabela_pinagem_esp32_nano.xlsx`](file:///home/usuario/Documentos/rover/tabela_pinagem_esp32_nano.xlsx))
-
-A planilha oficial separa explicitamente **o que é interno à placa (zero fios externos)**, **o que utiliza fios externos** e **campos técnicos de hardware (PWM, ADC, Nível Lógico, Boot/Strapping)**, deixando a coluna de observações 100% livre para anotações manuais pelo usuário:
-
+* **Fase Atual (Bancada com Cabo USB Único):** É possível usar **apenas 1 cabo USB** ligado na placa principal (ex: USB-C do ESP32-S3-CAM). Basta puxar um jumper do pino **5V do ESP32 para o pino 5V do Nano** e outro do **GND para o GND**. Ambas as placas ligarão e se comunicarão perfeitamente na bancada.
 * 📊 **Arquivo Oficial:** [`tabela_pinagem_esp32_nano.xlsx`](file:///home/usuario/Documentos/rover/tabela_pinagem_esp32_nano.xlsx)
   * **Aba 1: `S3_CAM_Sem_Nano`** $\rightarrow$ Configuração *Single-Board*: o ESP32-S3-CAM controla sozinho os 4 motores (modo 4 pinos TB6612), os 2 servos Pan/Tilt, a leitura analógica de bateria (ADC1) e os 8 LEDs WS2812B.
   * **Aba 2: `S3_CAM_Com_Nano`** $\rightarrow$ Configuração *Distribuída*: o ESP32-S3-CAM fica na cabeça móvel e envia comandos seriais via chicote ultra-leve de **3 fios** (`5V`, `GND`, `TX -> Nano RX`), deixando 6 GPIOs livres na cabeça.
@@ -154,14 +151,17 @@ graph TD
         CAM -->|Barramento Interno DVP| ESP
     end
 
-    %% Chicote Móvel de apenas 3 fios
-    STEP -.->|"Fio 1: 5.0V (Alimentação)"| ESP
+    %% Chicote Móvel de 4 fios
+    STEP -.->|"Fio 1: 5.0V (Pino 5V ESP32)"| ESP
     NANO -.->|"Fio 2: GND Comum"| ESP
-    ESP -.->|"Fio 3: TX -> RX (Comandos Seriais)"| NANO
+    ESP -.->|"Fio 3: IO43 TX -> Nano D0 RX (Comandos)"| NANO
+    NANO -.->|"Fio 4: Nano D1 TX -> Divisor 1k/2k -> IO44 RX (Telemetria)"| ESP
 ```
 
 * **Vantagens Principais:**
-  * Pela articulação do Pan/Tilt passam **estritamente 3 fios finos e flexíveis** (`5V`, `GND` e `TX`).
+  * Pela articulação do Pan/Tilt passam **4 fios finos e flexíveis** (`5V`, `GND`, `TX` e `RX`).
+  * O pino **5V do ESP32-S3-CAM** recebe a energia do Step-Down, alimentando o regulador interno da placa.
+  * O pino **IO44 (RX)** do ESP32-S3-CAM é protegido por um divisor de tensão (1kΩ / 2kΩ) contra os 5V do Nano.
   * Carga zero sobre os servos SG90 de 9g.
   * O Arduino Nano opera em 5V nativo (perfeito para os servos, LEDs e buzzer).
   * Sobram **7 GPIOs livres no ESP32** e **8 GPIOs livres no Nano** para sensores futuros.
@@ -326,3 +326,10 @@ Com a eletrônica, pinagem e chicote 100% dimensionados, o próximo foco é o de
 
 
 
+
+## 🧪 Teste de Bancada: Painel Web de Pinos do Nano (código escrito, ainda NÃO testado)
+
+* Pasta [`codes/controle_pinos_nano_web/`](file:///home/usuario/Documentos/rover/codes/controle_pinos_nano_web/):
+  * [`nano_pinos_serial.ino`](file:///home/usuario/Documentos/rover/codes/controle_pinos_nano_web/nano_pinos_serial/nano_pinos_serial.ino): Nano recebe comandos de texto (`M`, `W`, `P`, `S`, `D`, `A`, `X`) a 115200 baud e controla qualquer pino D2..D13/A0..A7 (digital, PWM, servo em qualquer pino, leitura).
+  * [`esp32_painel_web.ino`](file:///home/usuario/Documentos/rover/codes/controle_pinos_nano_web/esp32_painel_web/esp32_painel_web.ino): ESP32-S3-CAM sobe servidor web com painel genérico (escolhe o modo de cada pino na página, sem mudar o código). Cai em AP `Rover-Nano` se não achar o Wi-Fi.
+* Ligação: 5V↔5V, GND↔GND, IO43(TX)→D0, D1→divisor 1k/2k→IO44(RX). Ao gravar o Nano, desconectar o fio em D0 e o jumper de 5V.
