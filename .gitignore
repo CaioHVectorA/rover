@@ -1,15 +1,33 @@
 # Office / Excel temporary files
 ~$*.xlsx
 ~$*.xls
+~$*.docx
+.~lock.*#
 
 # Python cache
 __pycache__/
 *.py[cod]
 *$py.class
 
-# PlatformIO & Arduino builds
+# PlatformIO, Arduino & C++ builds
 .pio/
 .vscode/
+compile_commands.json
 
 # Node.js
 node_modules/
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Diagnósticos e logs de artefatos
+*.inspect.ndjson
+
+# Estado local e travas do KiCad
+*.kicad_prl
+*.lck
+_autosave-*
+
+# Root scratch directory
+/scratch/
