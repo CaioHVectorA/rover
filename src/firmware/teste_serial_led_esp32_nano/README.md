@@ -30,14 +30,14 @@ Para este teste inicial, você só precisa de **2 jumpers**:
 ## 🚀 2. Passo a Passo de Teste
 
 ### Passo 1: Gravar o Arduino Nano
-1. Abra o arquivo [`nano_rx_led.ino`](file:///home/usuario/Documentos/rover/codes/teste_serial_led_esp32_nano/nano_rx_led/nano_rx_led.ino) na Arduino IDE.
+1. Abra o arquivo [`nano_rx_led.ino`](file:///home/usuario/Documentos/rover/src/firmware/teste_serial_led_esp32_nano/nano_rx_led/nano_rx_led.ino) na Arduino IDE.
 2. Em **Ferramentas ➔ Placa**, selecione **Arduino Nano**.
 3. Em **Processador**, selecione **ATmega328P** (ou *Old Bootloader* se for o clone comum).
 4. Conecte o cabo USB no Nano e faça o upload.
 5. Ao ligar, o LED embutido no pino 13 piscará 3 vezes para confirmar que o firmware iniciou.
 
 ### Passo 2: Gravar o ESP32
-1. Abra o arquivo [`esp32_web_tx.ino`](file:///home/usuario/Documentos/rover/codes/teste_serial_led_esp32_nano/esp32_web_tx/esp32_web_tx.ino) na Arduino IDE.
+1. Abra o arquivo [`esp32_web_tx.ino`](file:///home/usuario/Documentos/rover/src/firmware/teste_serial_led_esp32_nano/esp32_web_tx/esp32_web_tx.ino) na Arduino IDE.
 2. No topo do arquivo, verifique a placa selecionada (`PLACA_ESP32_S3_CAM` ou `PLACA_ESP32_CAM_CLASSIC`).
 3. Conecte o cabo USB no ESP32 e faça o upload.
 

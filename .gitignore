@@ -8,3 +8,12 @@ __pycache__/
 # Arquivos de sistema
 .DS_Store
 Thumbs.db
+
+# Dependências instaladas e diagnósticos de artefatos
+node_modules/
+*.inspect.ndjson
+
+# Estado local e travas do KiCad
+*.kicad_prl
+*.lck
+_autosave-*

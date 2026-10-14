@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ROVER TELEMETRY // GROUND CONTROL</title>
+  <style>
+    :root {
+      --bg: #08090c;
+      --panel: #0f1117;
+      --panel-border: rgba(255, 255, 255, 0.08);
+      --accent: #00e5ff;
+      --accent-dim: rgba(0, 229, 255, 0.15);
+      --green: #10b981;
+      --green-dim: rgba(16, 185, 129, 0.15);
+      --warn: #f59e0b;
+      --text: #e2e8f0;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "JetBrains Mono", monospace; }
+    body { background: var(--bg); color: var(--text); padding: 18px; min-height: 100vh; display: flex; flex-direction: column; gap: 16px; }
+
+    /* Top bar */
+    header {
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--panel); border: 1px solid var(--panel-border);
+      padding: 12px 18px; border-radius: 10px;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand h1 { font-size: 14px; letter-spacing: 2px; color: var(--text); text-transform: uppercase; font-weight: 800; }
+    .brand .badge { font-size: 10px; background: var(--accent-dim); color: var(--accent); padding: 3px 8px; border-radius: 4px; border: 1px solid var(--accent); font-weight: 700; }
+    .link-status { display: flex; align-items: center; gap: 8px; font-size: 12px; font-family: monospace; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+    .dot.live { background: var(--green); box-shadow: 0 0 10px var(--green); }
+
+    /* Grid layout */
+    .grid { display: grid; grid-template-columns: 360px 1fr 340px; gap: 16px; flex: 1; }
+    @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--panel); border: 1px solid var(--panel-border);
+      border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px;
+      position: relative; overflow: hidden;
+    }
+    .card-title {
+      font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px;
+      color: var(--muted); font-weight: 700; display: flex; justify-content: space-between;
+    }
+
+    /* 3D Head Visualizer */
+    .viewport-3d {
+      flex: 1; min-height: 280px; display: flex; align-items: center; justify-content: center;
+      perspective: 800px; background: radial-gradient(circle at center, rgba(0,229,255,0.04) 0%, transparent 70%);
+      border: 1px dashed rgba(255,255,255,0.06); border-radius: 8px;
+    }
+    .pan-base {
+      width: 130px; height: 130px; border: 2px dashed rgba(255,255,255,0.15); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; position: relative;
+      transform-style: preserve-3d; transition: transform 0.05s ease-out;
+    }
+    .tilt-camera {
+      width: 80px; height: 60px; background: #1a1e29; border: 2px solid var(--accent);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.25); transform-style: preserve-3d;
+      position: relative; transition: transform 0.05s ease-out;
+    }
+    .lens {
+      width: 32px; height: 32px; border-radius: 50%; background: #050608;
+      border: 3px solid #38bdf8; box-shadow: inset 0 0 8px #00e5ff;
+    }
+    .crosshair-cam { position: absolute; width: 100%; height: 100%; pointer-events: none; }
+    .crosshair-cam::before { content:''; position: absolute; left: 50%; top: -8px; bottom: -8px; width: 1px; background: rgba(0,229,255,0.4); }
+    .crosshair-cam::after { content:''; position: absolute; top: 50%; left: -8px; right: -8px; height: 1px; background: rgba(0,229,255,0.4); }
+
+    /* Gauges */
+    .readout-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .readout-box { background: rgba(0,0,0,0.3); border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px; text-align: center; }
+    .readout-label { font-size: 10px; color: var(--muted); text-transform: uppercase; font-family: monospace; }
+    .readout-num { font-size: 26px; font-weight: 800; font-family: monospace; color: var(--accent); margin: 4px 0; }
+    .bar-track { width: 100%; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; margin-top: 6px; }
+    .bar-fill { height: 100%; background: var(--accent); width: 50%; transition: width 0.05s ease-out; }
+
+    /* Waveform canvas */
+    canvas#scope { width: 100%; height: 110px; background: #050608; border-radius: 6px; border: 1px solid var(--panel-border); }
+
+    /* Drive Telemetry */
+    .drive-status { display: flex; flex-direction: column; gap: 8px; }
+    .drive-pill { padding: 12px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--panel-border); display: flex; justify-content: space-between; align-items: center; }
+    .cmd-badge { font-size: 13px; font-weight: 800; padding: 4px 10px; border-radius: 4px; font-family: monospace; background: rgba(255,255,255,0.08); color: var(--text); }
+    .cmd-badge.active { background: var(--green-dim); color: var(--green); border: 1px solid var(--green); }
+
+    /* Log feed */
+    .log-stream { flex: 1; min-height: 140px; background: #050608; border: 1px solid var(--panel-border); border-radius: 6px; padding: 10px; font-family: monospace; font-size: 11px; color: var(--muted); overflow-y: auto; display: flex; flex-direction: column-reverse; gap: 4px; }
+    .log-line { border-bottom: 1px dashed rgba(255,255,255,0.04); padding-bottom: 2px; }
+    .log-line.hl { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <h1>Rover Telemetry Desk</h1>
+      <span class="badge">FIDELITY INSPECTOR</span>
+    </div>
+    <div class="link-status">
+      <div class="dot" id="dot"></div>
+      <span id="status-text">AGUARDANDO CELULAR...</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <!-- COLUNA 1: SIMULAÇÃO 3D -->
+    <div class="card">
+      <div class="card-title">
+        <span>Gimbal 3D Virtual</span>
+        <span id="rate-counter">0 Hz</span>
+      </div>
+      <div class="viewport-3d">
+        <div class="pan-base" id="panBase">
+          <div class="tilt-camera" id="tiltCam">
+            <div class="crosshair-cam"></div>
+            <div class="lens"></div>
+          </div>
+        </div>
+      </div>
+      <div class="readout-row">
+        <div class="readout-box">
+          <div class="readout-label">Servo Pan (Horizontal)</div>
+          <div class="readout-num" id="valPan">90°</div>
+          <div class="bar-track"><div class="bar-fill" id="barPan"></div></div>
+        </div>
+        <div class="readout-box">
+          <div class="readout-label">Servo Tilt (Vertical)</div>
+          <div class="readout-num" id="valTilt">90°</div>
+          <div class="bar-track"><div class="bar-fill" id="barTilt"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA 2: OSCILOSCÓPIO DE FIDELIDADE & CÂMERA -->
+    <div class="card">
+      <div class="card-title">
+        <span>Osciloscópio de Resposta Angular (Jitter & Delay)</span>
+        <span style="color:var(--accent);">AZUL: PAN | LARANJA: TILT</span>
+      </div>
+      <canvas id="scope"></canvas>
+
+      <div class="card-title" style="margin-top:10px;">
+        <span>Stream de Vídeo Mock (/stream)</span>
+      </div>
+      <div style="flex:1; min-height:180px; background:#000; border-radius:6px; overflow:hidden; position:relative; display:flex; align-items:center; justify-content:center;">
+        <img id="streamImg" src="/stream" style="width:100%; height:100%; object-fit:cover;" onerror="this.style.display='none'" />
+        <div style="position:absolute; bottom:8px; left:8px; font-size:10px; background:rgba(0,0,0,0.7); padding:3px 6px; border-radius:4px; font-family:monospace; color:#38bdf8;">
+          RESOLUTION: 320x240 @ 10FPS (MOCK)
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUNA 3: TRAÇÃO 4WD & LOGS -->
+    <div class="card">
+      <div class="card-title">
+        <span>Controle de Tração 4WD</span>
+      </div>
+      <div class="drive-status">
+        <div class="drive-pill">
+          <span style="font-size:12px; font-family:monospace;">DIREÇÃO ATIVA</span>
+          <span class="cmd-badge" id="driveCmd">PARADO</span>
+        </div>
+        <div class="drive-pill">
+          <span style="font-size:12px; font-family:monospace;">VELOCIDADE PWM</span>
+          <span class="cmd-badge" id="driveSpeed">0</span>
+        </div>
+      </div>
+
+      <div class="card-title" style="margin-top:8px;">
+        <span>Log de Pacotes WebSocket</span>
+      </div>
+      <div class="log-stream" id="logStream">
+        <div class="log-line">Aguardando handshake do Expo Mobile...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dot = document.getElementById('dot');
+    const statusText = document.getElementById('status-text');
+    const panBase = document.getElementById('panBase');
+    const tiltCam = document.getElementById('tiltCam');
+    const valPan = document.getElementById('valPan');
+    const valTilt = document.getElementById('valTilt');
+    const barPan = document.getElementById('barPan');
+    const barTilt = document.getElementById('barTilt');
+    const rateCounter = document.getElementById('rate-counter');
+    const driveCmd = document.getElementById('driveCmd');
+    const driveSpeed = document.getElementById('driveSpeed');
+    const logStream = document.getElementById('logStream');
+
+    const canvas = document.getElementById('scope');
+    const ctx = canvas.getContext('2d');
+    canvas.width = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+
+    let panHistory = new Array(80).fill(90);
+    let tiltHistory = new Array(80).fill(90);
+    let packetCount = 0;
+    let lastTime = Date.now();
+
+    setInterval(() => {
+      const now = Date.now();
+      const hz = Math.round((packetCount * 1000) / (now - lastTime));
+      rateCounter.textContent = hz + ' Hz';
+      packetCount = 0;
+      lastTime = now;
+    }, 1000);
+
+    // Conectar ao WebSocket do próprio servidor Mock
+    const wsProto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const ws = new WebSocket(`${wsProto}//${location.hostname}:8082`);
+
+    ws.onopen = () => {
+      addLog('Conectado ao canal de telemetria local.', true);
+    };
+
+    ws.onmessage = (event) => {
+      packetCount++;
+      try {
+        const d = JSON.parse(event.data);
+        if (d.type === 'telemetry') {
+          dot.className = 'dot live';
+          statusText.textContent = 'ONLINE (ROVER ATIVO)';
+          addLog(`Handshake: Status ${d.status || 'OK'}`);
+        }
+        if (d.type === 'servo') {
+          updateServo(d.pan, d.tilt);
+        }
+        if (d.type === 'drive') {
+          updateDrive(d.cmd, d.speed);
+        }
+      } catch(e) {}
+    };
+
+    ws.onclose = () => {
+      dot.className = 'dot';
+      statusText.textContent = 'DESCONECTADO';
+    };
+
+    function updateServo(pan, tilt) {
+      valPan.textContent = Math.round(pan) + '°';
+      valTilt.textContent = Math.round(tilt) + '°';
+
+      barPan.style.width = ((pan - 20) / (160 - 20) * 100) + '%';
+      barTilt.style.width = ((tilt - 50) / (130 - 50) * 100) + '%';
+
+      // Transformação 3D da cabeça Pan/Tilt
+      // Pan gira no eixo Y (azimute)
+      const rotY = (pan - 90);
+      // Tilt inclina no eixo X (elevação)
+      const rotX = -(tilt - 90);
+
+      panBase.style.transform = `rotateY(${rotY}deg)`;
+      tiltCam.style.transform = `rotateX(${rotX}deg)`;
+
+      panHistory.push(pan); panHistory.shift();
+      tiltHistory.push(tilt); tiltHistory.shift();
+      drawScope();
+    }
+
+    function updateDrive(cmd, speed) {
+      const names = { 'F':'▲ FRENTE', 'B':'▼ RÉ', 'L':'◄ ESQUERDA', 'R':'► DIREITA', 'S':'■ PARADO', 'STOP':'■ PARADO' };
+      driveCmd.textContent = names[cmd] || cmd;
+      driveCmd.className = cmd === 'S' || cmd === 'STOP' ? 'cmd-badge' : 'cmd-badge active';
+      driveSpeed.textContent = (cmd === 'S' || cmd === 'STOP') ? '0' : (speed || 220);
+      addLog(`Tração: ${cmd} @ ${speed}`);
+    }
+
+    function addLog(text, hl = false) {
+      const time = new Date().toLocaleTimeString();
+      const el = document.createElement('div');
+      el.className = 'log-line' + (hl ? ' hl' : '');
+      el.textContent = `[${time}] ${text}`;
+      logStream.insertBefore(el, logStream.firstChild);
+      if (logStream.children.length > 25) logStream.removeChild(logStream.lastChild);
+    }
+
+    function drawScope() {
+      ctx.fillStyle = '#050608';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Linha central de 90°
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height / 2);
+      ctx.lineTo(canvas.width, canvas.height / 2);
+      ctx.stroke();
+
+      // Pan (Azul)
+      ctx.strokeStyle = '#00e5ff';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for(let i=0; i<panHistory.length; i++) {
+        const x = (i / (panHistory.length - 1)) * canvas.width;
+        const norm = (panHistory[i] - 20) / (160 - 20);
+        const y = canvas.height - (norm * canvas.height);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      // Tilt (Laranja)
+      ctx.strokeStyle = '#f59e0b';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for(let i=0; i<tiltHistory.length; i++) {
+        const x = (i / (tiltHistory.length - 1)) * canvas.width;
+        const norm = (tiltHistory[i] - 50) / (130 - 50);
+        const y = canvas.height - (norm * canvas.height);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,484 @@
+# 🤖 Robô Móvel ESP32 (4WD & Pan/Tilt)
+
+Projeto de um robô móvel com tração nas 4 rodas e câmera com mecanismo Pan/Tilt, controlado via ESP32.
+
+> **Regra Obrigatória para o Modelo / Memória Contínua do Projeto:**
+> Este documento deve ser **incrementado e atualizado a cada troca de mensagens**. A ideia é que ele vá crescendo organicamente conforme conversamos e conforme o projeto anda.
+> * Sempre registre aqui novas decisões, ideias validadas, respostas a dúvidas e o avanço real do projeto.
+> * Mantenha os registros estritamente fiéis ao que foi de fato conversado, decidido ou testado (sem inventar esquemas elétricos prontos, pinagens definitivas ou códigos como se já estivessem funcionando enquanto ainda estamos na fase de planejamento).
+
+---
+
+## 📦 Componentes Físicos Adquiridos (Recebidos & em Bancada de Testes)
+
+As compras foram finalizadas com os seguintes itens e especificações físicas:
+
+* **Tração & Rodas (Dimensões Físicas):**
+  * **4x Rodas:** Modelo **StickyMAX S20 Macia - 22 mm (RoboCore)**:
+    * **Diâmetro externo:** **22 mm** (Raio = 11 mm do centro do eixo ao solo)
+    * **Largura da banda:** **~12 mm**
+    * **Furo de acoplamento:** **3 mm com perfil em D** (encaixe direto no eixo dos micromotores sem necessidade de parafusos adicionais)
+    * **Pneu:** Silicone/borracha macia de altíssima aderência (padrão de mini sumô)
+  * **4x Motores:** Motores DC com Caixa de Redução Metálica **série JGA-050 (JGA16-050)**:
+    * **Diâmetro do motor:** Cilíndrico de **16 mm de diâmetro** (raio = 8 mm)
+    * **Comprimento total:** ~30 mm a 35 mm (com caixa de redução toda metálica)
+    * **Eixo de saída:** Aço com **perfil em D de 3 mm de diâmetro** e ~9 mm a 10 mm de comprimento
+    * **Tensão nominal:** 6V a 12V (alimentado pelos 7.4V da bateria via TB6612FNG)
+    * **Análise Geométrica com Rodas de 22 mm:**
+      * Raio da roda de 22 mm = **11 mm** (altura do centro do eixo até o solo)
+      * Raio do motor JGA-050 = **8 mm** (do centro do eixo ao fundo da carcaça)
+      * **Vão livre sob o motor:** $11\text{ mm} - 8\text{ mm} = \mathbf{3\text{ mm}}$!
+      * **Diretriz de Design 3D:** O chassi não deve ter assoalho fechado por baixo do motor; o motor deve ser abraçado por cima e pelas laterais, mantendo os **3 mm de folga livres** para o solo.
+* **Placas de Controle:**
+  * **ESP32-S3-CAM N16R8** (Mercado Livre - USB-C, 16MB Flash, 8MB PSRAM, Câmera 5MP OV5640)
+  * **ESP32-CAM** (RoboCore - com câmera OV2640)
+  * **Arduino Nano V3** (com cabo mini-USB)
+* **Ponte H:**
+  * Driver duplo MOSFET **TB6612FNG** (~20 mm x 20 mm, suporta até 1.2A contínuo por canal e lógica 3.3V)
+* **Visão / Mecanismo Pan & Tilt:**
+  * 2x Micro Servos **SG90 9g** (dimensões: 22.8 mm x 12.2 mm x 28.5 mm, torque de 1.6 kg·cm)
+  * Suporte articulado de 2 eixos para os servos
+* **Alimentação & Energia:**
+  * **Pack Bateria Li-Ion 2S 7.4V 2500mAh com BMS integrado:** Dimensões aprox. **69 mm x 37 mm x 19 mm**, peso ~100g, com conector JST-RCY fêmea
+  * **Regulador Step-Down Mini 560 5V:** Placa ultracompacta (30 mm x 18 mm x 5.5 mm) que rebaixa 7.4V para 5.0V fixos com até 5A
+  * **Chave Geral Liga/Desliga:** Chave gangorra **KCD1-101 2T** (recorte para encaixe no painel 3D: **19 mm x 13 mm**)
+* **Sinalização & Acessórios:**
+  * Módulo **WS2812B com 8 LEDs RGB endereçáveis** (barra estreita de ~53 mm x 10 mm)
+  * Módulo **Buzzer passivo 5V** (diâmetro ~12 mm)
+  * Jumpers Fêmea-Fêmea e Macho-Macho (40 de cada)
+
+---
+
+## 📌 Decisões e Alinhamentos Feitos até Agora
+
+1. **Linha ESP32:** Foco total no ecossistema ESP32 para controle e streaming de vídeo.
+2. **Fabricação 100% em Impressão 3D:** Toda a estrutura física, chassi/case e suportes serão impressos em 3D.
+3. **Mecânica do Pan & Tilt com a Câmera:**
+   * O cabo flat da câmera é muito curto e frágil.
+   * Decisão: Montar a própria placa ESP32 no berço móvel de inclinação vertical (Tilt), para que a câmera não sofra torção no cabo flat.
+4. **Alimentação e Cuidados:**
+   * Bateria de 7.4V precisa alimentar os motores (via TB6612FNG) e passar pelo Step-Down para gerar 5V para o ESP32 e servos.
+   * Não sobrecarregar a placa tentando alimentar servos direto dos pinos do microcontrolador.
+5. **Integração Carrinho + Pan/Tilt:**
+   * O objetivo principal agora é fazer o carrinho se movimentar juntamente com a movimentação da câmera nos eixos Pan e Tilt.
+6. **Separação de Imagens Técnicas vs. Inspirações Visuais:**
+   * **Pasta de Imagens Importantes & Cotas ([`docs/hardware/`](file:///home/usuario/Documentos/rover/docs/hardware/ESPECIFICACOES_TECNICAS.md)):**
+     * `desenho_tecnico_stickymax_22mm.png`: Desenho técnico oficial RoboCore com cotas do cubo de alumínio CNC, diâmetro externo (22 mm) e parafuso M3.
+     * `desenho_tecnico_motor_jga16_050.png`: Planta de engenharia do motor JGA16-050 com diâmetro de 16 mm, eixo D 3 mm, furação M2 (10 mm) e o cálculo visual do vão livre de 3,0 mm.
+     * `desenho_tecnico_micro_servo_sg90.png`: Cotas milimétricas completas do servo SG90 9g (22,8 x 12,2 x 28,5 mm, furação 28 mm).
+     * `esquema_eletrico_chicote_esp32_nano.png`: Diagrama elétrico completo da separação Cabeça Pan/Tilt (ESP32) vs Chassi (Nano + TB6612 + Step-Down + Bateria 7.4V).
+   * **Pasta de Inspirações Visuais & Produtos ([`docs/references/`](file:///home/usuario/Documentos/rover/docs/references/INSPIRACOES_CASE_E_PAN_TILT.md)):**
+     * `roda_stickymax_s20_22mm.png`: Foto real do produto adquirido.
+     * `motor_jga16_050_robocore.png`: Foto real do motor JGA16-050 adquirido na RoboCore (substituindo o antigo N20).
+     * `suporte_pan_tilt_robocore.png`: Suporte articulado de 2 eixos para os servos SG90.
+     * `pan_tilt_sg90_mechanism.jpg` e `esp32_cam_pan_tilt_assembled.jpg`: Montagens reais da comunidade maker como referência estética.
+7. **Estilo Visual, Rodas 22 mm e Motores JGA-050 (Desafio dos 3 mm de Vão Livre):**
+   * **Os motores JGA-050 cabem com as rodas de 22 mm, mas com folga justa de 3 mm:**
+     * $11\text{ mm (roda)} - 8\text{ mm (motor JGA)} = 3\text{ mm}$ do chão.
+     * **Solução na Impressão 3D:** O chassi abraça o motor de 16 mm por cima e pelos lados. A face inferior do motor fica exposta (sem plástico embaixo dele) para não "roubar" nenhum milímetro desses 3 mm.
+     * **Compatibilidade Futura:** Como o eixo do JGA-050 é padrão de 3 mm com chanfro em D, se no futuro o usuário quiser andar em pisos irregulares ou tapetes mais altos, basta desencaixar as rodas de 22 mm e colocar rodas de 32 mm, aumentando o vão livre de 3 mm para 8 mm sem refazer o robô.
+   * **Chassi Fechado/Carenado em 3D:** Corpo protegendo bateria e eletrônica internamente, com a cabeça móvel encapsulando o ESP32 (expondo apenas lente e barra de 8 LEDs).
+8. **Cinemática Definida (Pan na Base e Tilt no Topo):**
+   * **Ordem:** O servo de Pan (giro horizontal) fica parafusado na base do chassi, e o servo de Tilt (inclinação vertical) fica no braço móvel segurando a cabeça da câmera.
+   * **Vantagens de Engenharia:**
+     * Menor peso móvel: o servo de Tilt levanta apenas a caixinha da câmera (não precisa levantar o peso de outro motor).
+     * Horizonte estável: ao virar para os lados mesmo com a câmera inclinada para baixo, o horizonte não tomba na diagonal (evita efeito indesejado de roll).
+9. **Cubo de Alumínio e Proporção Visual das Rodas de 22 mm:**
+   * **Cubo Já Incluso:** Verificado na ficha técnica da RoboCore que o item *StickyMAX Roda S20 22 mm* é um kit completo que já vem com o cubo usinado de alumínio 6351-T6 e o parafuso M3 sem cabeça.
+   * **Dilema Estético (Proporção Roda vs Chassi):**
+     * O chassi fechado terá cerca de 11 a 13 cm de comprimento e 4 a 5 cm de altura (para acomodar bateria de 19 mm, ESP32 e Pan/Tilt).
+     * Rodas de **22 mm (2.2 cm)** resultam em proporção visual de "veículo tático sumô super rebaixado".
+     * Se for desejada uma silhueta de "Rover de Exploração" mais imponente e com rodas maiores, a alternativa é imprimir aros de 32 mm a 36 mm em 3D diretamente para o eixo D de 3 mm com anéis O-ring ou TPU.
+10. **Montagem da Roda Invertida (Sem Englobar a Caixa de Redução):**
+    * **Orientação do Professor/Orientador:** Montar o cubo e a roda virados **para fora** do chassi.
+    * **O que significa:** O motor JGA-050 e sua caixa de redução metálica de 16 mm ficam 100% alojados dentro do chassi; apenas o eixo D de 3 mm sai pela lateral. A roda é fixada na ponta do eixo, projetada para fora.
+    * **Vantagem:** Elimina completamente o conflito de espaço entre o diâmetro da caixa de redução do motor e o miolo interno da roda, além de aumentar a bitola (estabilidade lateral) do robô.
+11. **Arquitetura de Comunicação ESP32 + Arduino Nano (Serial RX/TX):**
+    * **Por que a Câmera consome tantos pinos (16 GPIOs)?**
+      * Câmeras como OV2640 e OV5640 usam o barramento paralelo DVP (Digital Video Port). A cada pulso de clock, 1 byte inteiro de pixel trafega por 8 pinos de dados paralelos (Y2 a Y9 / D0 a D7), somados a 3 pinos de sincronismo (PCLK, VSYNC, HREF), clock de 20MHz (XCLK), controle serial I2C (SIOD/SIOC) e pinos de energia (PWDN/RESET).
+      * *Fonte Oficial:* Repositório oficial da Espressif [`espressif/esp32-camera` (`camera_pins.h`)](https://github.com/espressif/esp32-camera/blob/master/conversions/include/camera_pins.h).
+      * No ESP32-CAM clássico, sobram literalmente apenas os pinos de Serial (GPIO 1 e 3) e o GPIO 16 livres.
+    * **A Solução do Chicote Limpo de 3/4 Fios:**
+      * O ESP32 fica na cabeça móvel (Pan/Tilt).
+      * Em vez de descer uma dúzia de fios de motores, servos e chassi pela articulação móvel, descem **apenas 3 a 4 fios finos e flexíveis**:
+        1. `5V` (Alimentação)
+        2. `GND` (Terra comum)
+        3. `TX` do ESP32 $\rightarrow$ ligado ao `RX` do Arduino Nano
+        4. *(Opcional)* `RX` do ESP32 $\leftarrow$ vindo do `TX` do Nano (apenas se houver telemetria)
+      * O **Arduino Nano fica fixo dentro do chassi**, recebendo os comandos seriais e comandando os 6 pinos do TB6612FNG, os 2 servos SG90, buzzer e iluminação sem qualquer disputa de pinos com a câmera.
+
+* **Fase Atual (Bancada com Cabo USB Único):** É possível usar **apenas 1 cabo USB** ligado na placa principal (ex: USB-C do ESP32-S3-CAM). Basta puxar um jumper do pino **5V do ESP32 para o pino 5V do Nano** e outro do **GND para o GND**. Ambas as placas ligarão e se comunicarão perfeitamente na bancada.
+* 📊 **Arquivo Oficial:** [`docs/hardware/tabela_pinagem_esp32_nano.xlsx`](file:///home/usuario/Documentos/rover/docs/hardware/tabela_pinagem_esp32_nano.xlsx)
+  * **Aba 1: `S3_CAM_Sem_Nano`** $\rightarrow$ Configuração *Single-Board*: o ESP32-S3-CAM controla sozinho os 4 motores (modo 4 pinos TB6612), os 2 servos Pan/Tilt, a leitura analógica de bateria (ADC1) e os 8 LEDs WS2812B.
+  * **Aba 2: `S3_CAM_Com_Nano`** $\rightarrow$ Configuração *Distribuída*: o ESP32-S3-CAM fica na cabeça móvel e envia comandos seriais via chicote ultra-leve de **3 fios** (`5V`, `GND`, `TX -> Nano RX`), deixando 6 GPIOs livres na cabeça.
+  * **Aba 3: `ESP32_CAM_RoboCore`** $\rightarrow$ Mapeamento completo dos 16 pinos físicos do modelo clássico AI-Thinker / OV2640.
+  * **Aba 4: `Arduino_Nano_Chassi`** $\rightarrow$ Mapeamento do Nano concentrando a potência e sensores no chassi em 5V nativo, com 8 pinos livres para expansões.
+
+---
+
+### 🗺️ Comparativo Visual das Arquiteturas
+
+#### Opção A: Arquitetura Distribuída (Recomendada: ESP32 na Cabeça + Arduino Nano no Chassi)
+
+```mermaid
+graph TD
+    subgraph Bateria_Alimentacao ["🔋 Alimentação & Potência"]
+        BAT["Pack Bateria Li-Ion 2S (7.4V / 2500mAh)"]
+        SW["Chave Geral KCD1"]
+        STEP["Step-Down Mini 560 (Saída 5.0V / 5A)"]
+        BAT --> SW --> STEP
+        SW -->|7.4V Brutos| TB_VM["TB6612FNG (VM Motores)"]
+    end
+
+    subgraph Chassi_Fixo ["🤖 Chassi Fixo (Controle de Potência)"]
+        NANO["Arduino Nano V3 (5V Nativo)"]
+        STEP -->|5.0V| NANO
+        TB["Driver Duplo TB6612FNG"]
+        STEP -->|5.0V Logic| TB
+        NANO -->|6 Pinos D3..D8| TB
+        TB --> MOT_ESQ["2x Motores JGA16-050 Esquerdos"]
+        TB --> MOT_DIR["2x Motores JGA16-050 Direitos"]
+        NANO -->|D11| LEDS["Barra 8 LEDs WS2812B"]
+        NANO -->|D12| BUZZER["Buzzer Passivo 5V"]
+        SW -->|Divisor 100k/47k| ADC_BAT["Pino A0 (Leitura Bateria)"]
+        NANO -->|D9 PWM| SERVO_PAN["Micro Servo SG90 (Pan Horizontal)"]
+        NANO -->|D10 PWM| SERVO_TILT["Micro Servo SG90 (Tilt Vertical)"]
+    end
+
+    subgraph Cabeca_Movel ["📷 Cabeça Pan/Tilt (Visão & Rede)"]
+        ESP["ESP32-S3-CAM / ESP32-CAM"]
+        CAM["Câmera OV5640 / OV2640 (Conector FPC)"]
+        CAM -->|Barramento Interno DVP| ESP
+    end
+
+    %% Chicote Móvel de 4 fios
+    STEP -.->|"Fio 1: 5.0V (Pino 5V ESP32)"| ESP
+    NANO -.->|"Fio 2: GND Comum"| ESP
+    ESP -.->|"Fio 3: IO43 TX -> Nano D0 RX (Comandos)"| NANO
+    NANO -.->|"Fio 4: Nano D1 TX -> Divisor 1k/2k -> IO44 RX (Telemetria)"| ESP
+```
+
+* **Vantagens Principais:**
+  * Pela articulação do Pan/Tilt passam **4 fios finos e flexíveis** (`5V`, `GND`, `TX` e `RX`).
+  * O pino **5V do ESP32-S3-CAM** recebe a energia do Step-Down, alimentando o regulador interno da placa.
+  * O pino **IO44 (RX)** do ESP32-S3-CAM é protegido por um divisor de tensão (1kΩ / 2kΩ) contra os 5V do Nano.
+  * Carga zero sobre os servos SG90 de 9g.
+  * O Arduino Nano opera em 5V nativo (perfeito para os servos, LEDs e buzzer).
+  * Sobram **7 GPIOs livres no ESP32** e **8 GPIOs livres no Nano** para sensores futuros.
+
+---
+
+#### Opção B: Arquitetura Single-Board (Apenas ESP32-S3-CAM, Sem Nano)
+
+```mermaid
+graph TD
+    subgraph Bateria_Alimentacao ["🔋 Alimentação & Potência"]
+        BAT["Pack Bateria Li-Ion 2S (7.4V)"]
+        SW["Chave Geral KCD1"]
+        STEP["Step-Down Mini 560 (5.0V / 5A)"]
+        BAT --> SW --> STEP
+        SW -->|7.4V| TB_VM["TB6612FNG (VM Motores)"]
+    end
+
+    subgraph ESP32_S3 ["🧠 ESP32-S3-CAM N16R8 (Central Única)"]
+        STEP -->|5.0V| ESP_PWR["Pino 5V"]
+        CAM["Câmera OV5640 (Trilhas Internas J2)"]
+        
+        %% Mapeamento dos 8 GPIOs Livres
+        ESP_IO41["IO41 (PWM)"] -->|AIN1| TB["TB6612FNG (Modo 4 Pinos)"]
+        ESP_IO42["IO42 (PWM)"] -->|AIN2| TB
+        ESP_IO43["TX / IO43 (PWM)"] -->|BIN1| TB
+        ESP_IO44["RX / IO44 (PWM)"] -->|BIN2| TB
+        TB --> MOT_ALL["4x Motores JGA16-050"]
+        
+        ESP_IO21["IO21 (PWM 50Hz)"] --> SERVO_P["Servo SG90 Pan"]
+        ESP_IO3["IO3 (PWM 50Hz)"] --> SERVO_T["Servo SG90 Tilt"]
+        ESP_IO1["IO1 (ADC1_CH0)"] <--|Divisor 100k/33k| SW
+        ESP_IO2["IO2 (DIN Digital)"] --> LEDS_RGB["Barra 8 LEDs WS2812B"]
+    end
+```
+
+---
+
+### 🧐 Análise Detalhada dos Pinos do ESP32-S3-CAM: Ocupados de Fábrica vs. Livres
+
+A placa **ESP32-S3-CAM N16R8** possui 24 pinos nos seus dois headers (12 no Header J1 esquerdo + 12 no Header J2 direito). A divisão física e de hardware do circuito é a seguinte:
+
+#### 1. Pinos Ocupados Naturalmente de Fábrica (16 Pinos):
+* **Câmera OV5640 (Header J2 - 8 pinos de dados e sincronismo):**
+  * `IO4` (SIOD / SDA I2C), `IO5` (SIOC / SCL I2C)
+  * `IO6` (VSYNC), `IO7` (HREF)
+  * `IO8` (D2), `IO9` (D1), `IO10` (D3), `IO11` (D0)
+  * *Por que não podem ser usados para outra coisa?* O sensor OV5640 transmite vídeo em alta frequência pelo barramento paralelo DVP (Digital Video Port). Se qualquer fio de motor ou servo for soldado nesses pinos, o sinal elétrico de clock e imagem se corrompe e a câmera entra em falha imediata (`Camera init failed`).
+* **Memória Octal PSRAM de 8MB:** A versão N16R8 utiliza PSRAM de 8 bits (OPI), que consome internamente os pinos `GPIO 33, 34, 35, 36 e 37` (esses pinos nem saem nos headers).
+* **Porta USB-C Nativa:** Consome os pinos `IO19 (D-)` e `IO20 (D+)` para programação e Serial Monitor.
+* **Botão BOOT Onboard:** Consome `IO0` (com resistor de pull-up soldado no PCB).
+* **Alimentação & GND:** `5V`, `3V3` e 3 pinos de `GND`.
+
+#### 2. Pinos que NÃO Estão Ocupados Naturalmente (Exatamente 8 GPIOs):
+No Header J1 (lado esquerdo), os únicos pinos livres para periféricos do usuário são:
+$$\mathbf{IO1,\ IO2,\ IO3,\ IO41,\ IO42,\ TX\ (IO43),\ RX\ (IO44)\ e\ IO21}$$
+
+#### 3. O Dilema: O que acontece na prática?
+* **Se você optar por NÃO usar o Arduino Nano:**
+  * Você é obrigado a **usar 100% dos 8 pinos livres** do S3 (4 nos motores via TB6612, 2 nos servos, 1 no ADC da bateria e 1 na fita de LEDs).
+  * **Zero pinos de folga:** Não sobra nenhum pino livre para adicionar sensores novos no futuro, e o buzzer sonoro precisa ser descartado.
+* **Se você optar por USAR o Arduino Nano (Recomendado):**
+  * O ESP32-S3 utiliza apenas **1 pino livre** (`TX`) para enviar as ordens de movimento ao Nano.
+  * **Sobram 7 pinos livres no ESP32-S3** (na cabeça móvel, perfeitos para colocar sensor de distância a laser ToF VL53L0X, microfone I2S ou display).
+  * **Sobram 8 pinos livres no Arduino Nano** (no chassi, para faróis adicionais, encoders nas rodas ou sensores de toque/fim de curso).
+
+---
+
+### ⚡ Engenharia Elétrica & Compatibilidade de Sinais
+
+1. **Alimentação:**
+   * **Bateria:** Pack Li-Ion 2S 7.4V nominal (8.4V totalmente carregada) com placa BMS de proteção integrada.
+   * **Step-Down Mini 560:** Rebaixa de 7.4V/8.4V para **5.0V fixos com até 5A** de capacidade de corrente contínua/pico. Alimenta com folga o ESP32, o Nano, os servos SG90 e a barra de LEDs.
+   * **Alimentação dos Motores:** O pino `VM` do TB6612FNG é ligado diretamente nos 7.4V da bateria (após a chave geral KCD1), aproveitando o torque máximo dos motores JGA16-050.
+2. **Níveis Lógicos Serial (ESP32 3.3V $\rightarrow$ Arduino Nano 5V):**
+   * O ESP32-S3 opera em **3.3V TTL**.
+   * O microcontrolador ATmega328P do Arduino Nano (alimentado a 5.0V) possui tensão mínima de nível alto garantida ($V_{IH, min}$) de:
+     $$V_{IH, min} = 0.6 \times V_{CC} = 0.6 \times 5.0\text{V} = \mathbf{3.0\text{V}}$$
+   * Como a saída HIGH do ESP32 é de **3.3V** ($3.3\text{V} > 3.0\text{V}$), o Nano reconhece perfeitamente os pulsos seriais em seu pino RX **sem necessidade de nenhum conversor de nível**.
+   * **ESP TX → Nano RX com transistor NPN BC337 (TO-92, 1=C, 2=B, 3=E):** ESP GPIO43 → $R_1$ (1 kΩ) → base (pino 2); emissor (pino 3) → GND; coletor (pino 1) → Nano **D2** (RX) com pull-up de 10 kΩ ao +5V do Nano; GND do ESP e do Nano em comum. O transistor sobe o nível para 5V, mas **inverte o sinal**, então o Nano usa SoftwareSerial com lógica invertida (`SoftwareSerial(rx, tx, true)`). O sentido Nano → ESP não está desenhado no KiCad ainda.
+   * **Projeto KiCad (KiCad 10, símbolos oficiais ESP32-S3-WROOM-1 / Arduino Nano / BC337):** [`hardware/kicad/rover_serial_bridge/`](file:///home/usuario/Documentos/rover/hardware/kicad/rover_serial_bridge/), gerado por [`tools/gerar_esquema_kicad.py`](file:///home/usuario/Documentos/rover/tools/gerar_esquema_kicad.py).
+   * **Mini PCI THT para perfurada (17x10 furos, grade 2,54 mm):** `rover_serial_bridge.kicad_pcb` (gerada por [`tools/gerar_pcb_kicad.py`](file:///home/usuario/Documentos/rover/tools/gerar_pcb_kicad.py)) com J1 (+5V/GND/TX do ESP), R1 1k, Q1 BC337 (TO-92 largo), R2 10k e J2 (+5V/GND/D2 do Nano). As trilhas em B.Cu equivalem aos fios na placa perfurada. Prévias: `preview_3d.png`, `preview_top.png`, `preview_bottom.png` na pasta do projeto. DRC sem erros.
+   * **Visualização Realista em Placa Perfurada (Com Nano e chicote do ESP):** Arquivo [`rover_perfboard_visual.kicad_pcb`](file:///home/usuario/Documentos/rover/hardware/kicad/rover_serial_bridge/rover_perfboard_visual.kicad_pcb) gerado por [`tools/gerar_perfboard_kicad.py`](file:///home/usuario/Documentos/rover/tools/gerar_perfboard_kicad.py). Mostra o Arduino Nano encaixado/soldado na perfurada, o conector J1 recebendo os fios que vêm do ESP32 (vermelho: 5V, preto: GND, amarelo: TX), o transistor BC337 e os resistores R1 e R2, com a fiação inferior simulada. Imagens salvas: [`preview_perfboard_3d.png`](file:///home/usuario/Documentos/rover/hardware/kicad/rover_serial_bridge/preview_perfboard_3d.png), [`preview_perfboard_top.png`](file:///home/usuario/Documentos/rover/hardware/kicad/rover_serial_bridge/preview_perfboard_top.png) e [`preview_perfboard_bottom.png`](file:///home/usuario/Documentos/rover/hardware/kicad/rover_serial_bridge/preview_perfboard_bottom.png).
+3. **Divisores de Tensão para Medição de Bateria (ADC):**
+   * **No ESP32-S3 (ADC1_CH0 no pino IO1):** Divisor com $R_1 = 100\text{ k}\Omega$ e $R_2 = 33\text{ k}\Omega$. Em 8.4V, a tensão na entrada ADC atinge $\approx 2.08\text{V}$, muito segura e dentro da faixa linear do conversor de 3.3V.
+   * **No Arduino Nano (Pino A0):** Divisor com $R_1 = 100\text{ k}\Omega$ e $R_2 = 47\text{ k}\Omega$. Em 8.4V, a tensão na entrada atinge $\approx 2.68\text{V}$ (segura para o conversor de 5.0V de 10 bits).
+
+---
+
+### 📋 Estrutura das Colunas da Planilha Oficial
+
+A planilha [`docs/hardware/tabela_pinagem_esp32_nano.xlsx`](file:///home/usuario/Documentos/rover/docs/hardware/tabela_pinagem_esp32_nano.xlsx) segue este padrão em todas as suas 4 abas:
+
+| Coluna | Descrição Técnica |
+|---|---|
+| **Pino Físico** | Identificação física do conector na placa (ex: `J1-01`, `J2-05`, `P01`, `D3`, `A0`). |
+| **Silk na Placa** | Nome impresso em serigrafia na placa (ex: `3V3`, `IO1`, `TX`, `RX0`). |
+| **GPIO Nativo** | Identificador de hardware do chip (ex: `GPIO 1`, `PD3`, `-`). |
+| **Ligação** | Classificação direta: **`Interno`** (trilhas da câmera, USB, botões), **`Fio Externo`** (chicote ou conectores), ou em branco se livre. |
+| **Uso** | Função ativa do pino no robô (em branco para os pinos disponíveis). |
+| **Suporta PWM?** | Capacidade de modulação PWM por hardware (`Sim (LEDC/MCPWM)` no S3; `Timer 0/1/2` no Nano; ou `Não`). |
+| **ADC (Analógico)** | Capacidade analógica: destaca os pinos **`ADC1`** (compatíveis com Wi-Fi ativo) vs. `ADC2` (incompatíveis com Wi-Fi). |
+| **Nível Lógico** | Tensão nominal do sinal (`3.3V`, `5.0V`, ou `Alimentação`). |
+| **Boot / Strapping** | Alertas sobre pinos que afetam a inicialização (`IO0 Pull-up`, `Touch`, `JTAG`). |
+| **Observações** | **100% em branco**, reservada para anotações personalizadas do usuário. |
+
+---
+
+## 🤖 13. Instruções para Agentes de IA ([`AGENTS.md`](file:///home/usuario/Documentos/rover/AGENTS.md))
+
+Diretrizes permanentes documentadas no repositório para agentes de IA:
+* **Política de Git:** Não execute comandos Git de forma automática a cada resposta durante as sessões de trabalho para preservar o histórico manual do usuário. O versionamento (`git add`, `git commit`, `git push`) deve ser realizado exclusivamente ao final das sessões quando comandado pelo usuário.
+* **Memória Central:** Manter o `README.md` como a fonte central de verdade do projeto, atualizado a cada evolução.
+* **Componentes Validados:** Motores JGA16-050 cilíndricos de 16 mm (nunca N20), rodas StickyMAX 22 mm com cubo CNC de alumínio incluso, vão livre de 3,0 mm, TB6612FNG e alimentação com Step-Down Mini 560.
+* **Estrutura de Arquivos:** `docs/hardware/` para especificações técnicas e desenhos com cotas milimétricas; `docs/references/` para fotos reais de produtos.
+
+---
+
+## 📚 14. Base de Conhecimento de Redes & Vídeo ([`docs/guides/`](file:///home/usuario/Documentos/rover/docs/guides/))
+
+Artigos técnicos aprofundados sobre arquitetura de redes e otimização para controle em tempo real do robô:
+
+* [**Protocolos de Rede no Robô: HTTP vs. WebSocket vs. WebRTC**](file:///home/usuario/Documentos/rover/docs/guides/http_vs_websocket_redes.md):
+  * **Não é FPV:** Arquitetura de teleoperação estritamente digital em redes IP (Wi-Fi local ou celular 4G/LTE).
+  * Análise das três abordagens de rede: **HTTP/1.1** (REST e MJPEG), **WebSocket** (Full-Duplex TCP) e **WebRTC/RTSP** (UDP Datagramas).
+  * Como cada protocolo se comporta tanto nos comandos de pilotagem quanto no streaming de vídeo.
+  * Por que o WebSocket se consolidou como a arquitetura campeã no ESP32: equilibra latência mínima (**5-18 ms** em comandos e **40-65 ms** em vídeo com descarte de frames) sem sobrecarregar a CPU com criptografia pesada DTLS/ICE do WebRTC.
+  * **Matriz de Trade-offs Completa:** Tabela comparando lado a lado transporte, overhead, latências, comportamento em perdas de pacotes no 4G/CGNAT e consumo de memória RAM do microcontrolador.
+* [**Streaming de Vídeo de Baixa Latência**](file:///home/usuario/Documentos/rover/docs/guides/streaming_video_baixa_latencia.md):
+  * Diagramas e comparativos visuais de engenharia:
+    * [`topologia_redes_wifi_local_vs_4g_remoto.png`](file:///home/usuario/Documentos/rover/docs/guides/images/topologia_redes_wifi_local_vs_4g_remoto.png): Comparativo direto entre Wi-Fi Local (LAN direta) e Teleoperação 4G (com servidor Relay na nuvem para contornar CGNAT).
+    * [`fluxo_streaming_mjpeg_buffer_vs_drop.png`](file:///home/usuario/Documentos/rover/docs/guides/images/fluxo_streaming_mjpeg_buffer_vs_drop.png): Por que o descarte de frames atrasados (*Drop-Frame*) é mandatório no 4G para não pilotar o robô "olhando para o passado".
+    * [`comparativo_visual_resolucoes_esp32.png`](file:///home/usuario/Documentos/rover/docs/guides/images/comparativo_visual_resolucoes_esp32.png): Painel real 2x2 simulando a exibição em tela de celular/PC para QQVGA, QVGA, CIF e VGA.
+    * [`comparativo_zoom_detalhe.png`](file:///home/usuario/Documentos/rover/docs/guides/images/comparativo_zoom_detalhe.png): Zoom de 300% na pata da cadeira e no piso mostrando o grau exato de pixelização de borda em cada resolução.
+  * Por que o ESP32 usa MJPEG por hardware dos sensores OV2640/OV5640 em vez de H.264.
+  * Tabela de resoluções (QQVGA a UXGA), tamanhos de frame, FPS e latência (destaque para **QVGA 320x240 @ 25-30fps** como ideal para teleoperação e **CIF 400x296** para maior definição).
+  * Otimizações de firmware: desativação do Wi-Fi Power Save (`WIFI_PS_NONE`), eliminação do algoritmo de Nagle (`TCP_NODELAY`), duplo buffer na PSRAM e separação de núcleos no FreeRTOS.
+
+---
+
+## 💻 15. Códigos de Teste & Firmware de Bancada ([`src/firmware/`](file:///home/usuario/Documentos/rover/src/firmware/))
+
+Repositório de códigos e testes práticos de validação antes da montagem final:
+
+* [**Teste de Comunicação Serial ESP32 ➔ Nano (LED)**](file:///home/usuario/Documentos/rover/src/firmware/teste_serial_led_esp32_nano/README.md):
+  * Firmware do ESP32 ([`esp32_web_tx.ino`](file:///home/usuario/Documentos/rover/src/firmware/teste_serial_led_esp32_nano/esp32_web_tx/esp32_web_tx.ino)) criando rede Wi-Fi direta (`Rover-Control-Test`) e servindo interface web moderna com dark mode.
+  * Firmware do Arduino Nano ([`nano_rx_led.ino`](file:///home/usuario/Documentos/rover/src/firmware/teste_serial_led_esp32_nano/nano_rx_led/nano_rx_led.ino)) escutando na porta Serial física (pino RX / D0) a 115200 baud e chaveando o LED embutido D13.
+  * Validação física da arquitetura de comunicação distribuída usando apenas 2 jumpers na bancada.
+
+---
+
+## 🎯 Próximos Passos (Modelagem CAD 3D)
+
+Com a eletrônica, pinagem e chicote 100% dimensionados, o próximo foco é o desenho das peças 3D:
+1. **Chassi Inferior:**
+   * 4 berços dos motores JGA16-050 abraçando-os por cima e pelas laterais, mantendo o vão livre inferior de 3,0 mm totalmente desobstruído.
+   * Berço interno para a bateria Li-Ion 2S (69 x 37 x 19 mm).
+   * Alojamento para o Step-Down Mini 560, driver TB6612FNG e Arduino Nano.
+   * Encaixe traseiro para a chave gangorra KCD1-101 (recorte de 19 x 13 mm).
+2. **Cabeça Pan/Tilt:**
+   * Fixação do servo Pan no chassi e servo Tilt no braço móvel.
+   * Caixa fechada para a placa ESP32, expondo apenas a lente da câmera e o rasgo frontal para os 8 LEDs WS2812B.
+   * Canaleta central para passagem suave dos 3 fios do chicote flexível.
+
+
+
+
+
+## 🧪 Teste de Bancada: Painel Web de Pinos do Nano (código escrito, ainda NÃO testado)
+
+* Pasta [`src/firmware/controle_pinos_nano_web/`](file:///home/usuario/Documentos/rover/src/firmware/controle_pinos_nano_web/):
+  * [`nano_pinos_serial.ino`](file:///home/usuario/Documentos/rover/src/firmware/controle_pinos_nano_web/nano_pinos_serial/nano_pinos_serial.ino): Nano recebe comandos de texto (`M`, `W`, `P`, `S`, `D`, `A`, `X`) a 115200 baud e controla qualquer pino D2..D13/A0..A7 (digital, PWM, servo em qualquer pino, leitura).
+  * [`esp32_painel_web.ino`](file:///home/usuario/Documentos/rover/src/firmware/controle_pinos_nano_web/esp32_painel_web/esp32_painel_web.ino): ESP32-S3-CAM sobe servidor web com painel genérico (escolhe o modo de cada pino na página, sem mudar o código). Cai em AP `Rover-Nano` se não achar o Wi-Fi.
+* Ligação: 5V↔5V, GND↔GND, IO43(TX)→D0, D1→divisor 1k/2k→IO44(RX). Ao gravar o Nano, desconectar o fio em D0 e o jumper de 5V.
+
+---
+
+## 📱 16. Aplicativo Mobile & VR Head-Tracking ([`src/app_mobile/`](file:///home/usuario/Documentos/rover/src/app_mobile/))
+
+* **Guia Acessível para Iniciantes:** [`docs/guides/controle_servos_head_tracking_vr.md`](file:///home/usuario/Documentos/rover/docs/guides/controle_servos_head_tracking_vr.md) (explica o funcionamento dos servos, giroscópio do celular, filtros EMA e prevenção de queima/tremedeiras).
+* **Aplicativo Expo / React Native:** [`src/app_mobile/`](file:///home/usuario/Documentos/rover/src/app_mobile/)
+  * **Modo Painel:** Diagnóstico, ajuste fino grau a grau e teste de tração 4WD.
+  * **Modo FPV Touch:** Streaming de vídeo com mira HUD e botões de pilotagem na tela.
+  * **Modo VR Head-Tracking (Side-by-Side):** Tela dividida para óculos VR (Cardboard/VR Box) onde o movimento da cabeça comanda os servos da câmera via WebSocket e giroscópio.
+
+## Leitura cruzada do projeto — 2026-10-13
+
+### Atualização de bancada e intenção de compras informadas pelo usuário
+
+O usuário rejeitou o ESP32-C3 como compra conveniente e pediu a planilha da seleção UsinaInfo. Gerado `outputs/01a136bb-0898-72e1-a621-24d29689bee0/compra_usinainfo_rover.xlsx` com W5500 (1), ventoinha 5V 25mm (1), DS18B20 pequeno (2) e kit de 3 dissipadores (1), sem C3 nem thermal pad de outra loja. Quantidades/preços editáveis, totais por fórmula e links de produto. Total dos produtos: R$ 95,85 no cartão ou R$ 91,06 com desconto de boleto/depósito, sem frete, usando os preços consultados em 13/10/2026. Nenhum pedido foi finalizado; a criação da planilha não alterou os carrinhos do navegador.
+
+Prioridade esclarecida: máxima qualidade possível de vídeo com segurança de performance e controle térmico. C3 sugerido apenas como auxiliar de testes, opcional, não upgrade do vídeo. Usuário compartilhou relatos do Reddit `1pg818g` e `1lqj78b` sobre aquecimento de OV5640; lidos como evidência de outros casos, sem diagnosticar a causa local. Não houve mudança nos carrinhos nem teste físico nesta etapa.
+
+Pesquisa de compras em 13/10/2026: o usuário autorizou preparar até três carrinhos em lojas diferentes, com NF; Mercado Livre somente Full. Relatou câmera provavelmente OV5640 chegando a 70°C, sem instrumento/ponto de medição especificados, e interesse em thermal pad, ventoinha 5V e dissipador atrás da câmera. Foram montados carrinhos na sessão do navegador em UsinaInfo (R$ 124,45; boleto/depósito R$ 118,23), Eletrogate (R$ 56,60; Pix R$ 53,77) e RoboCore (R$ 62,52; Pix R$ 59,39), sem frete e sem finalizar pedidos. São alternativas com conteúdos diferentes, não compras aprovadas. Relatório com produtos, evidências, limitações térmicas e câmeras disponíveis: `docs/hardware/COMPRAS_CONEXAO_REFRIGERACAO.md`. Thermal pad Full localizado como referência adicional, sem quarto carrinho. Nenhuma substituição da câmera foi decidida nem compatibilidade física validada.
+
+Correção de escopo pelo usuário: fonte de bancada, servos extras, fios, parafusos e barras de pinos já existem ou provavelmente existem no laboratório. A segunda compra deve focar componentes que acrescentem capacidades, principalmente alternativas de conexão e dissipação térmica. Há interesse explícito em experimentar UDP com o ESP32-S3-CAM. UDP por Wi-Fi pode ser testado com a placa atual sem módulo adicional; eventuais compras de Ethernet, segundo ESP ou modem celular são possibilidades, ainda não decisões.
+
+Em 2026-10-13, o usuário esclareceu que está começando o projeto elétrico e pretende usar uma placa perfurada grande. Está preparando o teste do app com giroscópio em um mock de servos Pan/Tilt que fez; o funcionamento desse teste ainda não foi confirmado. Também começa a alinhar as próximas etapas e considera um segundo carrinho de compras para dissipação térmica, conexões e componentes para futuras expansões. Não há lista de compras aprovada. Prioridades sugeridas nesta conversa: montagem removível e cabeamento, filtragem de alimentação/ruído, proteção elétrica e instrumentos de diagnóstico; dissipadores e sensores adicionais dependem do espaço, das medições e da função desejada.
+
+O usuário pediu compreender o projeto confrontando documentação e código, pois os documentos podem estar desatualizados. Esta leitura não executou testes físicos e não confirma qual firmware está gravado nas placas.
+
+* Proposta: rover 4WD de teleoperação por rede IP, com câmera Pan/Tilt e app de pilotagem/VR com rastreamento da cabeça. Todos os componentes estão em mãos; o estágio informado continua sendo bancada e preparação de CAD.
+* O app possui controle manual, DeviceMotion com filtro EMA, zona morta, centralização e modo VR duplicando a mesma câmera nos dois olhos. O serviço de sensores configura 40 Hz por padrão.
+* `esp32_rover_ws.ino` implementa WebSocket e repasse serial, mas não inicializa a câmera nem oferece `/stream`. O app espera vídeo HTTP nesse caminho; os guias descrevem também vídeo binário por WebSocket, que não está implementado nesse firmware.
+* Há incompatibilidade entre o gateway WebSocket (UART a 115200, ligação documentada em D0) e o Nano genérico atual (SoftwareSerial em D2 a 38400). O painel web de pinos usa 38400, compatível com a entrada desse Nano.
+* O gateway envia `D_CMD <direção>`, mas o Nano genérico não implementa esse protocolo de tração nem o controle integrado do TB6612. Não considerar a tração pronta com essa combinação.
+* O KiCad/contexto descreve uma interface BC337 que inverte o sinal para D2, enquanto o Nano atual instancia `SoftwareSerial(2, 3)` sem lógica invertida. É uma divergência entre circuito documentado e código; a montagem efetivamente usada precisa ser confirmada na bancada.
+* O mock em `tools/mock_rover_server.js` gera vídeo sintético e bateria simulada. Isso auxilia desenvolvimento do app e não comprova streaming ou telemetria reais do rover.
+* Documentos preservam versões antigas: chicote de 3 versus 4 fios, pinagem do ESP32-CAM clássico em especificações e descrições de testes como validados ou ainda não testados. Números de FPS/latência nos guias não foram verificados nesta leitura como medições do equipamento.
+
+
+
+### Avaliação do KiCad para placa perfurada — 2026-10-13
+
+Usuário deseja guia de montagem bem visível para placa perfurada. Inspecionados projeto existente e geradores em `hardware/kicad/rover_serial_bridge/` e `tools/`: representam somente interface serial BC337/Nano, não toda a eletrônica. A prévia superior oculta pinos do Nano e a inferior usa linhas brancas sem nomes das redes, com cruzamentos ambíguos. A grade visual não representa todos os furos físicos. Circuito prevê RX D2 invertido; firmware genérico lido usa `SoftwareSerial(2, 3)` sem inversão. Recomendação de apresentação: esquemático por blocos mais mapa físico em grade, com coordenadas, nomes dos pinos, fios identificados e vista inferior espelhada explícita. Dimensões e tipo de ilhas da placa real ainda precisam ser informados; nenhuma montagem foi validada ou circuito alterado nesta avaliação.
+
+### Ampliação da planilha UsinaInfo — 2026-10-13
+
+Usuário solicitou campo de prioridade, farol regulável com LED potente, sensor de tensão, OLED para bateria, microSD e controle próprio com tela em prioridade baixa. Informou possuir controle FlySky; esclareceu que buscava receptor, inicialmente chamado de ESC. Não foi decidido substituir TB6612 nem motores JGA. Receptor fica pendente do modelo/protocolo do transmissor; integração ao Nano e parada por perda de sinal ainda não foram implementadas ou testadas.
+
+Atualizada a planilha existente com prioridades editáveis, situação e uso/compatibilidade, preservando anotações em branco. Cotados: sensor DC 0–25V (divisor 5:1, R$4,95 cartão), OLED I2C 0,96 (R$24,30), ESP32-S3 N8R2 para controle futuro (R$62,80), TFT ST7789 1,3 (R$34,70) e dois joysticks (R$5,95 cada), além dos quatro itens anteriores. Total parcial cotado R$234,50 cartão / R$222,79 Pix-boleto; sem frete. Cotados de prioridade alta R$56,20, média R$24,30, baixa R$154,00. Baixa inclui W5500 e controle futuro; não implica compra finalizada.
+
+Cinco itens sem preço: cartão microSD 32GB, LED branco 3W (UsinaInfo indisponível), driver de corrente constante com DIM/PWM compatível com toda faixa da bateria 2S, dissipação dedicada do farol e receptor FlySky. XL4015 CC/CV pesquisado exige entrada de 8V e não foi escolhido para 2S; LED branco 10W da loja exige 10–12V e tampouco foi escolhido. Não inventar cotação nem tratar o farol como conjunto já compatibilizado. Cartão microSD não localizado na busca da UsinaInfo; confirmar slot e GPIO da placa física antes de comprar leitor adicional.
+
+Alternativa somente consultada, sem criar outro carrinho: W5500 Mercado Livre produto MLB42965922 / oferta MLB5834894252, R$57,00, com “Armazenado e enviado pelo Full” verificado no navegador. UsinaInfo segue mais barata antes do frete (R$44,60). Ethernet é cabeada: ESP32-S3 comunica por SPI com W5500 e cabo RJ45 vai ao roteador/switch. TCP/UDP suportados; UDP no Wi-Fi existente dispensa compra. Taxa Ethernet nominal não garante FPS nem taxa útil através de SPI. Nenhum teste físico, pedido finalizado ou operação Git nesta etapa.
+
+### Conectividade de longa distância esclarecida — 2026-10-13
+
+Usuário esclareceu que a expansão de conexão deve fornecer internet ao ESP32-S3 para operação remota em qualquer local com cobertura, por exemplo 4G. Ethernet/W5500 por si só não satisfaz essa necessidade e deve permanecer experimento de bancada, não compra central de longa distância. Caminho inicial recomendado: celular em hotspot para validar arquitetura remota; depois roteador/hotspot LTE com SIM e Wi-Fi 2,4GHz embarcado. Alternativa integrada: modem LTE Cat4 SIM7600 ou semelhante via USB/PPP, verificando placa, bandas, alimentação e firmware. Nenhum modem específico comprado/validado. Internet no rover é apenas parte da solução: app/gateway atual local precisa adaptação para conexão de saída a servidor/relay ou VPN adequada para acesso remoto; não assumir acesso público direto em rede celular. Não foi alterada a planilha nesta explicação.
+
+
+### Distribuição na perfurada 90 × 150 mm — 2026-10-13
+
+Usuário confirmou placa de 9 × 15 cm com ilhas isoladas e desejo de montar componentes nela. Criado rascunho físico em `docs/hardware/kicad/rover_perfurada_90x150/` com contorno, grade assumida de 2,54 mm e reservas para Nano, TB6612, Mini 560 e conectores. Prévia superior PNG e arquivo KiCad reaberto pelo parser local; 1.972 ilhas sem rede e zero trilhas. Não é esquemático completo nem guia de soldagem: medidas dos módulos, posição real dos furos e pinagens precisam de confirmação. ESP32 permanece na cabeça móvel.
+
+
+### Esquemático com conexões e chicote de três fios — 2026-10-13
+
+Usuário corrigiu o escopo: deseja esquemático com fios/conexões, não apenas distribuição. Confirmou alimentação adicional ao TX e GND: chicote de três fios (+5V, GND, IO43 TX), ESP fora da perfurada. Criado `docs/hardware/kicad/rover_perfurada_90x150/rover_conexoes.kicad_sch`, com PDF/PNG, mostrando alimentação, Nano, TB6612, quatro motores em pares paralelos, servos, LEDs e divisor 10k/4k7 no A0. Adotado D0/RX conforme arquitetura permanente; firmware genérico D2 não foi alterado e divergência aparece no desenho. Novo esquema não usa BC337 no TX. Símbolos são módulos/terminais funcionais, não footprints nem posição física dos pinos. Exportado por KiCad 10.0.7; principais redes conferidas via netlist XML. Buzzer permanece pendente de confirmar se módulo de três pinos ou dispositivo de dois terminais. Nenhuma ligação ou corrente validada em bancada; mapa físico com furos/fios depende dos headers reais.
+
+
+### Simplificação solicitada do esquema — 2026-10-13
+
+Usuário pediu sem buzzer, sem barra de pinos e somente o principal. Atualizados esquema/PDF/PNG e rascunho físico para alimentação, Nano, TB6612, quatro JGA-050, dois SG90 e ESP externo por três fios. Omitidos buzzer, LEDs e divisor A0 do esquema simplificado; não implica retirada desses itens da arquitetura futura. Servos representados como S1/S2 e bateria BT1, sem símbolos de conectores adicionais. Pares de motores agora têm fios explícitos e junções. KiCad 10.0.7 exportou desenho e netlist; conferidas 17 redes e 12 componentes. Continua esquema funcional, sem roteiro físico por furo e sem validação de bancada; firmware D2 não alterado. Pedido anterior de identificação do buzzer ficou sem necessidade nesta versão.
+
+
+### Correção: inversor e fios na perfurada — 2026-10-13
+
+Usuário cobrou inversor RX/TX e diagrama físico de montagem, ausentes da versão anterior. Restaurado circuito IO43 → R1 1k → base BC337; emissor GND; coletor D2 + R2 10k ao 5V. Chico­te de três fios permanece. D2 reservado ao RX invertido; STBY proposto em D12. Para evitar conflito de TX SoftwareSerial com PWM D3, documentada declaração `SoftwareSerial entrada(2, A1, true)`/38400 com A1 sem ligação e reservado. Firmware não alterado, teste não realizado. Esta versão substitui a proposta direta D0 em resposta ao pedido explícito do usuário.
+
+Mapa físico criado com 36 fios isolados, Nano padrão, R1/R2/BC337, grade e ilhas identificadas; topo e lado de solda espelhado em `docs/hardware/kicad/rover_perfurada_90x150/montagem_superior.png` e `montagem_inferior.png`; tabela CSV com coluna/linha de cada ponta. Fios são gráficos em camadas técnicas do KiCad, não trilhas de PCB. Conferidos netlist do esquema e redes das pontas; placa reaberta com 1972 ilhas. TB/Mini representados por ilhas auxiliares, não ordem de pads do breakout: ligações curtas módulo→ilha ainda dependem do módulo real. Usuário informou TB6612FNG (chip; versão da placa desconhecida) e link Mini 560 RoboCore, consultado: 29 × 18 × 5,4 mm. Não declarar pinagens físicas/montagem validadas.
+
+### Pesquisa 4G para compra antecipada — 13/10/2026
+
+Orçamento do laboratório vai até dezembro; usuário deseja adquirir agora componentes de iterações futuras. Prioridade de compra não é a etapa de implementação. Pesquisa no Mercado Livre com filtro Full não confirmou SIM7600 adequado (resultados exibiam módulos não celulares). Não afirmar inexistência global de ofertas.
+
+Melhor candidato nacional encontrado: Curto Circuito A7608SA-H Cat4 em placa, antena LTE inclusa, SKU18609, em estoque verificado no navegador, R$448 cartão / R$403,20 Pix-boleto, sem frete: https://curtocircuito.com.br/modulo-a7608sa-h-4g-lte-antena-fcp.html . Loja informa nota fiscal na página inicial e termos. Placa anunciada 5–16V e UART TTL3,3V; núcleo SIMCom isolado é 3,4–4,2V, não confundir alimentações. Fabricante suporta PPP/USB, B3/B7/B28 entre outras; compatibilidade USB/firmware e GPIO19/20 na S3-CAM não confirmada localmente. Candidato, não plug-and-play validado. Loja inverte uplink/downlink em uma lista; valores corretos SIMCom: até150Mbps down /50Mbps up celulares nominais, não taxa real do ESP. https://www.simcom.com/product/A7608SA-H.html .
+
+Magalu/nocnocestadosunidos Waveshare SIM7600G-H HAT(B): R$838,19 Pix/R$882,30 cartão, importado, página informa NF, antenas LTE/GPS e cabo. https://www.magazineluiza.com.br/modulo-4g-hat-waveshare-sim7600g-h-lte-gnss-para-raspberry-pi/p/eaf5f2ka89/in/ardn/ . Modelo(B) possui hubUSB; não considerar compatível automaticamente com stack USB do S3. Não escolhido.
+
+Albacore SIM7600G-H MiniPCIe R$537,92/3estoque segundo página indexada; é módulo de integração, exige carrier/adaptador/SIM/antenas e NF não verificada; excluído da recomendação fechada. Curto SIM7600SA Cat1 R$660 esgotado; não escolhido.
+
+W5500 da seleção UsinaInfo é Ethernet SPI/RJ45, sem SIM nem rádio4G. Pode receber internet de roteador4G com portaLAN, mas não converte modemUSB/serial em Ethernet e não é necessário para modem direto. Permanece baixa prioridade experimental. Não alterada planilha nem carrinhos, nenhum pedido finalizado.
+
+### 4G incluído na planilha — 13/10/2026
+
+Usuário autorizou adicionar A7608SA-H na planilha. Adicionado bloco separado Curto Circuito, prioridade de compra alta / uso futuro, 1unidade R$448 cartão ou R$403,20 Pix-boleto, sem aplicar desconto UsinaInfo à outra loja. Totais UsinaInfo preservados. Total geral parcial cotado R$682,50 cartão /R$625,99 à vista, sem frete/plano e sem cinco itens ainda sem cotação. Arquivo existente atualizado, não houve pedido nem novo carrinho.
+
+Oferta Mercado Livre encontrada por busca do modelo exato: https://www.mercadolivre.com.br/modulo-gsm-a7608sah-4g-lte-com-antena-fcp/up/MLBU2311204429 , itemMLB3669224895, loja oficial Curto Circuito, 4disponíveis e R$427,51 na consulta. Descrição informa NF. Seção de entrega não confirma Full; badgesFull observados pertencem a recomendações de outros produtos, não ao modem. Link registrado como alternativa na planilha, fora dos totais, não elegível sob critério Full atual. Não afirmar que não existe no ML. Compatibilidade USB/PPP com a S3-CAM ainda não validada.
+
+### Alternativa 4G Full — 13/10/2026
+
+Usuário reafirmou que anúncio ML semFull não é elegível. Encontrado dongle hotspot Athenix, produtoMLB45000536/ofertaMLB4208432419, vendedorRAXON, R$144,95; “Armazenado e enviado pelo Full” verificado na seção de compra do próprio anúncio, não em recomendações. USB fornece alimentação; anúncio informa hotspot Wi-Fi802.11b/g/n, SIMmicro, 93,7mm/30g, taxas celulares nominais150/50Mbps. Conexão planejada ao S3 viaWi-Fi, não integraçãoUSB-PPP. Bandas LTE específicas/B28 e comprovaçãoNF individual não expostas na ficha consultada; compatibilidade de cobertura/performance não validada. Alternativa mais barata a avaliar, sem assumir equivalente ao móduloCat4 de desenvolvimento. URL: https://www.mercadolivre.com.br/modem-4g-usb-lte-notebook-wifi-compartilhamento-cor-branco-athenix/p/MLB45000536?pdp_filters=item_id%3AMLB4208432419%7Cshipping%3Afulfillment . Nenhum pedido/carrinho ou alteração da planilha nesta pesquisa.
+
+### Avaliação aprofundada 4G — 13/10/2026
+
+Usuário pediu avaliar confiabilidade, compatibilidade comcase e trade-off de compra. Ao perguntar medidas esclareceu que esperava módulo, não modem comcarcaçaUSB; caminhohotspot foi explicado como alternativa diferente, não substituição implícita. Relatório salvo docs/hardware/AVALIACAO_4G_ROVER.md. AthenixFullR$144,95 tem reviews4,6/56 mas bandas/corrente/limite térmico desconhecidos; relatoClaro não funcionar semcausa. Não recomendado como solução principal validada. SIM7000GFullR$332,50 encontrado, mas uploadCatM375kbps inadequado para vídeo contínuo. A7670SACurtoR$337,50Pix esgotado. A7608 mantém candidato documentado, não compatibilidadeUSB comprovada; Cat4não garante vazãoESP. Não encontradoCAD comcotas internas finais. Nenhum teste/pedido ou nova alteração da planilha.
+
+### Consolidação Multiloja da Planilha de Compras — 13/10/2026
+
+Usuário pontuou a impossibilidade de edição remota direta no Google Sheets sem autenticação e questionou os itens sem links/indisponíveis na UsinaInfo (microSD, farol 3W, driver PWM, dissipador e receptor FlySky). Solicitou cotar esses itens em outras lojas para fechar a compra completa de expansão e periféricos.
+
+Em revisão subsequente, usuário questionou a real necessidade do módulo Ethernet W5500, a utilidade de uma antena Wi-Fi 2.4GHz 3dBi externa e determinou a retirada do ESP32-S3 adicional (já possuímos ESP32-S3-CAM e ESP32-CAM em bancada). Solicitou checagem em tempo real de estoque de todos os itens.
+
+Decisões de engenharia e estoque validadas:
+1. **Módulo Ethernet W5500:** Descartado da compra. O Rover é um veículo móvel sem fio; passar cabo de rede RJ45 limita a locomoção, e em bancada o Wi-Fi e o cabo USB já resolvem todos os testes de rede/streaming.
+2. **Antena Wi-Fi 2.4GHz 3dBi com Pigtail U.FL (IPEX1) para SMA Fêmea:** Inclusa na UsinaInfo (SKU `04933`, R$ 26,51 cartão / R$ 25,18 Pix). Altamente útil: a antena de cerâmica/PCB interna do ESP32 perde muito sinal dentro do chassi fechado ou com obstáculos. A antena externa de 3dBi melhora o RSSI, estabiliza a taxa de quadros (FPS) do streaming MJPEG e reduz o drop-frame de vídeo.
+3. **ESP32-S3 DevKitC-1 N8R2:** Removido definitivamente da lista conforme determinação do usuário.
+4. **Checagem de Estoque em Tempo Real:**
+   - **UsinaInfo:** Todos os 8 itens listados estão com botão de compra ativo e estoque confirmado (Cooler 25mm, 2x DS18B20, Dissipadores autoadesivos, Sensor de tensão 0-25V, Antena Wi-Fi 3dBi, OLED 0.96", TFT 1.3" e 2x Joysticks). Subtotal UsinaInfo: R$ 153,62 cartão / R$ 145,94 Pix.
+   - **Mercado Livre:** 4 itens ativos (SanDisk 32GB Full, Kit 5x LEDs 3W com estrela 20mm, Driver LED PT4115 700mA PWM e Receptor FlySky FS-iA6B). Subtotal ML: R$ 168,20.
+   - **Curto Circuito:** Módulo A7608SA-H 4G Cat-4 com estoque confirmado (SKU `18609`). Subtotal: R$ 448,00 / R$ 403,20 Pix.
+   - **Total Consolidado Atual:** **R$ 769,82 no Cartão** ou **R$ 717,34 no Pix/Boleto** (economia à vista de R$ 52,48).
+
+5. **Revisão Mercado Livre (Meli):**
+   - Todos os itens do Mercado Livre foram reclassificados para **Prioridade Baixa** conforme decisão do usuário.
+   - O **driver de corrente constante** foi removido da lista de compras.
+   - Os links do Mercado Livre foram configurados com o parâmetro oficial `pdp_filters=shipping:fulfillment`, abrindo direto na listagem exclusiva de produtos com entrega **Full** e frete rápido.
+   - Subtotal Mercado Livre (3 itens: SanDisk 32GB Full, Kit 5x LEDs 3W estrela Full, Receptor FlySky FS-iA6B Full): R$ 149,70.
+   - **Novo Total Geral Consolidado:** **R$ 751,32 no Cartão** ou **R$ 698,84 no Pix/Boleto** (economia à vista de R$ 52,48).
+
+Planilha física `docs/hardware/compras_rover_reorganizado.xlsx` atualizada com as 4 abas corrigidas e fórmulas ajustadas. Nenhum pedido finalizado ou comando Git executado.
+
+
+
+
+
+### Revisão da compra reorganizada — 13/10/2026
+
+Revisada e corrigida docs/hardware/compras_rover_reorganizado.xlsx (4 abas), diferente da planilha antiga emoutputs. Usuário pediu revisar tudo. Preservadas prioridades, quantidades, estrutura e valoresML como estimativas; não restauradas compras removidas. AntenaWiFi corrigida para Usina08359, URL5259, R$11,80 cartão/R$11,21Pix em vez de código04933/link4933/R$26,51. CompatibilidadeU.FL e seleçãoRF daS3-CAM pendentes; não é antenaLTE e não garanteFrames.
+
+Os três linksML não sustentam “Full garantido”: SanDisk abriuR$59 semFull; kitLED10×3W R$70,13 semFull confirmado; receptor abriu como importaçãoChina. Valores44,90/29,90/79,90 preservados exclusivamente como estimativas a recotar, sem confirmarFull/procedência. ReceptorAFHDS2A depende do modelo exatoFlySky. Farol semlimitador/acionamento/dissipação não está completo. Thermalpad ausente da compra. TFT/joysticks precisam deMCU disponível no laboratório, sem recriar linhaESP removida.
+
+Notas corrigidas: DS18B20 exigepull-up4,7kΩ e mede superfície/região, não junção; sensorDC éalternativa ao divisor jádocumentado; OLEDSSD1306 framebuffer1kB noNano e U8g2nãoé automaticamenteleve; fan ficha10mm vs fotos7mm requer confirmar; dissipadoresnão garantem resfriamentoOV5640. A7608plano/cabo/alimentação e USB/PPP/vazãoserial/GPIO/encaixe ainda não validados.
+
+Matemáticaoriginal somava corretamente; corrigido resumo deprioridades para SUMIF emtodas lojas e adicionado dropdown, testado mudar prioridade deSD e restaurar. Corrigida exibição monetária. Totais após antena: R$741,60 cartão/R$689,87Pix incluindoR$154,70 emestimativasML; lojasdiretas R$586,90cartão/R$535,17Pix, semfrete e comcompatibilidadespendentes. Arquivooriginal atualizado e cópia entregáveloutputs/.../compras_rover_reorganizado_revisado.xlsx. Fórmulas semerros, reconciliadas prioridades, 4abas/13links nativos verificados e revisão visual. Nenhum pedido nemGit.
+
+### Publicação autorizada — 14/10/2026
+
+Usuário solicitou explicitamente “suba”, autorizando commit/push de todas as alterações locais do projeto. Incluídas reorganização, app/firmware, KiCad, documentação e planilhas. .gitignore ampliado para node_modules, diagnósticosinspect e estado/travas/autosaveKiCad, preservando os arquivos locais. TypeScript tsc --noEmit passou. LintExpo não executou por ausênciaESLint/config; tentativa automática de instalação falhou por bun não encontrado no subprocesso, sem alterações no package.json/lockfiles. Sem novos testes físicos.

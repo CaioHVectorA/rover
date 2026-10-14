@@ -3,7 +3,7 @@
 Esta pasta reúne exclusivamente **fotos reais dos componentes adquiridos** e **referências estéticas e mecânicas da comunidade maker** para inspirar o design da carenagem fechada e do suporte Pan/Tilt.
 
 > **Nota de Organização:**
-> Para desenhos técnicos de engenharia com cotas milimétricas, plantas e esquemas elétricos oficiais, consulte a pasta [`imagens_importantes/`](file:///home/usuario/Documentos/rover/imagens_importantes/ESPECIFICACOES_TECNICAS.md).
+> Para desenhos técnicos de engenharia com cotas milimétricas, plantas e esquemas elétricos oficiais, consulte a pasta [`docs/hardware/`](file:///home/usuario/Documentos/rover/docs/hardware/ESPECIFICACOES_TECNICAS.md).
 
 ---
 

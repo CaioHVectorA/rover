@@ -1,0 +1,7 @@
+#VRML V2.0 utf8
+Transform { translation 0 -0.0 6.0 children [ Shape { appearance Appearance { material Material { diffuseColor 0.9 0.1 0.1 specularColor 0.4 0.4 0.4 } } geometry Box { size 1.0 1.0 12.0 } } ] }
+Transform { translation -18.0 -0.0 12.0 children [ Shape { appearance Appearance { material Material { diffuseColor 0.9 0.1 0.1 specularColor 0.4 0.4 0.4 } } geometry Box { size 36.0 1.0 1.0 } } ] }
+Transform { translation 0 -2.54 7.0 children [ Shape { appearance Appearance { material Material { diffuseColor 0.1 0.1 0.1 specularColor 0.4 0.4 0.4 } } geometry Box { size 1.0 1.0 14.0 } } ] }
+Transform { translation -18.0 -2.54 14.0 children [ Shape { appearance Appearance { material Material { diffuseColor 0.1 0.1 0.1 specularColor 0.4 0.4 0.4 } } geometry Box { size 36.0 1.0 1.0 } } ] }
+Transform { translation 0 -5.08 8.0 children [ Shape { appearance Appearance { material Material { diffuseColor 0.95 0.8 0.1 specularColor 0.4 0.4 0.4 } } geometry Box { size 1.0 1.0 16.0 } } ] }
+Transform { translation -18.0 -5.08 16.0 children [ Shape { appearance Appearance { material Material { diffuseColor 0.95 0.8 0.1 specularColor 0.4 0.4 0.4 } } geometry Box { size 36.0 1.0 1.0 } } ] }
