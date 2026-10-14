@@ -611,6 +611,20 @@ Firmwares do projeto multi-board no PlatformIO configurados, integrados e compil
   * Totais UsinaInfo recalculados para **R$ 270,92 no cartão / R$ 257,37 no Pix** (11 itens). Total geral consolidado: **R$ 898,62 cartão / R$ 840,27 Pix**.
   * Planilha e interface visual móvel atualizadas e sincronizadas.
 
+### Simplificação da Planilha e Adição das Capas de Botão — 14/10/2026
+
+* **Melhorias de Visualização e Usabilidade Mobile:**
+  * Planilha física reestruturada para **formato simplificado de aba única consolidada** (`Lista de Compras`), eliminando blocos de observações pesadas, excesso de colunas horizontais e navegação complexa entre abas no smartphone.
+  * Colunas reduzidas para o essencial: *Produto / Componente*, *Qtd*, *Preço Unit.*, *Subtotal Cartão*, *À Vista (Pix)* e *Link Direto da Loja*.
+  * Cards de resumo no topo com fórmulas automáticas dinâmicas para Total Pix, Total Cartão e Economia Total.
+* **Novo Item Incluído:**
+  * **Kit 10 Capas para Push Button 6×6mm** (UsinaInfo cód. 05861, R$ 8,86 cartão / R$ 8,42 Pix) adicionado para acabamento profissional e acionamento ergonômico dos 10 botões.
+* **Totais Finais:**
+  * UsinaInfo (12 itens): **R$ 279,78 cartão / R$ 265,79 Pix**
+  * Mercado Livre (4 itens): **R$ 179,70**
+  * Curto Circuito (1 item): **R$ 448,00 cartão / R$ 403,20 Pix**
+  * **Total Geral Consolidado:** **R$ 907,48 no cartão / R$ 848,69 à vista no Pix** (Economia: R$ 58,79).
+
 
 
 
