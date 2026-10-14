@@ -602,6 +602,15 @@ Firmwares do projeto multi-board no PlatformIO configurados, integrados e compil
     3. Tabelas detalhadas "De ➔ Para" de conexões: Barramento de Força/GND, Comunicação Serial com inversor BC337, Tração 4WD (TB6612FNG) e Servos Pan/Tilt.
     4. Dicas práticas de engenharia de montagem (soquetes para Nano/TB6612, trilhas mestras de força e conectores de borda).
 
+### Inclusão do Display TFT 3,5" Touch e 10x Botões Tácteis — 14/10/2026
+
+* **Ajustes Solicitados pelo Usuário:**
+  * **Display TFT 3,5" SPI Touch com Slot SD (ILI9488)** adicionado na aba UsinaInfo (cód. 09989, R$ 119,60 / R$ 113,62 no Pix, Prioridade Alta) para interface tátil direta de bordo.
+  * **10x Botões Push Button Chave Táctil 6×6×5mm** (2 kits de 5 unidades) adicionados na aba UsinaInfo (cód. 02989, R$ 4,92 / R$ 4,68 no Pix, Prioridade Alta) para comandos físicos locais e calibração.
+  * **Esclarecimento do Cabo Pigtail:** O item cód. 08359 da UsinaInfo já consiste no **Kit Completo: Antena Wi-Fi 2,4GHz 3dBi + Cabo Pigtail U.FL (IPEX) para SMA Fêmea** (ambos inclusos por R$ 11,80 / R$ 11,21 no Pix). A descrição na planilha foi tornada explícita.
+  * Totais UsinaInfo recalculados para **R$ 270,92 no cartão / R$ 257,37 no Pix** (11 itens). Total geral consolidado: **R$ 898,62 cartão / R$ 840,27 Pix**.
+  * Planilha e interface visual móvel atualizadas e sincronizadas.
+
 
 
 
