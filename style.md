@@ -89,3 +89,8 @@ Este documento registra o perfil técnico, tom de voz, ritmo e preferências de 
 * **2026-10-13 (Orçamento do laboratório):** Comprar componentes de expansão agora, antes do fim do orçamento em dezembro; separar prioridade de aquisição da etapa futura de uso. Não adiar automaticamente a compra por não ser necessária na bancada atual.
 
 * **2026-10-13 (Revisão de compras):** Revisar o XLSX atual em docs/hardware, distinguindo-o de versões antigas em outputs. Não tratar URL de catálogo como comprovação de Full; preservar orçamento estimado identificando pendências e validar compatibilidade antes de declarar compra pronta.
+
+* **2026-10-24 (Suíte de 6 POCs & Limpeza Radical da Raiz):**
+  * O usuário solicitou que a raiz do repositório seja mantida estritamente limpa e sem pastas de testes/compras soltas.
+  * Validação prática antes da integração final: arquitetura em 6 POCs incrementais isolados (`poc1` a `poc6`), permitindo testar cada subsistema físico (Serial, Pan/Tilt sem rebolado, Câmera fria/soneca e Motores com rampa anti-brownout) antes de juntar tudo.
+  * O usuário prefere subidas de Git apenas quando sinalizar expressamente o encerramento da rodada.
