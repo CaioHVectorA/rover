@@ -631,3 +631,66 @@ Firmwares do projeto multi-board no PlatformIO configurados, integrados e compil
 
 
 
+
+
+---
+
+## 🔬 17. Suíte dos 6 POCs Incrementais, Otimização Térmica do OV5640 e Prevenção de Brown-Out — 24/10/2026
+
+### Contexto & Desafios de Bancada Levantados pelo Usuário:
+1. **Desligamento/Reset Intermitente do Arduino Nano:** Durante testes com motores/servos, o Arduino Nano desligava e reiniciava.
+2. **Dúvida sobre a Capacidade de Corrente da Bateria 2S e do OV5640:** Verificação se a bateria 2S Li-Ion dá conta de todo o conjunto e qual o impacto real da corrente do sensor OV5640.
+3. **Efeito "Rebolado" no Servo de Pan:** Em movimentos lentos, o suporte da câmera oscilava lateralmente ("rebolava").
+4. **Aquecimento Severo do OV5640:** Desejo de "secar em software" o calor da câmera, evitando ventoinhas mecânicas na cabeça móvel Pan/Tilt.
+5. **Reorganização Estrutural da Raiz:** A raiz do projeto acumulava pastas e sketches soltos (`hardware/`, `testes/`, `servidor-relay/`, `outputs/`, `scratch/`), gerando confusão visual.
+
+---
+
+### Diagnósticos de Engenharia Validados:
+
+#### A. Diagnóstico de Alimentação & Brown-Out Reset (ATmega328P):
+* **Capacidade da Bateria 2S (7.4V 2500mAh):** A bateria fornece de **2,5A a 5A contínuos** com folga (consumo médio total do robô: ~1,2A a 1,5A). O consumo do sensor OV5640 é de apenas **~100 mA a 130 mA** na linha de 5V (< 2,5% da capacidade do Step-Down Mini 560 de 5A). O OV5640 é completamente inofensivo para a alimentação.
+* **Causa Raiz do Desligamento:** O circuito **BOD (Brown-Out Detection)** do microcontrolador ATmega328P do Nano dispara reset forçado se a linha de 5V oscilar abaixo de **4,3V** por microssegundos.
+* **Origem da Queda de Tensão:** No arranque súbito (0 a 100% de PWM) ou na reversão direta frente/ré, os 4 micromotores JGA16-050 drenam até **4,8A instantâneos** de corrente de bloqueio (*stall inrush*). Isso causa um afundamento (*sag*) temporário na resistência interna da bateria e fiação. Se o Mini 560 sofrer dropout, o 5V cai e o Nano apaga.
+* **Solução Implementada:** Módulo [`nano_motores.h`](file:///c:/Users/caihe/Documents/develop/rover/src/firmware/comum/nano_motores.h) com rampa progressiva de PWM (0 a 100% em 800ms) e **tempo morto obrigatório de 150ms na reversão**, cortando o pico de partida em mais de 70%.
+
+#### B. Mecânica e Software do "Rebolado" nos Servos SG90:
+* **Causa Física:** O servo SG90 possui bucha plástica sem rolamento de esferas. Comandos lentos em graus inteiros (`servo.write()`) geram degraus grosseiros de ~10,3 µs a 20,6 µs. O motor não vence o atrito estático imediatamente (*stick*), acumula erro, pula de repente (*slip*) e faz a cabeça oscilar como um pêndulo.
+* **Solução Implementada:** Módulo [`nano_servos.h`](file:///c:/Users/caihe/Documents/develop/rover/src/firmware/comum/nano_servos.h) com interpolação em **microssegundos** (544 a 2400 µs = 1.856 passos, resolução 10x maior), sincronizada rigorosamente no ciclo de **50 Hz (20 ms)** do servo, perfil trapezoidal de aceleração, piso de velocidade anti-stick-slip (`velMin`) e compensação de folga (*backlash*).
+
+#### C. Otimização Térmica Extrema do OV5640 em Software:
+* **Soneca Real (Soft Power-Down):** Registrador SCCB `0x3008 = 0x42` desativa ADC, ISP e JPEG interno quando não há espectadores por mais de 3 segundos (corrente cai de ~140 mA para < 1 mA, esfriando a câmera). Reativação em ~40 ms (`0x3008 = 0x02`).
+* **XCLK Adaptativo:** Redução do clock de 20 MHz para **8 MHz a 12 MHz** (`s->set_xclk()`), reduzindo a dissipação dinâmica do silício pela metade sem perder taxa em QVGA/VGA.
+* **Isolamento de Núcleos FreeRTOS:** Servidor de streaming MJPEG migrado para a biblioteca `esp_http_server` nativa, rodando em **Task dedicada no Core 0 (porta 82)**. O Core 1 permanece 100% livre para o WebSocket (porta 81) e serial, eliminando o travamento do laço anterior.
+* **Modo Eco Automático:** Após 8 segundos sem comandos nos servos/motores, a taxa de envio cai para 5 FPS (`MODO_ECO`). Ao tocar no controle, volta imediatamente para 20 FPS.
+
+---
+
+### Implementação da Suíte dos 6 POCs:
+
+Todos os 6 POCs foram implementados de forma desacoplada em [`src/firmware/pocs/`](file:///c:/Users/caihe/Documents/develop/rover/src/firmware/pocs/) e configurados no [`platformio.ini`](file:///c:/Users/caihe/Documents/develop/rover/platformio.ini):
+
+1. **POC 1 — Enlace Serial RX/TX (`poc1_esp32` + `poc1_nano`):** Servidor Web com medição de ping/RTT, detecção de perda e telemetria de causa do último reset do Nano (`MCUSR`).
+2. **POC 2 — Pan/Tilt Suave sem Vídeo (`poc2_esp32` + `poc2_nano`):** Sliders manuais, teste de varredura lenta e sintonia de parâmetros anti-rebolado em tempo real.
+3. **POC 3 — Transmissão de Vídeo Fria (`poc3_esp32`):** ESP32 isolado testando os presets térmicos (Frio, Equilibrado, Qualidade, Máximo), medição de temperatura do silício e soneca.
+4. **POC 4 — Pan/Tilt + Transmissão (`poc4_esp32` + `poc2_nano`):** Operação combinada da cabeça móvel com taxa de quadros e modo Eco dinâmico sem interferência entre vídeo e servos.
+5. **POC 5 — Teste Automático de Motores (`poc5_nano`):** Teste autônomo no Nano (baud 115200) com rodas suspensas no ar, executando polaridade, vai-e-volta, giros e medição contínua do afundamento (*sag*) da bateria.
+6. **POC 6 — Motores Controlados (`poc6_esp32` + `poc6_nano`):** Joystick virtual touch, D-pad e controle via teclado com rampa de aceleração e watchdog de segurança de 600 ms.
+
+*Status de Compilação:* Todos os 10 ambientes PlatformIO foram compilados com status **SUCCESS** (`poc1_nano`, `poc1_esp32`, `poc2_nano`, `poc2_nano_hw`, `poc2_esp32`, `poc3_esp32`, `poc4_esp32`, `poc5_nano`, `poc6_nano`, `poc6_nano_hw`, `poc6_esp32`).
+
+---
+
+### Reorganização Definitiva da Estrutura de Diretórios:
+* **Raiz Limpa:** Removidas pastas soltas da raiz (`outputs/`, `testes/`, `scratch/`, `hardware/`, `servidor-relay/`).
+* **Documentação Estruturada em `docs/`:**
+  * `docs/pocs/`: [`README.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/pocs/README.md) e [`GUIA_EXECUCAO_POCS.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/pocs/GUIA_EXECUCAO_POCS.md).
+  * `docs/guides/`: Adicionados [`camera_calor_software.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/camera_calor_software.md), [`ajuste_fino_servos_rebolado.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/ajuste_fino_servos_rebolado.md) e [`tracao_motores_anti_reset.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/tracao_motores_anti_reset.md).
+  * `docs/compras/`: Histórico consolidado de compras e orçamentos.
+  * `docs/hardware/kicad/`: Projetos KiCad unificados.
+* **Código Modular em `src/`:**
+  * `src/firmware/comum/`: Código de hardware compartilhado (`.h`).
+  * `src/firmware/pocs/`: Códigos dos 6 POCs.
+  * `src/firmware/gateway_app/`: Firmware de produção integrado ao App Expo.
+  * `src/firmware/legado/`: Sketches históricos arquivados.
+  * `src/servidor_relay/`: Servidor de teleoperação em nuvem.

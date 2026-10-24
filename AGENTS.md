@@ -15,8 +15,8 @@ Este documento contém as **diretrizes obrigatórias de comportamento, regras de
 
 ## 📖 2. Memória Contínua & Documentação (`docs/context.md` e `README.md`)
 
-* **Memória Técnica Contínua:** O arquivo [`docs/context.md`](file:///home/usuario/Documentos/rover/docs/context.md) é a memória técnica detalhada de longo prazo. A cada decisão técnica ou avanço prático relevante, atualize este documento organicamente.
-* **Visão Geral Executiva:** O arquivo [`README.md`](file:///home/usuario/Documentos/rover/README.md) é a porta de entrada pública do repositório (status, quickstart, arquitetura limpa e links).
+* **Memória Técnica Contínua:** O arquivo [`docs/context.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/context.md) é a memória técnica detalhada de longo prazo. A cada decisão técnica ou avanço prático relevante, atualize este documento organicamente.
+* **Visão Geral Executiva:** O arquivo [`README.md`](file:///c:/Users/caihe/Documents/develop/rover/README.md) é a porta de entrada pública do repositório (status, quickstart, arquitetura limpa e links).
 * **Fidelidade Real ao Status do Projeto:**
   * **STATUS ATUAL:** **Todos os componentes físicos já chegaram e estão em mãos na bancada de testes.**
   * O projeto está na fase de **testes ativos de bancada (firmware, comunicação serial e app mobile)** e validação para modelagem CAD 3D do chassi.
@@ -42,7 +42,7 @@ Nunca volte atrás ou altere os seguintes componentes já adquiridos e validados
 5. **Placas de Controle & Comunicação Serial:**
    * **Cabeça Pan/Tilt (Móvel):** Placa ESP32-S3-CAM (câmera + Wi-Fi + WebSocket Server).
    * **Chassi (Fixo):** Arduino Nano V3 (5V nativo, comanda TB6612FNG, 2 servos SG90, LEDs WS2812B, Buzzer e lê bateria).
-   * **Comunicação:** Chicote flexível de **4 fios** (`5V`, `GND`, `ESP IO43 TX -> Nano D0 RX`, `Nano D1 TX -> Divisor -> ESP IO44 RX`).
+   * **Comunicação:** Chicote flexível de **3 a 4 fios** (`5V`, `GND`, `ESP IO43 TX -> Nano D2 RX via BC337 ou D0 direto`, `Nano D1 TX -> Divisor -> ESP IO44 RX`).
 6. **Alimentação:**
    * Bateria Li-Ion 2S 7.4V 2500mAh com BMS.
    * Regulador Step-Down Mini 560 (5V / até 5A).
@@ -52,24 +52,50 @@ Nunca volte atrás ou altere os seguintes componentes já adquiridos e validados
 
 ## 📂 4. Organização Oficial de Arquivos e Pastas
 
-Mantenha a modularidade rigorosa da codebase:
+Mantenha a modularidade rigorosa da codebase e a raiz (`/`) estritamente limpa (sem pastas soltas de testes ou compras):
 
-* [`docs/`](file:///home/usuario/Documentos/rover/docs/):
-  * [`context.md`](file:///home/usuario/Documentos/rover/docs/context.md): Registro contínuo de decisões e contexto geral.
-  * [`hardware/`](file:///home/usuario/Documentos/rover/docs/hardware/): Desenhos técnicos oficiais milimétricos (`ESPECIFICACOES_TECNICAS.md`) e planilha oficial [`tabela_pinagem_esp32_nano.xlsx`](file:///home/usuario/Documentos/rover/docs/hardware/tabela_pinagem_esp32_nano.xlsx).
-  * [`guides/`](file:///home/usuario/Documentos/rover/docs/guides/): Guias aprofundados de servos/VR, protocolos de rede e streaming de vídeo.
-  * [`references/`](file:///home/usuario/Documentos/rover/docs/references/): Fotos reais dos produtos e referências maker ([`INSPIRACOES_CASE_E_PAN_TILT.md`](file:///home/usuario/Documentos/rover/docs/references/INSPIRACOES_CASE_E_PAN_TILT.md)). Proibido renders ou imagens falsas de IA.
-* [`src/`](file:///home/usuario/Documentos/rover/src/):
-  * [`firmware/`](file:///home/usuario/Documentos/rover/src/firmware/): Códigos C++/Arduino do ESP32 e Arduino Nano.
-  * [`app_mobile/`](file:///home/usuario/Documentos/rover/src/app_mobile/): Aplicativo React Native / Expo (VR Head-Tracking, FPV, Dashboard).
-* [`tools/`](file:///home/usuario/Documentos/rover/tools/):
-  * Scripts auxiliares em Python e geradores de diagramas.
+* [`docs/`](file:///c:/Users/caihe/Documents/develop/rover/docs/):
+  * [`context.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/context.md): Registro contínuo de decisões e contexto geral.
+  * [`pocs/`](file:///c:/Users/caihe/Documents/develop/rover/docs/pocs/): Documentação e guias de execução da suíte de 6 POCs incrementais ([`README.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/pocs/README.md), [`GUIA_EXECUCAO_POCS.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/pocs/GUIA_EXECUCAO_POCS.md)).
+  * [`hardware/`](file:///c:/Users/caihe/Documents/develop/rover/docs/hardware/): Desenhos técnicos oficiais milimétricos (`ESPECIFICACOES_TECNICAS.md`), planilha oficial [`tabela_pinagem_esp32_nano.xlsx`](file:///c:/Users/caihe/Documents/develop/rover/docs/hardware/tabela_pinagem_esp32_nano.xlsx) e projetos KiCad em `kicad/`.
+  * [`guides/`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/): Guias aprofundados de engenharia:
+    * [`camera_calor_software.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/camera_calor_software.md): Otimização térmica do OV5640 (soneca em 0x3008, XCLK adaptativo, FreeRTOS Core 0).
+    * [`ajuste_fino_servos_rebolado.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/ajuste_fino_servos_rebolado.md): Eliminação do rebolado nos servos SG90 (microssegundos a 50Hz, rampa e antifolga).
+    * [`tracao_motores_anti_reset.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/tracao_motores_anti_reset.md): Prevenção de Brown-Out e rampa de PWM 4WD na TB6612FNG.
+    * [`controle_servos_head_tracking_vr.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/controle_servos_head_tracking_vr.md): Guia de head-tracking VR para o app mobile.
+    * [`http_vs_websocket_redes.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/http_vs_websocket_redes.md): Arquitetura de rede.
+    * [`streaming_video_baixa_latencia.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/guides/streaming_video_baixa_latencia.md): Pipeline de vídeo.
+  * [`compras/`](file:///c:/Users/caihe/Documents/develop/rover/docs/compras/): Histórico consolidado de compras, planilhas orçamentárias e fotos das lojas.
+  * [`references/`](file:///c:/Users/caihe/Documents/develop/rover/docs/references/): Fotos reais dos produtos e referências maker ([`INSPIRACOES_CASE_E_PAN_TILT.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/references/INSPIRACOES_CASE_E_PAN_TILT.md)). Proibido renders ou imagens falsas de IA.
+* [`src/`](file:///c:/Users/caihe/Documents/develop/rover/src/):
+  * [`firmware/`](file:///c:/Users/caihe/Documents/develop/rover/src/firmware/):
+    * `comum/`: Módulos de hardware unificados e reutilizáveis (`esp_camera_frio.h`, `esp_painel.h`, `esp_enlace.h`, `nano_servos.h`, `nano_motores.h`, `nano_diag.h`, `rover_protocolo.h`).
+    * `pocs/`: Suíte dos 6 POCs incrementais (`poc1` a `poc6`), cada um com pasta própria para ESP32 e/ou Nano.
+    * `gateway_app/`: Firmware completo de produção integrado ao aplicativo mobile Expo.
+    * `legado/`: Sketches e testes históricos arquivados.
+  * [`app_mobile/`](file:///c:/Users/caihe/Documents/develop/rover/src/app_mobile/): Aplicativo React Native / Expo (VR Head-Tracking, FPV, Dashboard).
+  * [`servidor_relay/`](file:///c:/Users/caihe/Documents/develop/rover/src/servidor_relay/): Servidor Node.js / Docker para relay de teleoperação em nuvem.
+* [`tools/`](file:///c:/Users/caihe/Documents/develop/rover/tools/):
+  * Scripts auxiliares em Python e geradores de diagramas KiCad/Docx.
 
 ---
 
-## 💬 5. Estilo de Comunicação & Tom
+## ⚡ 5. Ambientes de Compilação PlatformIO (`platformio.ini`)
+
+Ao compilar ou gravar qualquer firmware, sempre use o ambiente específico com `pio run -e <env>`:
+* POC 1: `poc1_esp32` | `poc1_nano`
+* POC 2: `poc2_esp32` | `poc2_nano` (ou `poc2_nano_hw`)
+* POC 3: `poc3_esp32`
+* POC 4: `poc4_esp32` | `poc2_nano`
+* POC 5: `poc5_nano` (baud rate 115200)
+* POC 6: `poc6_esp32` | `poc6_nano` (ou `poc6_nano_hw`)
+* Produção App: `gateway_esp32` | `gateway_nano`
+
+---
+
+## 💬 6. Estilo de Comunicação & Tom
 
 * Seja direto, prático e conciso.
 * Sempre utilize links clicáveis no padrão markdown (`[Nome do Arquivo](file:///caminho/completo)`).
 * Responda em Português (Brasil).
-* **Guia de Estilo Vivo ([`style.md`](file:///home/usuario/Documentos/rover/style.md)):** O agente deve enriquecer continuamente o arquivo `style.md`, registrando o perfil de comunicação, ritmo das respostas e preferências do usuário, afinando o tom organicamente a cada conversa.
+* **Guia de Estilo Vivo ([`style.md`](file:///c:/Users/caihe/Documents/develop/rover/style.md)):** O agente deve enriquecer continuamente o arquivo `style.md`, registrando o perfil de comunicação, ritmo das respostas e preferências do usuário, afinando o tom organicamente a cada conversa.

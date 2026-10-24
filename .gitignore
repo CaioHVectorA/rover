@@ -31,3 +31,9 @@ _autosave-*
 
 # Root scratch directory
 /scratch/
+
+# Credenciais de Wi-Fi dos firmwares (modelo: credenciais.exemplo.h)
+src/firmware/comum/credenciais.h
+
+# Lixo de build dentro de sketches legados
+src/firmware/legado/**/.pio/
