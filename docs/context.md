@@ -694,3 +694,31 @@ Todos os 6 POCs foram implementados de forma desacoplada em [`src/firmware/pocs/
   * `src/firmware/gateway_app/`: Firmware de produção integrado ao App Expo.
   * `src/firmware/legado/`: Sketches históricos arquivados.
   * `src/servidor_relay/`: Servidor de teleoperação em nuvem.
+
+
+---
+
+### Validação Física em Bancada & Firmware Integrado Total (26/10/2026):
+
+1. **Resolução Definitiva do Circuito Inversor BC337 (ESP32 IO43 -> Nano D0):**
+   * **Problema Físico:** O transistor BC337 invertia a lógica da UART (repouso HIGH virava 0V no D0 do Nano). Como o receptor de hardware nativo do ATmega328P (Serial no D0) não possui inversão de polaridade por hardware, ele interpretava os 0V como condição perpétua de Break/Framing Error, travando a leitura e mantendo o LED RX do Nano aceso direto.
+   * **Solução Elegante em Software:** Ativamos a inversão nativa do periférico UART2 no ESP32 (Serial2.begin(9600, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, true)). A dupla inversão (ESP inverte saída -> BC337 desinverte na passagem) entrega a lógica positiva padrão (repouso 5V, pulsos em 0V) ao pino D0 do Nano, garantindo leitura perfeita com 0% de ruído e sem perda de pacotes.
+
+2. **Validação Sequencial dos POCs em Bancada:**
+   * **POC 1 (Serial & LED):** Resposta imediata do LED D13 aos comandos da interface web.
+   * **POC 3 (Câmera Fria OV5640):** Transmissão estável a 20 FPS QVGA mantendo temperatura média do ESP em ~33 °C a 35 °C, com acionamento sob demanda e soneca em 3 segundos sem espectadores.
+   * **POC 5 e POC 6 (Tração 4WD TB6612FNG):** Rampa suave e reversão com tempo morto validadas nos micromotores JGA-050 sem queda de tensão (sem brown-out reset no Nano).
+
+3. **Firmware Integrado Total de Produção (
+over_total_esp32 + 
+over_total_nano):**
+   * **Hardware Unificado:** Câmera OV5640 (preset Equilibrado + rotação 270°) + Pan/Tilt com servos SG90 (D9/D10) + Tração 4WD TB6612FNG (D3..D8, D12) + Leitura da bateria 2S.
+   * **Eliminação de Interrupções e Conflitos de Timers:**
+     * SoftwareSerial completamente removido (-DLINK_HW) em favor da UART de hardware no D0 (sem desabilitar interrupções com cli()).
+     * Servos desacoplados em Timer 1 modo Fast PWM 14 de hardware puro nos pinos D9 (OC1A) e D10 (OC1B), operando sem ISR e sem jitter.
+     * Acionamento dos motores com PWM simétrico nos canais A (D3) e B (D6) com rampa suave de aceleração anti-brownout.
+   * **Cockpit FPV Web Compacto & Responsivo (http://192.168.7.8/):**
+     * Sem necessidade de zoom out no celular, proporção 100% responsiva em tela única.
+     * Controles táteis isolados com D-pads independentes para Tração 4WD e Pan/Tilt.
+     * Modal/tooltip de configurações em tempo real para velocidade dos servos (até 600°/s) eliminando stick-slip/trepidação.
+     * Curso de inclinação vertical (Tilt) expandido para 0° a 155°.

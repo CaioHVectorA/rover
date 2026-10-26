@@ -112,7 +112,8 @@ class MotoresTB6612 {
 
   void aplicar(LadoMotor &m, uint8_t idx) {
     if (m.cur == 0) {                                 // coast
-      digitalWrite(m.in1, LOW); digitalWrite(m.in2, LOW); analogWrite(m.pwm, 0);
+      digitalWrite(m.in1, LOW); digitalWrite(m.in2, LOW);
+      analogWrite(m.pwm, 0);
       return;
     }
     long v = labs(m.cur) / 16; if (v < 1) v = 1;

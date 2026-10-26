@@ -35,7 +35,8 @@ class EnlaceNano {
 
   void begin() {
     Serial2.setRxBufferSize(512);
-    Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX);
+    Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, false);
+    Serial2.setTxInvert(true);   // so o TX e invertido (BC337 re-inverte); RX do Nano chega em polaridade normal
   }
 
   void loop(uint32_t agora) {

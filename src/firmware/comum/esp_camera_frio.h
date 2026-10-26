@@ -29,7 +29,7 @@
 #ifndef POC_ECO_APOS_S
 #define POC_ECO_APOS_S 0           // 0 = modo eco desligado (POC 3: so assistindo); POC 4/6 definem 8
 #endif
-#define CAM_CFG_VERSAO 2
+#define CAM_CFG_VERSAO 3
 
 enum ModoCam : uint8_t { MODO_ATIVO = 0, MODO_ECO, MODO_DORMINDO, MODO_TERMICO };
 static const char *MODO_NOME[] = {"ATIVO", "ECO", "DORMINDO", "TERMICO"};
@@ -51,6 +51,7 @@ struct CamConfig {
   uint8_t tempAlerta = 68, tempCorte = 80;   // graus C (chip ESP32-S3)
   uint8_t governor = 1, espelho = 0, inverte = 0;
   int8_t  brilho = 0;
+  uint16_t rotacao = 90;                // 0, 90, 180, 270 graus (camera deitada = 90 ou 270)
 };
 
 struct CamEstado {
@@ -87,6 +88,7 @@ static void camClamp() {
   camCfg.governor = camCfg.governor ? 1 : 0;
   camCfg.espelho = camCfg.espelho ? 1 : 0;
   camCfg.inverte = camCfg.inverte ? 1 : 0;
+  if (camCfg.rotacao != 0 && camCfg.rotacao != 90 && camCfg.rotacao != 180 && camCfg.rotacao != 270) camCfg.rotacao = 90;
 }
 
 static void camCarregar() {
@@ -315,24 +317,24 @@ static void camIniciarServidor() {
 
 // ---------------------------------------------------------------- API HTTP de configuracao (porta 80)
 static String camCfgJson() {
-  char b[420];
+  char b[450];
   snprintf(b, sizeof(b),
-    "{\"res\":\"%s\",\"q\":%u,\"xclk\":%u,\"xclk_eco\":%u,\"xclk_t\":%u,\"fps\":%u,\"fps_eco\":%u,\"fps_t\":%u,"
+    "{\"res\":\"%s\",\"rot\":%u,\"q\":%u,\"xclk\":%u,\"xclk_eco\":%u,\"xclk_t\":%u,\"fps\":%u,\"fps_eco\":%u,\"fps_t\":%u,"
     "\"sleep_s\":%u,\"eco_s\":%u,\"t_alerta\":%u,\"t_corte\":%u,\"gov\":%u,\"hmirror\":%u,\"vflip\":%u,\"bright\":%d}",
-    RES_NOME[camCfg.res], camCfg.qualidade, camCfg.xclkAtivo, camCfg.xclkEco, camCfg.xclkTermico,
+    RES_NOME[camCfg.res], camCfg.rotacao, camCfg.qualidade, camCfg.xclkAtivo, camCfg.xclkEco, camCfg.xclkTermico,
     camCfg.fpsAtivo, camCfg.fpsEco, camCfg.fpsTermico, camCfg.dormirApos_s, camCfg.ecoApos_s,
     camCfg.tempAlerta, camCfg.tempCorte, camCfg.governor, camCfg.espelho, camCfg.inverte, camCfg.brilho);
   return String(b);
 }
 
 static String camStatsJson() {
-  char b[360];
+  char b[380];
   snprintf(b, sizeof(b),
     "{\"ok\":%d,\"ov5640\":%d,\"modo\":\"%s\",\"dormindo\":%d,\"forcado\":%d,\"clientes\":%d,\"fps\":%.1f,\"kbps\":%.0f,"
-    "\"kb_frame\":%.1f,\"cap_ms\":%.1f,\"xclk\":%u,\"res\":\"%s\",\"res_px\":\"%s\",\"teto_fps\":%u,\"frames\":%lu}",
+    "\"kb_frame\":%.1f,\"cap_ms\":%.1f,\"xclk\":%u,\"res\":\"%s\",\"res_px\":\"%s\",\"rot\":%u,\"teto_fps\":%u,\"frames\":%lu}",
     camEst.ok, camEst.ov5640, MODO_NOME[camEst.modo], camEst.dormindo, camEst.forcadoTermico, camEst.clientes,
     camEst.fps, camEst.kbps, camEst.ultFrameBytes / 1024.0f, camEst.capUs / 1000.0f, camEst.xclkAtual,
-    RES_NOME[camCfg.res], RES_DESC[camCfg.res], camFpsDoModo(camEst.modo), (unsigned long)camEst.frames);
+    RES_NOME[camCfg.res], RES_DESC[camCfg.res], camCfg.rotacao, camFpsDoModo(camEst.modo), (unsigned long)camEst.frames);
   return String(b);
 }
 
@@ -352,6 +354,7 @@ static void camRotas(WebServer &w) {
       String r = w.arg("res"); r.toLowerCase();
       for (int i = 0; i < RES_N; i++) if (r == RES_NOME[i]) camCfg.res = i;
     }
+    if (w.hasArg("rot"))      camCfg.rotacao     = w.arg("rot").toInt();
     if (w.hasArg("q"))        camCfg.qualidade   = w.arg("q").toInt();
     if (w.hasArg("xclk"))     camCfg.xclkAtivo   = w.arg("xclk").toInt();
     if (w.hasArg("xclk_eco")) camCfg.xclkEco     = w.arg("xclk_eco").toInt();

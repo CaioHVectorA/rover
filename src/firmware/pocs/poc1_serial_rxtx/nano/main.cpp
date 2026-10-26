@@ -1,40 +1,63 @@
 // ====================================================================================
-// POC 1 - NANO: TESTE DE ENLACE RX/TX (lado do Nano)
+// POC 1 - NANO: CONTROLE DE LED VIA ENLACE SERIAL (ESCUTA TANTO D0/RX QUANTO D2!)
 // ====================================================================================
-// - Recebe quadros do ESP32 (D2 invertido via BC337) e do Serial Monitor (USB, 9600).
-// - <P,n>  -> responde <A,n> (ack, mede ida e volta)
-// - qualquer outro quadro valido -> responde <K,codigo_do_comando,n_args>
-// - 1x por segundo envia <H,uptime_s,quadros_rx,erros> (testa o sentido Nano -> ESP sozinho)
-// - No boot envia <R,flags> com a causa do reset (power-on / BROWN-OUT / watchdog / externo)
-// - LED D13 inverte a cada quadro recebido.
+// - Aceita comandos tanto pelo pino RX0 nativo (D0, fio direto) quanto pelo D2 (BC337) a 9600 baud!
+// - <L,1> ou '1' -> Liga o LED D13
+// - <L,0> ou '0' -> Desliga o LED D13
+// - <L,2> ou '2' -> Pisca 5 vezes rapido
 // ====================================================================================
 #include <Arduino.h>
-#include <SoftwareSerial.h>   // citado aqui para o PlatformIO (LDF) localizar a biblioteca
-#include "nano_enlace.h"
-#include "nano_diag.h"
+#include <SoftwareSerial.h>
 
-static uint32_t ultHb = 0;
+SoftwareSerial s3Serial(2, 3, true); // D2 com BC337 (invertido)
+
+static unsigned long ultimoStatusMs = 0;
+static unsigned long totalBytes = 0;
+static unsigned long totalComandos = 0;
+
+static void piscarRapido(int vezes) {
+  for (int i = 0; i < vezes; i++) {
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(80);
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(80);
+  }
+}
+
+static void processarChar(char c) {
+  totalBytes++;
+  if (c == '1') {
+    digitalWrite(LED_BUILTIN, HIGH);
+    totalComandos++;
+  } else if (c == '0') {
+    digitalWrite(LED_BUILTIN, LOW);
+    totalComandos++;
+  } else if (c == '2') {
+    totalComandos++;
+    piscarRapido(5);
+  }
+}
 
 void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
-  enlaceBegin();
-  delay(50);
-  Serial.println(F("== POC1 NANO: teste de enlace =="));
-  Serial.print(F("Ultimo reset: ")); Serial.println(diagResetTexto(g_resetFlags));
-  tx('R', g_resetFlags);
+  digitalWrite(LED_BUILTIN, LOW);
+
+  Serial.begin(9600);   // Escuta pino RX0 (D0) a 9600 baud!
+  s3Serial.begin(9600); // Escuta pino D2 (BC337) a 9600 baud!
+  pinMode(2, INPUT_PULLUP);
+
+  // Pisca 3 vezes no boot confirmando que ligou
+  piscarRapido(3);
 }
 
 void loop() {
-  ProtoFrame f;
-  while (enlaceLer(f)) {
-    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-    if (f.cmd == 'P' && f.n >= 1) tx('A', f.arg[0]);
-    else                          tx('K', (long)f.cmd, f.n);
+  // 1) Se estiver ligado no pino RX0 (D0):
+  while (Serial.available() > 0) {
+    processarChar((char)Serial.read());
   }
 
-  uint32_t agora = millis();
-  if (agora - ultHb >= 1000) {
-    ultHb = agora;
-    tx('H', agora / 1000, enlaceRx, enlaceErros());
+  // 2) Se estiver ligado no pino D2 (via BC337):
+  while (s3Serial.available() > 0) {
+    processarChar((char)s3Serial.read());
   }
 }

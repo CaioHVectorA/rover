@@ -16,7 +16,6 @@
 // Tudo ajustavel em tempo real (protocolo <C,id,valor>) para voce calibrar na bancada.
 // ====================================================================================
 #include <Arduino.h>
-#include <Servo.h>
 
 #define SERVO_US_MIN  544
 #define SERVO_US_MAX  2400
@@ -35,6 +34,34 @@ static inline float deg10ParaUs(int d10) {
   return SERVO_US_MIN + (float)d10 * (SERVO_US_MAX - SERVO_US_MIN) / 1800.0f;
 }
 static inline float grausParaUs(float g) { return g * (SERVO_US_MAX - SERVO_US_MIN) / 180.0f; }
+
+// Servo por hardware (Timer1 modo Fast PWM 14, ICR1=20 ms): D9=OC1A, D10=OC1B.
+// Sem ISR e sem desabilitar interrupcoes -> nao interfere na serial nem gera jitter.
+class ServoT1 {
+ public:
+  void attach(uint8_t p, int, int) {
+    static bool init = false;
+    if (!init) {
+      TCCR1A = _BV(WGM11);
+      TCCR1B = _BV(WGM13) | _BV(WGM12) | _BV(CS11);   // prescaler 8 -> 2 ticks/us
+      ICR1 = 39999;
+      init = true;
+    }
+    pin = p;
+    pinMode(pin, OUTPUT);
+    if (pin == 9) TCCR1A |= _BV(COM1A1); else TCCR1A |= _BV(COM1B1);
+  }
+  void writeMicroseconds(int us) {
+    us = constrain(us, 400, 2500);
+    if (pin == 9) OCR1A = (uint16_t)us * 2; else OCR1B = (uint16_t)us * 2;
+  }
+  void detach() {
+    if (pin == 9) TCCR1A &= ~_BV(COM1A1); else TCCR1A &= ~_BV(COM1B1);
+    digitalWrite(pin, LOW);
+  }
+ private:
+  uint8_t pin = 9;
+};
 
 class ServoSuave {
  public:
@@ -104,7 +131,7 @@ class ServoSuave {
   int  posDeg10() const { return (int)((pos - SERVO_US_MIN) * 1800.0f / (SERVO_US_MAX - SERVO_US_MIN) + 0.5f); }
 
  private:
-  Servo s;
+  ServoT1 s;
   uint8_t pin = 0;
   const ServoParams *P = nullptr;
   float pos = 1472, destino = 1472, finalUs = 1472, minUs = 544, maxUs = 2400, vAt = 0, vmax = 1500;
