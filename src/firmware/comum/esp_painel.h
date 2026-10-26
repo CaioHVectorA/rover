@@ -1,6 +1,8 @@
 #pragma once
 // ====================================================================================
-// PAINEL WEB COMPACTO E DIRETO (TOUCH PURO + TOOLTIP DE AJUSTE DE VELOCIDADE)
+// PAINEL WEB COMPACTO E DIRETO
+// - Modos: D-Pad Tátil & Joystick Virtual Proporcional (sem bugs)
+// - Configurações: Inversão de Eixos, Velocidade Fluida, Passo e Qualidade de Vídeo
 // ====================================================================================
 #include <Arduino.h>
 
@@ -40,7 +42,6 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 .status-pill.ok { color: var(--green); border-color: #166534; }
 .status-pill.bad { color: var(--red); border-color: #991b1b; }
 
-/* Botão Configurações */
 .btn-cfg {
   background: #1e293b; border: 1px solid var(--border); color: var(--text);
   padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; cursor: pointer;
@@ -51,14 +52,10 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 .video-card {
   background: #000; border: 1px solid var(--border); border-radius: 8px;
   overflow: hidden; position: relative; display: flex; align-items: center;
-  justify-content: center; min-height: 200px; max-height: 38vh;
+  justify-content: center; min-height: 200px; max-height: 36vh;
 }
-#vid {
-  width: 100%; height: 100%; object-fit: contain; display: block;
-}
-.cam-btn-overlay {
-  position: absolute; top: 6px; right: 6px; display: flex; gap: 6px; z-index: 10;
-}
+#vid { width: 100%; height: 100%; object-fit: contain; display: block; }
+.cam-btn-overlay { position: absolute; top: 6px; right: 6px; display: flex; gap: 6px; z-index: 10; }
 .btn-mini {
   background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;
@@ -66,18 +63,26 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 }
 .btn-mini:active { background: var(--accent); color: #000; }
 
-/* Grid de Controles Lado a Lado */
-.controls-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;
+/* Seletor de Modo (D-Pad vs Joystick) */
+.mode-switch {
+  display: flex; gap: 6px; width: 100%; background: #101622;
+  border: 1px solid var(--border); border-radius: 6px; padding: 3px;
 }
+.btn-mode {
+  flex: 1; background: transparent; border: none; color: var(--sub);
+  padding: 6px; border-radius: 4px; font-weight: 700; font-size: 11px; cursor: pointer;
+}
+.btn-mode.active {
+  background: #1e293b; color: var(--accent); box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* Grid de Controles Lado a Lado */
+.controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
 .ctrl-card {
   background: var(--card); border: 1px solid var(--border); border-radius: 8px;
   padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 6px;
 }
-.ctrl-title {
-  font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub);
-  letter-spacing: 0.5px;
-}
+.ctrl-title { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--sub); letter-spacing: 0.5px; }
 
 /* D-pad 3x3 */
 .dpad {
@@ -90,28 +95,30 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   display: flex; align-items: center; justify-content: center; cursor: pointer;
   touch-action: none; user-select: none;
 }
-.dpad button:active, .dpad button.active {
-  background: var(--accent); color: #000; border-color: #38bdf8;
+.dpad button:active { background: var(--accent); color: #000; border-color: #38bdf8; }
+.dpad-center { background: #232f45 !important; font-size: 11px !important; color: var(--sub) !important; }
+
+/* Joysticks Virtuais */
+.joy-zone {
+  width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(#1c2638 40%, #101622 100%);
+  border: 2px solid var(--border); position: relative; touch-action: none;
+  display: flex; align-items: center; justify-content: center; user-select: none;
 }
-.dpad-center {
-  background: #232f45 !important; font-size: 11px !important; color: var(--sub) !important;
+.joy-knob {
+  width: 44px; height: 44px; border-radius: 50%; background: #2a384f;
+  border: 2px solid var(--accent); position: absolute; pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
 /* Sliders Rápidos */
-.slider-group {
-  width: 100%; display: flex; flex-direction: column; gap: 6px;
-}
-.slider-item {
-  display: flex; align-items: center; justify-content: space-between; gap: 6px;
-}
+.slider-group { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.slider-item { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .slider-item label { font-size: 11px; color: var(--sub); width: 45px; }
 .slider-item input[type=range] { flex: 1; height: 5px; accent-color: var(--accent); }
 .slider-item output { font-size: 11px; font-weight: 600; min-width: 35px; text-align: right; color: var(--accent); }
 
 /* Barra Inferior com Botões Rápidos */
-.bottom-bar {
-  display: flex; gap: 8px; width: 100%;
-}
+.bottom-bar { display: flex; gap: 8px; width: 100%; }
 .btn-stop {
   flex: 1; background: #7f1d1d; border: 1px solid #dc2626; color: #fecaca;
   padding: 10px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer;
@@ -131,23 +138,21 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 .modal-overlay.active { display: flex; }
 .modal-box {
   background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-  width: 100%; max-width: 360px; padding: 14px; display: flex; flex-direction: column; gap: 12px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+  width: 100%; max-width: 380px; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6); max-height: 90vh; overflow-y: auto;
 }
-.modal-header {
-  display: flex; justify-content: space-between; align-items: center;
-}
+.modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
 .modal-header h3 { font-size: 13px; font-weight: 700; color: var(--accent); }
-.modal-close {
-  background: transparent; border: none; color: var(--sub); font-size: 18px; cursor: pointer; padding: 2px 6px;
-}
+.modal-close { background: transparent; border: none; color: var(--sub); font-size: 18px; cursor: pointer; padding: 2px 6px; }
 .modal-close:hover { color: #fff; }
-.preset-row {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 4px;
-}
+
+.cfg-sec { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; margin-top: 4px; }
+.chk-row { display: flex; gap: 12px; align-items: center; font-size: 11px; color: var(--text); }
+.chk-row label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.preset-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 2px; }
 .btn-preset {
   background: #1c2638; border: 1px solid var(--border); color: var(--text);
-  padding: 6px 4px; border-radius: 4px; font-size: 11px; cursor: pointer; text-align: center;
+  padding: 5px 2px; border-radius: 4px; font-size: 10px; cursor: pointer; text-align: center;
 }
 .btn-preset:active { background: var(--accent); color: #000; font-weight: 700; }
 </style>
@@ -173,20 +178,24 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     <img id="vid" src="" alt="Vídeo ao vivo">
   </div>
 
-  <!-- Bloco de Controles Compactos -->
-  <div class="controls-grid">
-    <!-- Bloco Tração 4WD -->
+  <!-- Alternador de Modo de Pilotagem -->
+  <div class="mode-switch">
+    <button id="btnModoDpad" class="btn-mode active" onclick="setModo('dpad')">🔲 Modo Botões D-Pad</button>
+    <button id="btnModoJoy" class="btn-mode" onclick="setModo('joy')">🕹️ Modo Joysticks Virtuais</button>
+  </div>
+
+  <!-- MODO 1: D-PAD TÁTIL -->
+  <div id="viewDpad" class="controls-grid">
+    <!-- Tração 4WD -->
     <div class="ctrl-card">
       <div class="ctrl-title">Tração 4WD</div>
       <div class="dpad">
         <span></span>
         <button id="btnFrente" onpointerdown="drive(1,0)" onpointerup="drive(0,0)" onpointerleave="drive(0,0)" onpointercancel="drive(0,0)">▲</button>
         <span></span>
-
         <button id="btnEsq" onpointerdown="drive(0,-1)" onpointerup="drive(0,0)" onpointerleave="drive(0,0)" onpointercancel="drive(0,0)">◄</button>
         <button class="dpad-center" onclick="drive(0,0)">■</button>
         <button id="btnDir" onpointerdown="drive(0,1)" onpointerup="drive(0,0)" onpointerleave="drive(0,0)" onpointercancel="drive(0,0)">►</button>
-
         <span></span>
         <button id="btnRe" onpointerdown="drive(-1,0)" onpointerup="drive(0,0)" onpointerleave="drive(0,0)" onpointercancel="drive(0,0)">▼</button>
         <span></span>
@@ -200,20 +209,18 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
       </div>
     </div>
 
-    <!-- Bloco Pan / Tilt -->
+    <!-- Pan / Tilt -->
     <div class="ctrl-card">
       <div class="ctrl-title">Pan / Tilt</div>
       <div class="dpad">
         <span></span>
-        <button onpointerdown="stepTilt(5)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">▲</button>
+        <button onpointerdown="stepTilt(1)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">▲</button>
         <span></span>
-
-        <button onpointerdown="stepPan(5)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">◄</button>
+        <button onpointerdown="stepPan(1)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">◄</button>
         <button class="dpad-center" onclick="centroPT()">⌖</button>
-        <button onpointerdown="stepPan(-5)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">►</button>
-
+        <button onpointerdown="stepPan(-1)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">►</button>
         <span></span>
-        <button onpointerdown="stepTilt(-5)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">▼</button>
+        <button onpointerdown="stepTilt(-1)" onpointerup="stopPT()" onpointerleave="stopPT()" onpointercancel="stopPT()">▼</button>
         <span></span>
       </div>
       <div class="slider-group" style="margin-top:4px">
@@ -231,38 +238,91 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     </div>
   </div>
 
-  <!-- Barra de Ações Rápidas -->
+  <!-- MODO 2: JOYSTICKS VIRTUAIS PROPORCIONAIS (OCULTO POR PADRÃO) -->
+  <div id="viewJoy" class="controls-grid" style="display:none">
+    <!-- Joy Tração 4WD -->
+    <div class="ctrl-card">
+      <div class="ctrl-title">Tração 4WD</div>
+      <div class="joy-zone" id="joyDriveBase">
+        <div class="joy-knob" id="joyDriveKnob"></div>
+      </div>
+      <div class="slider-group" style="margin-top:4px">
+        <div class="slider-item">
+          <label>PWM</label>
+          <input type="range" id="rngPwmJoy" min="80" max="255" value="180" oninput="outPwmJoy.value=this.value; rngPwm.value=this.value; outPwm.value=this.value;">
+          <output id="outPwmJoy">180</output>
+        </div>
+      </div>
+    </div>
+
+    <!-- Joy Pan / Tilt -->
+    <div class="ctrl-card">
+      <div class="ctrl-title">Pan / Tilt</div>
+      <div class="joy-zone" id="joyPTBase">
+        <div class="joy-knob" id="joyPTKnob"></div>
+      </div>
+      <div style="display:flex;width:100%;justify-content:space-between;margin-top:4px;font-size:11px;color:var(--accent)">
+        <span>Pan: <b id="lblJoyPan">90°</b></span>
+        <span>Tilt: <b id="lblJoyTilt">90°</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra Inferior de Ações -->
   <div class="bottom-bar">
     <button class="btn-center" onclick="centroPT()">⌖ Centralizar Câmera</button>
     <button class="btn-stop" onclick="parada()">PARADA IMEDIATA</button>
   </div>
 </div>
 
-<!-- Modal / Tooltip de Configurações -->
+<!-- Modal / Tooltip de Configurações Avançadas -->
 <div class="modal-overlay" id="modalCfg" onclick="if(event.target===this) toggleModal(false)">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>⚙️ Ajustes dos Servos (Velocidade)</h3>
+      <h3>⚙️ Configurações do Rover</h3>
       <button class="modal-close" onclick="toggleModal(false)">✕</button>
     </div>
 
-    <div class="slider-group">
-      <div class="slider-item">
-        <label style="width:75px">Velocidade</label>
-        <input type="range" id="rngVel" min="60" max="600" step="20" value="380" oninput="aplicarVel(this.value)">
-        <output id="outVel">380°/s</output>
-      </div>
+    <!-- Seção de Vídeo -->
+    <div class="cfg-sec">📹 Qualidade de Vídeo (OV5640)</div>
+    <div class="slider-item">
+      <label style="width:70px">Resolução</label>
+      <select id="selPresetCam" onchange="mudarPresetCam(this.value)" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:5px;border-radius:4px;font-size:11px">
+        <option value="frio">Frio (QVGA 320x240 - ~34°C)</option>
+        <option value="equilibrado">Equilibrado (VGA 640x480 - ~44°C)</option>
+        <option value="qualidade">Qualidade (SVGA 800x600 - ~52°C)</option>
+        <option value="maximo">Máximo (HD 1280x720 - Alta Def.)</option>
+      </select>
     </div>
 
-    <div style="font-size:11px;color:var(--sub)">Presets Rápidos:</div>
+    <!-- Seção de Inversão de Eixos -->
+    <div class="cfg-sec">🔄 Inversão de Eixos dos Servos</div>
+    <div class="chk-row">
+      <label><input type="checkbox" id="chkInvPan" onchange="invPan=this.checked"> Inverter Pan (Horizontal)</label>
+      <label><input type="checkbox" id="chkInvTilt" onchange="invTilt=this.checked"> Inverter Tilt (Vertical)</label>
+    </div>
+
+    <!-- Seção de Velocidade e Fluidez dos Servos -->
+    <div class="cfg-sec">⚡ Velocidade e Movimento dos Servos</div>
+    <div class="slider-item">
+      <label style="width:75px">Velocidade</label>
+      <input type="range" id="rngVel" min="60" max="600" step="20" value="420" oninput="aplicarVel(this.value)">
+      <output id="outVel">420°/s</output>
+    </div>
     <div class="preset-row">
       <button class="btn-preset" onclick="aplicarVel(150)">150°/s</button>
       <button class="btn-preset" onclick="aplicarVel(280)">280°/s</button>
-      <button class="btn-preset" onclick="aplicarVel(400)">400°/s</button>
+      <button class="btn-preset" onclick="aplicarVel(420)">420°/s</button>
       <button class="btn-preset" onclick="aplicarVel(600)">Máx 600°/s</button>
     </div>
-    <div style="font-size:10px;color:var(--sub);margin-top:2px">
-      * Velocidades mais altas eliminam a trepidação (stick-slip) do SG90.
+
+    <div class="slider-item" style="margin-top:6px">
+      <label style="width:75px">Passo D-Pad</label>
+      <input type="range" id="rngPasso" min="2" max="25" step="1" value="8" oninput="passoGraus=parseInt(this.value); outPasso.value=this.value+'°'">
+      <output id="outPasso">8°</output>
+    </div>
+    <div style="font-size:10px;color:var(--sub)">
+      * Passo maior + repetição rápida tornam o movimento do D-Pad muito mais veloz e contínuo.
     </div>
   </div>
 </div>
@@ -271,9 +331,22 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 let ws = null;
 let pan = 90;
 let tilt = 90;
-let velServo = 380; // Velocidade em graus/s (380°/s para movimento rapido e estavel)
+let velServo = 420;   // Velocidade padrao dos servos (graus/s)
+let passoGraus = 8;   // Passo por toque no D-Pad (graus)
+let invPan = false;   // Inversao Pan
+let invTilt = false;  // Inversao Tilt
 let rotAtual = 270;
 let ptTimer = null;
+let modoAtual = 'dpad';
+
+function setModo(m) {
+  modoAtual = m;
+  parada();
+  document.getElementById('btnModoDpad').className = (m === 'dpad') ? 'btn-mode active' : 'btn-mode';
+  document.getElementById('btnModoJoy').className = (m === 'joy') ? 'btn-mode active' : 'btn-mode';
+  document.getElementById('viewDpad').style.display = (m === 'dpad') ? 'grid' : 'none';
+  document.getElementById('viewJoy').style.display = (m === 'joy') ? 'grid' : 'none';
+}
 
 function toggleModal(show) {
   document.getElementById('modalCfg').className = show ? 'modal-overlay active' : 'modal-overlay';
@@ -283,8 +356,12 @@ function aplicarVel(v) {
   velServo = parseInt(v);
   document.getElementById('rngVel').value = velServo;
   document.getElementById('outVel').value = velServo + '°/s';
-  // Envia configuracao persistente de velocidade padrao pro Nano (<C,1,graus_s>)
   tx(`<C,1,${velServo}>`);
+}
+
+async function mudarPresetCam(n) {
+  await fetch(`/api/cam/preset?n=${n}`);
+  recarregarVideo();
 }
 
 function conectarWS() {
@@ -293,9 +370,7 @@ function conectarWS() {
   ws.onopen = () => { pill.textContent = 'ONLINE'; pill.className = 'status-pill ok'; };
   ws.onclose = () => { pill.textContent = 'OFF'; pill.className = 'status-pill bad'; setTimeout(conectarWS, 1500); };
 }
-function tx(cmd) {
-  if (ws && ws.readyState === 1) ws.send(cmd);
-}
+function tx(cmd) { if (ws && ws.readyState === 1) ws.send(cmd); }
 
 function recarregarVideo() {
   const img = document.getElementById('vid');
@@ -309,13 +384,10 @@ async function girarRotacao() {
   await fetch(`/api/cam/set?rot=${rotAtual}`);
 }
 
-// ---------------- Tração 4WD (Exclusiva) ----------------
+// ---------------- Tração 4WD ----------------
 function drive(fwd, turn) {
   const maxVal = parseInt(document.getElementById('rngPwm').value);
-  if (fwd === 0 && turn === 0) {
-    tx('<M,0,0>');
-    return;
-  }
+  if (fwd === 0 && turn === 0) { tx('<M,0,0>'); return; }
   let left = fwd * maxVal + turn * (maxVal * 0.7);
   let right = fwd * maxVal - turn * (maxVal * 0.7);
   left = Math.round(Math.max(-maxVal, Math.min(maxVal, left)));
@@ -325,75 +397,165 @@ function drive(fwd, turn) {
 
 function parada() {
   stopPT();
+  if (joyDriveTimer) { clearInterval(joyDriveTimer); joyDriveTimer = null; }
+  if (joyPTTimer) { clearInterval(joyPTTimer); joyPTTimer = null; }
   drive(0, 0);
   tx('<X>');
 }
 
-// ---------------- Pan / Tilt (Exclusivo) ----------------
+// ---------------- Pan / Tilt ----------------
 function enviarPT() {
   document.getElementById('rngPan').value = Math.round(pan);
   document.getElementById('outPan').value = Math.round(pan) + '°';
   document.getElementById('rngTilt').value = Math.round(tilt);
   document.getElementById('outTilt').value = Math.round(tilt) + '°';
+  document.getElementById('lblJoyPan').textContent = Math.round(pan) + '°';
+  document.getElementById('lblJoyTilt').textContent = Math.round(tilt) + '°';
   tx(`<S,${Math.round(pan * 10)},${Math.round(tilt * 10)},${velServo * 10}>`);
 }
 
-function stepPan(d) {
+function stepPan(sinal) {
   stopPT();
+  const d = (invPan ? -sinal : sinal) * passoGraus;
   pan = Math.max(30, Math.min(150, pan + d));
   enviarPT();
+  // Repetição rápida a cada 60 ms para movimento ágil e contínuo
   ptTimer = setInterval(() => {
     pan = Math.max(30, Math.min(150, pan + d));
     enviarPT();
-  }, 100);
+  }, 60);
 }
 
-function stepTilt(d) {
+function stepTilt(sinal) {
   stopPT();
+  const d = (invTilt ? -sinal : sinal) * passoGraus;
   tilt = Math.max(0, Math.min(155, tilt + d));
   enviarPT();
   ptTimer = setInterval(() => {
     tilt = Math.max(0, Math.min(155, tilt + d));
     enviarPT();
-  }, 100);
+  }, 60);
 }
 
-function stopPT() {
-  if (ptTimer) { clearInterval(ptTimer); ptTimer = null; }
-}
+function stopPT() { if (ptTimer) { clearInterval(ptTimer); ptTimer = null; } }
 
 function setPanDirect(v) {
-  stopPT();
-  pan = parseInt(v);
-  document.getElementById('outPan').value = pan + '°';
-  tx(`<S,${pan * 10},${Math.round(tilt * 10)},${velServo * 10}>`);
+  stopPT(); pan = parseInt(v);
+  enviarPT();
 }
 
 function setTiltDirect(v) {
-  stopPT();
-  tilt = parseInt(v);
-  document.getElementById('outTilt').value = tilt + '°';
-  tx(`<S,${Math.round(pan * 10)},${tilt * 10},${velServo * 10}>`);
+  stopPT(); tilt = parseInt(v);
+  enviarPT();
 }
 
-function centroPT() {
-  stopPT();
-  pan = 90;
-  tilt = 90;
+function centroPT() { stopPT(); pan = 90; tilt = 90; enviarPT(); }
+
+// ---------------- Lógica dos Joysticks Virtuais ----------------
+let joyDriveTimer = null;
+let curDriveX = 0, curDriveY = 0;
+let joyPTTimer = null;
+let curPTX = 0, curPTY = 0;
+
+function setupJoystick(baseId, knobId, onMove, onEnd) {
+  const base = document.getElementById(baseId);
+  const knob = document.getElementById(knobId);
+  const R = 38;
+  let active = false;
+
+  base.addEventListener('pointerdown', e => {
+    active = true;
+    base.setPointerCapture(e.pointerId);
+    handle(e);
+  });
+
+  base.addEventListener('pointermove', e => {
+    if (!active) return;
+    handle(e);
+  });
+
+  function stop() {
+    if (!active) return;
+    active = false;
+    knob.style.transform = 'translate(0px, 0px)';
+    if (onEnd) onEnd();
+  }
+
+  base.addEventListener('pointerup', stop);
+  base.addEventListener('pointercancel', stop);
+
+  function handle(e) {
+    const rect = base.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    let dx = e.clientX - cx;
+    let dy = e.clientY - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist > R) {
+      dx = (dx / dist) * R;
+      dy = (dy / dist) * R;
+    }
+    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    // nx: -1 (esq) a +1 (dir), ny: +1 (frente) a -1 (re)
+    const nx = dx / R;
+    const ny = -dy / R;
+    if (onMove) onMove(nx, ny);
+  }
+}
+
+function initJoysticks() {
+  // Joystick Tração
+  setupJoystick('joyDriveBase', 'joyDriveKnob', (nx, ny) => {
+    curDriveX = nx;
+    curDriveY = ny;
+    if (!joyDriveTimer) {
+      joyDriveTick();
+      joyDriveTimer = setInterval(joyDriveTick, 50);
+    }
+  }, () => {
+    if (joyDriveTimer) { clearInterval(joyDriveTimer); joyDriveTimer = null; }
+    curDriveX = 0; curDriveY = 0;
+    drive(0, 0);
+  });
+
+  // Joystick Pan/Tilt
+  setupJoystick('joyPTBase', 'joyPTKnob', (nx, ny) => {
+    curPTX = nx;
+    curPTY = ny;
+    if (!joyPTTimer) {
+      joyPTTick();
+      joyPTTimer = setInterval(joyPTTick, 60);
+    }
+  }, () => {
+    if (joyPTTimer) { clearInterval(joyPTTimer); joyPTTimer = null; }
+    curPTX = 0; curPTY = 0;
+  });
+}
+
+function joyDriveTick() {
+  if (Math.abs(curDriveY) < 0.08 && Math.abs(curDriveX) < 0.08) {
+    drive(0, 0);
+    return;
+  }
+  drive(curDriveY, curDriveX);
+}
+
+function joyPTTick() {
+  if (Math.abs(curPTX) < 0.08 && Math.abs(curPTY) < 0.08) return;
+  const dt = 0.06;
+  const dirPan = (invPan ? -1 : 1) * curPTX;
+  const dirTilt = (invTilt ? -1 : 1) * curPTY;
+  
+  // Taxa contínua proporcional à deflexão do joystick
+  pan = Math.max(30, Math.min(150, pan + dirPan * velServo * dt));
+  tilt = Math.max(0, Math.min(155, tilt + dirTilt * velServo * dt));
   enviarPT();
 }
 
 // ---------------- Proteção Global de Toque ----------------
-window.addEventListener('pointerup', () => {
-  stopPT();
-  drive(0, 0);
-});
-window.addEventListener('pointercancel', () => {
-  stopPT();
-  drive(0, 0);
-});
+window.addEventListener('pointerup', () => { stopPT(); if (modoAtual === 'dpad') drive(0, 0); });
+window.addEventListener('pointercancel', () => { stopPT(); if (modoAtual === 'dpad') drive(0, 0); });
 
-// Atualizar telemetria de bateria
 async function atualizarStats() {
   try {
     const r = await fetch('/api/stats');
@@ -401,12 +563,22 @@ async function atualizarStats() {
     if (d.link && d.link.vbat) {
       document.getElementById('stBat').textContent = (d.link.vbat / 1000).toFixed(2) + ' V';
     }
+    if (d.cam && d.cam.res) {
+      const sel = document.getElementById('selPresetCam');
+      if (document.activeElement !== sel) {
+        if (d.cam.res === 'qvga') sel.value = 'frio';
+        else if (d.cam.res === 'vga') sel.value = 'equilibrado';
+        else if (d.cam.res === 'svga') sel.value = 'qualidade';
+        else if (d.cam.res === 'hd') sel.value = 'maximo';
+      }
+    }
   } catch (e) {}
 }
 
 window.onload = () => {
   conectarWS();
   recarregarVideo();
+  initJoysticks();
   setInterval(atualizarStats, 2000);
 };
 </script>
