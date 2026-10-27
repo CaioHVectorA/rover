@@ -66,6 +66,11 @@ static void configurar(long id, long v) {
 }
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(150);
+  digitalWrite(LED_BUILTIN, LOW);
+
   enlaceBegin();
 
   // Inicia Servos
@@ -110,6 +115,13 @@ void loop() {
         break;
       case 'P':
         if (f.n >= 1) tx('A', f.arg[0]);
+        break;
+      case 'L':
+        if (f.n >= 1) {
+          if (f.arg[0] == 2) digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
+          else digitalWrite(LED_BUILTIN, f.arg[0] ? HIGH : LOW);
+          tx('L', digitalRead(LED_BUILTIN) ? 1 : 0);
+        }
         break;
     }
   }

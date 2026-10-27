@@ -163,9 +163,10 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   <header>
     <div class="title">🚀 ROVER FPV</div>
     <div style="display:flex;gap:6px;align-items:center">
-      <button class="btn-cfg" onclick="toggleModal(true)">⚙️ Config</button>
+      <span class="status-pill" id="stNano">NANO</span>
       <span id="stBat" style="font-weight:700;color:var(--green)">-- V</span>
       <span class="status-pill" id="stWs">WS</span>
+      <button class="btn-cfg" onclick="toggleModal(true)">⚙️ Config</button>
     </div>
   </header>
 
@@ -176,6 +177,30 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
       <button class="btn-mini" onclick="recarregarVideo()">▶ Vídeo</button>
     </div>
     <img id="vid" src="" alt="Vídeo ao vivo">
+  </div>
+
+  <!-- Barra de Diagnóstico de Bancada -->
+  <div class="ctrl-card" style="width:100%;padding:8px 10px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+      <span class="ctrl-title">Diagnóstico & LED Nano (D13)</span>
+      <span id="stLed" class="status-pill">LED OFF</span>
+    </div>
+    <div style="display:flex;gap:6px;width:100%;margin-top:6px;">
+      <button class="btn-preset" style="flex:1" onclick="setLed(1)">Ligar LED</button>
+      <button class="btn-preset" style="flex:1" onclick="setLed(0)">Desligar LED</button>
+      <button class="btn-preset" style="flex:1" onclick="setLed(2)">Alternar</button>
+      <button class="btn-preset" style="flex:1" onclick="pingNano()">Ping <span id="rttPing"></span></button>
+    </div>
+    <div style="display:flex;gap:6px;width:100%;margin-top:6px;">
+      <button class="btn-preset" style="flex:1;background:#1e3a2b;color:#4ade80" onclick="testeMotor(150,150,1000)">4 Motores 1s</button>
+      <button class="btn-preset" style="flex:1" onclick="testeMotor(-150,-150,1000)">Ré 1s</button>
+      <button class="btn-preset" style="flex:1" onclick="testeMotor(-150,150,800)">Giro Esq</button>
+      <button class="btn-preset" style="flex:1" onclick="testeMotor(150,-150,800)">Giro Dir</button>
+    </div>
+    <div style="display:flex;gap:6px;width:100%;margin-top:6px;align-items:center;">
+      <span style="font-size:10px;color:var(--sub);white-space:nowrap">Fio TX ESP &rarr; Nano:</span>
+      <button id="btnTxInv" class="btn-preset" style="flex:1;font-size:10px" onclick="alternarTxInv()">Polaridade: carregando...</button>
+    </div>
   </div>
 
   <!-- Alternador de Modo de Pilotagem -->
@@ -370,7 +395,32 @@ function conectarWS() {
   ws.onopen = () => { pill.textContent = 'ONLINE'; pill.className = 'status-pill ok'; };
   ws.onclose = () => { pill.textContent = 'OFF'; pill.className = 'status-pill bad'; setTimeout(conectarWS, 1500); };
 }
-function tx(cmd) { if (ws && ws.readyState === 1) ws.send(cmd); }
+function tx(cmd) {
+  if (ws && ws.readyState === 1) { ws.send(cmd); return; }
+  fetch('/api/cmd?f=' + encodeURIComponent(cmd)).catch(() => {});
+}
+function setLed(v) { tx(`<L,${v}>`); }
+function pingNano() { tx('<P,1>'); const el = document.getElementById('rttPing'); if (el) el.textContent = '...'; }
+async function testeMotor(e, d, ms) {
+  tx(`<M,${e},${d}>`);
+  await new Promise(r => setTimeout(r, ms));
+  tx('<M,0,0>');
+}
+async function alternarTxInv() {
+  try {
+    const r = await fetch('/api/link/invert');
+    const d = await r.json();
+    atualizarBtnTxInv(d.tx_inv);
+    setLed(1);
+  } catch(e) {}
+}
+function atualizarBtnTxInv(inv) {
+  const btn = document.getElementById('btnTxInv');
+  if (btn) {
+    btn.textContent = inv ? 'Modo BC337 (Invertido)' : 'Fio Direto D0 (Normal)';
+    btn.style.color = inv ? 'var(--accent)' : 'var(--green)';
+  }
+}
 
 function recarregarVideo() {
   const img = document.getElementById('vid');
@@ -560,8 +610,27 @@ async function atualizarStats() {
   try {
     const r = await fetch('/api/stats');
     const d = await r.json();
-    if (d.link && d.link.vbat) {
-      document.getElementById('stBat').textContent = (d.link.vbat / 1000).toFixed(2) + ' V';
+    if (d.link) {
+      const l = d.link;
+      const ok = l.hb_age >= 0 && l.hb_age < 2500;
+      const stNano = document.getElementById('stNano');
+      if (stNano) {
+        stNano.className = 'status-pill ' + (ok ? 'ok' : 'bad');
+        stNano.textContent = ok ? 'NANO ok' : 'NANO off';
+      }
+      if (l.vbat) {
+        document.getElementById('stBat').textContent = (l.vbat / 1000).toFixed(2) + ' V';
+      }
+      const stLed = document.getElementById('stLed');
+      if (stLed && l.led !== undefined) {
+        stLed.className = 'status-pill ' + (l.led ? 'ok' : '');
+        stLed.textContent = l.led ? 'LED ON' : 'LED OFF';
+      }
+      const rttPing = document.getElementById('rttPing');
+      if (rttPing && l.rtt_ult > 0) {
+        rttPing.textContent = '(' + (l.rtt_ult / 1000).toFixed(0) + 'ms)';
+      }
+      if (l.tx_inv !== undefined) atualizarBtnTxInv(l.tx_inv);
     }
     if (d.cam && d.cam.res) {
       const sel = document.getElementById('selPresetCam');

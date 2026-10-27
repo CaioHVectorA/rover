@@ -74,6 +74,9 @@ static void apiStats() {
   s += ",\"vbat\":" + String(e.vbat) + ",\"vmin\":" + String(e.vmin);
   s += ",\"mot_e\":" + String(e.motE) + ",\"mot_d\":" + String(e.motD);
   s += ",\"reset\":" + String(e.resetFlags);
+  s += ",\"led\":" + String(e.ledNano);
+  s += ",\"tx_inv\":" + String(enlace.txInvertido ? 1 : 0);
+  s += ",\"rtt_ult\":" + String(e.rttUltUs);
   s += ",\"nano_up\":" + String(e.nanoUp) + "}";
 #endif
 #if POC_CAM
@@ -142,6 +145,11 @@ void setup() {
     String f = web.arg("f");
     bool ok = tratarQuadro(f.c_str(), f.length());
     web.send(ok ? 200 : 400, "text/plain", ok ? "ok" : "quadro invalido");
+  });
+  web.on("/api/link/invert", []() {
+    if (web.hasArg("inv")) enlace.setInversaoTx(web.arg("inv") == "1");
+    else enlace.setInversaoTx(!enlace.txInvertido);
+    web.send(200, "application/json", String("{\"tx_inv\":") + (enlace.txInvertido ? 1 : 0) + "}");
   });
 #endif
 #if POC_CAM

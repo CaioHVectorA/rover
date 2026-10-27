@@ -22,6 +22,7 @@ struct EnlaceStats {
   long vbat = 0, vmin = 0;
   long motE = 0, motD = 0;
   long resetFlags = -1;
+  long ledNano = 0;
   // ping
   uint32_t pings = 0, acks = 0, rttMinUs = 0xFFFFFFFF, rttMaxUs = 0, rttUltUs = 0;
   uint64_t rttSomaUs = 0;
@@ -33,10 +34,17 @@ class EnlaceNano {
   String logRx[ENLACE_LOG_N];
   uint8_t logPos = 0;
 
+  bool txInvertido = true;
+
   void begin() {
     Serial2.setRxBufferSize(512);
     Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, false);
-    Serial2.setTxInvert(true);   // so o TX e invertido (BC337 re-inverte); RX do Nano chega em polaridade normal
+    Serial2.setTxInvert(txInvertido);   // true se passar pelo BC337; false se for direto no D0 do Nano
+  }
+
+  void setInversaoTx(bool inv) {
+    txInvertido = inv;
+    Serial2.setTxInvert(txInvertido);
   }
 
   void loop(uint32_t agora) {
@@ -64,6 +72,7 @@ class EnlaceNano {
     raw('P', a, 1);
   }
   void config(long id, long v) { long a[2] = {id, v}; raw('C', a, 2); }
+  void led(long v) { long a[1] = {v}; raw('L', a, 1); }
   void zerarPing() { st.pings = st.acks = 0; st.rttMinUs = 0xFFFFFFFF; st.rttMaxUs = 0; st.rttSomaUs = 0; st.rttUltUs = 0; }
 
   // Despacha um quadro vindo do celular (WebSocket / HTTP). Somente comandos conhecidos passam.
@@ -73,6 +82,7 @@ class EnlaceNano {
       case 'M': if (f.n >= 2) { motores(f.arg[0], f.arg[1]); return true; } break;
       case 'X': parar(); return true;
       case 'C': if (f.n >= 2) { config(f.arg[0], f.arg[1]); return true; } break;
+      case 'L': if (f.n >= 1) { led(f.arg[0]); return true; } break;
       case 'P': ping(); return true;
     }
     return false;
@@ -118,6 +128,7 @@ class EnlaceNano {
       case 'B': if (f.n >= 2) { st.vbat = f.arg[0]; st.vmin = f.arg[1]; } break;
       case 'N': if (f.n >= 2) { st.motE = f.arg[0]; st.motD = f.arg[1]; } break;
       case 'R': if (f.n >= 1) st.resetFlags = f.arg[0]; break;
+      case 'L': if (f.n >= 1) st.ledNano = f.arg[0]; break;
       default: break;
     }
   }

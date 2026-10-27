@@ -7,6 +7,7 @@
 //
 // ESP32 -> NANO                                    NANO -> ESP32
 //   <P,n>              ping                          <A,n>              ack do ping
+//   <L,estado>         LED D13 (0=off, 1=on, 2=alt)  <L,estado>         ack do estado do LED
 //   <S,pan10,tilt10[,vel10]>  servos (decimos de grau, vel = decimos de grau/s, 0=padrao)
 //   <M,esq,dir>        motores -255..255 (cada lado)  <H,up_s,rx,err>    heartbeat (1 Hz)
 //   <X>                parada de emergencia           <B,mV,minmV>       bateria (a cada 2 s)

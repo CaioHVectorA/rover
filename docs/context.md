@@ -709,16 +709,32 @@ Todos os 6 POCs foram implementados de forma desacoplada em [`src/firmware/pocs/
    * **POC 3 (Câmera Fria OV5640):** Transmissão estável a 20 FPS QVGA mantendo temperatura média do ESP em ~33 °C a 35 °C, com acionamento sob demanda e soneca em 3 segundos sem espectadores.
    * **POC 5 e POC 6 (Tração 4WD TB6612FNG):** Rampa suave e reversão com tempo morto validadas nos micromotores JGA-050 sem queda de tensão (sem brown-out reset no Nano).
 
-3. **Firmware Integrado Total de Produção (
-over_total_esp32 + 
-over_total_nano):**
+3. **Firmware Integrado Total de Produção (rover_total_esp32 + rover_total_nano):**
    * **Hardware Unificado:** Câmera OV5640 (preset Equilibrado + rotação 270°) + Pan/Tilt com servos SG90 (D9/D10) + Tração 4WD TB6612FNG (D3..D8, D12) + Leitura da bateria 2S.
    * **Eliminação de Interrupções e Conflitos de Timers:**
      * SoftwareSerial completamente removido (-DLINK_HW) em favor da UART de hardware no D0 (sem desabilitar interrupções com cli()).
      * Servos desacoplados em Timer 1 modo Fast PWM 14 de hardware puro nos pinos D9 (OC1A) e D10 (OC1B), operando sem ISR e sem jitter.
      * Acionamento dos motores com PWM simétrico nos canais A (D3) e B (D6) com rampa suave de aceleração anti-brownout.
-   * **Cockpit FPV Web Compacto & Responsivo (http://192.168.7.8/):**
+   * **Cockpit FPV Web Compacto & Responsivo:**
      * Sem necessidade de zoom out no celular, proporção 100% responsiva em tela única.
      * Controles táteis isolados com D-pads independentes para Tração 4WD e Pan/Tilt.
      * Modal/tooltip de configurações em tempo real para velocidade dos servos (até 600°/s) eliminando stick-slip/trepidação.
      * Curso de inclinação vertical (Tilt) expandido para 0° a 155°.
+
+---
+
+### Diagnóstico de Bancada Pós-Montagem Mecânica (27/10/2026):
+
+1. **Investigação do Enlace D0 e LED RX:**
+   * O LED "RX" físico da placa do Arduino Nano é acionado pelo conversor USB-UART (CH340/FTDI), e **não** pelo pino D0 da MCU ATmega328P. Sinais seriais externos não acendem esse LED.
+   * Criado o comando `<L,estado>` no protocolo (`0`=desliga, `1`=liga, `2`=alterna) para acionar diretamente o pino D13 (LED onboard `L`) do Arduino Nano, permitindo validação visual instantânea da recepção de dados via D0 sem acionar motores.
+   * **Alternador Dinâmico de Polaridade TX (IO43):** Adicionado botão no painel web para alternar em tempo real entre o modo BC337 (TX invertido) e o modo Fio Direto (TX normal), permitindo testar ambas as conexões na bancada sem precisar regravar o microcontrolador.
+2. **Pasta Especial de Testes (`src/firmware/testes_bancada/`):**
+   * Firmware ESP32: [`src/firmware/testes_bancada/esp32/main.cpp`](file:///home/usuario/Documentos/rover/src/firmware/testes_bancada/esp32/main.cpp).
+   * Firmware Nano: [`src/firmware/testes_bancada/nano/main.cpp`](file:///home/usuario/Documentos/rover/src/firmware/testes_bancada/nano/main.cpp).
+   * Ambientes PlatformIO: `testes_bancada_esp32` e `testes_bancada_nano` (-DLINK_HW).
+   * Firmware de produção [`src/firmware/producao/nano/main.cpp`](file:///home/usuario/Documentos/rover/src/firmware/producao/nano/main.cpp) sincronizado com suporte ao comando `<L>`.
+3. **Botões de Teste Rápido no Painel:**
+   * Teste com 4 motores simultâneos (1s à frente, 1s em ré, giros 360) para validação segura com rodas suspensas.
+   * Guia passo a passo publicado em [`docs/pocs/TESTES_BANCADA.md`](file:///home/usuario/Documentos/rover/docs/pocs/TESTES_BANCADA.md).
+
