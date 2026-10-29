@@ -21,15 +21,15 @@ import { VRView } from './src/components/VRView';
 import { SettingsScreen } from './src/components/SettingsScreen';
 import { theme } from './src/theme';
 
-const STORAGE_KEY_CONFIG = '@rover_config_e2e_v1';
+const STORAGE_KEY_CONFIG = '@rover_config_e2e_v2';
 
 const DEFAULT_CONFIG: ConnectionConfig = {
-  mode: 'simulation',
+  mode: 'esp32',
   protocol: 'hybrid',
-  ip: '192.168.137.188',
+  ip: '192.168.137.72',
   wsPort: 81,
-  streamPort: 80,
-  streamPath: '/view',
+  streamPort: 82,
+  streamPath: '/stream',
   mockServerIp: '192.168.7.60',
   mockWsPort: 8082,
   mockHttpPort: 8080,

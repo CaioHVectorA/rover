@@ -236,10 +236,32 @@ export const CameraStream: React.FC<CameraStreamProps> = ({
 
   const isCanvas3D = operationMode === 'simulation' && !useMjpegInSim;
 
-  // Converte /stream ou /capture para a página nativa otimizada /view do ESP32
-  const viewUrl = streamUrl
-    .replace(/\/capture\/?$/, '/view')
-    .replace(/\/stream\/?$/, '/view');
+  // URL real do stream do ESP32 (porta 82 /stream)
+  const actualStreamUrl = streamUrl;
+
+  const mjpegHtml = `<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; background:#000000; overflow:hidden; }
+  html, body { width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000000; }
+  img { width:100%; height:100%; object-fit:contain; display:block; }
+</style>
+</head>
+<body>
+  <img id="stream" src="${actualStreamUrl}" alt="Rover FPV" />
+  <script>
+    const img = document.getElementById('stream');
+    img.onerror = function() {
+      setTimeout(function() {
+        var sep = '${actualStreamUrl}'.indexOf('?') !== -1 ? '&' : '?';
+        img.src = '${actualStreamUrl}' + sep + 't=' + Date.now();
+      }, 1500);
+    };
+  </script>
+</body>
+</html>`;
 
   useEffect(() => {
     if (isCanvas3D && webviewRef.current) {
@@ -268,7 +290,7 @@ export const CameraStream: React.FC<CameraStreamProps> = ({
         <View style={styles.errorContainer}>
           <Camera size={36} color="#64748b" />
           <Text style={styles.errorText}>Stream do ESP32 Indisponível</Text>
-          <Text style={styles.errorSubtext}>{viewUrl}</Text>
+          <Text style={styles.errorSubtext}>{actualStreamUrl}</Text>
           <View style={styles.errorBtnRow}>
             <TouchableOpacity style={styles.retryBtn} onPress={handleRefresh}>
               <RefreshCw size={14} color="#0f172a" />
@@ -281,7 +303,7 @@ export const CameraStream: React.FC<CameraStreamProps> = ({
           <WebView
             ref={webviewRef}
             key={`${operationMode}-${useMjpegInSim}-${reloadKey}`}
-            source={isCanvas3D ? { html: SIMULATOR_3D_HTML } : { uri: viewUrl }}
+            source={isCanvas3D ? { html: SIMULATOR_3D_HTML } : { html: mjpegHtml, baseUrl: actualStreamUrl }}
             originWhitelist={['*']}
             mixedContentMode="always"
             style={styles.webview}

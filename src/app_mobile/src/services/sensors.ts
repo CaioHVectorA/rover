@@ -63,7 +63,7 @@ export class HeadTrackingService {
     tiltMin: 40,
     tiltMax: 140,
     invertPan: false,
-    invertTilt: false,
+    invertTilt: true, // Invertido por padrao para orientacao natural (erguer celular = olhar para cima)
     updateRateHz: 25,    // 25 Hz = latência de ~40 ms (ideal para Wi-Fi sem saturar buffers)
   };
 

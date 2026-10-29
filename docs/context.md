@@ -806,3 +806,12 @@ Após reconexão, ESP USB nativo voltou a aparecer na COM8, MAC 90:70:69:f7:fc:1
   - `app.json` configurado com permissão `android.permission.HIGH_SAMPLING_RATE_SENSORS`, `NSMotionUsageDescription` (iOS), package `com.rover.fpv` e plugin `expo-dev-client`.
   - Scripts adicionados ao `package.json`: `"dev"`, `"build:android"`, `"build:ios"`.
   - Tipagem TypeScript validada com 0 erros (`tsc --noEmit`).
+
+### Correção de Stream da Câmera e Inversão de Tilt no App Mobile — 29/10/2026
+- **Detecção do IP do ESP32:** Rover ativo em `192.168.137.72` com portas 80 (HTTP), 81 (WS) e 82 (MJPEG) operacionais.
+- **Correção da Rota de Vídeo (`CameraStream.tsx`):**
+  - Removida substituição indevida da rota `/stream` por `/view` na porta 82 (que gerava erro 404).
+  - Implementado player HTML com elemento `<img>` responsivo e reconexão automática com timestamp (`?t=Date.now()`) para garantir compatibilidade com WebView no Android e iOS.
+- **Inversão de Tilt Padronizada (`sensors.ts`):**
+  - Ajustado `invertTilt: true` por padrão para compatibilizar com a montagem física do servo SG90 (erguer o celular agora comanda inclinação para cima; abaixar o celular inclina para baixo).
+- **Validação de Tipagem:** TypeScript 100% verificado (`tsc --noEmit`, 0 erros).
