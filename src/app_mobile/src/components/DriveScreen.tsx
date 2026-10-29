@@ -56,20 +56,33 @@ export const DriveScreen: React.FC<DriveScreenProps> = ({
           showHUD={true}
         />
 
-        {/* Toggle do Giroscópio flutuante no canto */}
-        <TouchableOpacity
-          style={[styles.gyroBtn, headTrackingActive && styles.gyroBtnActive]}
-          onPress={onToggleHeadTracking}
-          activeOpacity={0.8}
-        >
-          <Compass
-            size={14}
-            color={headTrackingActive ? '#000000' : 'rgba(255, 255, 255, 0.85)'}
-          />
-          <Text style={[styles.gyroBtnText, headTrackingActive && styles.gyroBtnTextActive]}>
-            {headTrackingActive ? 'Giroscópio ON' : 'Giroscópio'}
-          </Text>
-        </TouchableOpacity>
+        {/* Toggle do Giroscópio e Botão de Zerar no canto superior */}
+        <View style={styles.gyroCluster}>
+          <TouchableOpacity
+            style={[styles.gyroBtn, headTrackingActive && styles.gyroBtnActive]}
+            onPress={onToggleHeadTracking}
+            activeOpacity={0.8}
+          >
+            <Compass
+              size={14}
+              color={headTrackingActive ? '#000000' : 'rgba(255, 255, 255, 0.85)'}
+            />
+            <Text style={[styles.gyroBtnText, headTrackingActive && styles.gyroBtnTextActive]}>
+              {headTrackingActive ? 'Giroscópio ON' : 'Giroscópio'}
+            </Text>
+          </TouchableOpacity>
+
+          {headTrackingActive && (
+            <TouchableOpacity
+              style={styles.gyroResetBtn}
+              onPress={onRecenter}
+              activeOpacity={0.8}
+            >
+              <RotateCcw size={12} color="#00e5ff" />
+              <Text style={styles.gyroResetText}>Zerar</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Painel Duplo Inferior: Tração 4WD (Esquerda) + Pan/Tilt Manual (Direita) */}
@@ -194,10 +207,15 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
   },
-  gyroBtn: {
+  gyroCluster: {
     position: 'absolute',
     top: 12,
     right: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  gyroBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
@@ -207,6 +225,22 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.full,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  gyroResetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 9,
+    paddingVertical: 6,
+    backgroundColor: 'rgba(0, 0, 0, 0.72)',
+    borderRadius: theme.radius.full,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 229, 255, 0.4)',
+  },
+  gyroResetText: {
+    color: '#00e5ff',
+    fontSize: 11,
+    fontWeight: '700',
   },
   gyroBtnActive: {
     backgroundColor: '#22c55e',

@@ -738,3 +738,71 @@ Todos os 6 POCs foram implementados de forma desacoplada em [`src/firmware/pocs/
    * Teste com 4 motores simultâneos (1s à frente, 1s em ré, giros 360) para validação segura com rodas suspensas.
    * Guia passo a passo publicado em [`docs/pocs/TESTES_BANCADA.md`](file:///home/usuario/Documentos/rover/docs/pocs/TESTES_BANCADA.md).
 
+### Revisão de alimentação — 26/10/2026
+Usuário relata que ESP voltou a alimentar por USB após desconectar solda da montagem; suspeita da ventoinha, ainda sem medição que comprove causa. Nano recebe ESP via BC337 no D0; repouso medido 4,5 V. Nenhum firmware gravado nesta sessão.
+Correção das conclusões anteriores: 2500 mAh não determina corrente máxima. Pack RoboCore especifica 2C (5 A teóricos), mas resposta oficial de 23/10/2026 informa ausência de testes do conjunto e de especificação de pico/BMS: https://www.robocore.net/baterias-fontes/pack-bateria-li-ion-7_4v-2500mah-com-bms . Portanto não está validado que a bateria fornece corrente com folga.
+Referência JGA16-050 6 V 266 RPM RoboCore: 0,09 A sem carga, 0,40 A nominal, 2 A travado POR motor. Confirmar variante adquirida antes de aplicar; quatro iguais somariam 1,6 A nominal ou 8 A travados a 6 V, não os 4,8 A anteriormente afirmados. Fonte: https://www.robocore.net/motor-caixas-de-reducao/motor-com-caixa-de-reducao-6v-266rpm . Alimentação direta 2S chega a 8,4 V e não equivale a esse ensaio de 6 V. Dois motores desses em paralelo podem exigir 4 A por canal travados, acima do pico do TB6612FNG; rampa não substitui proteção de sobrecorrente.
+Orçamento provisório em 5 V, não medido: ESP+câmera 0,25–0,50 A; Nano 0,02–0,05 A; dois servos reservar 1–4 A (TowerPro publica 0,5–2 A por SG90; variante real incerta); ventoinha 0,03–0,06 A somente se for a cotada; oito WS2812B reservar até 0,48 A; lógica/buzzer/divisores reservar 0,02–0,05 A. Total 1,32–5,14 A, envelope de planejamento, não média medida. Equivalente na bateria a 7,4 V e eficiência assumida de 90%: 0,99–3,86 A mais motores. Com referência nominal de 1,6 A nos motores: 2,59–5,46 A; com 8 A de bloqueio: 8,99–11,86 A (referência 6 V, não previsão exata em 2S). Sem margem garantida em condições pesadas. Mini560 anunciado até 5 A, dissipação recomendada acima de 4 A. Não declarar ventoinha culpada ou USB incapaz de alimentar ESP isolado sem validar ligação.
+
+### Teste direto confirmado e par minimo LED/motores D0 preparado — 27/10/2026
+
+- Usuario confirmou que o teste `nano_motor_direto` funcionou: PWM bruto 120 nos dois canais TB6612 por 1 segundo, depois de 3 segundos de espera. Pinos: PWMA D3, AIN1 D4, AIN2 D5, PWMB D6, BIN1 D7, BIN2 D8, STBY D12. Nao extrapolar essa confirmacao para rodagem no chao, reversao ou carga.
+- O POC 1 de LED D13 havia funcionado pelo caminho ESP IO43 -> BC337 -> Nano D0. A montagem tem enlace de ida: ausencia de retorno/heartbeat no ESP nao demonstra falha de recepcao no Nano. A verificacao fisica do comando de LED e o D13.
+- A integracao anterior `testes_bancada` nao respondeu como esperado pelo usuario; o pulso de motor enviado via USB ao `poc6_nano` tambem nao produziu movimento observado. Escrita de bytes na COM nao comprova que o Nano recebeu o comando.
+- A pedido do usuario, preparado um par separado em `src/firmware/testes_bancada/led_motores_d0/`, ambientes `led_motores_d0_nano` e `led_motores_d0_esp32`. ESP usa a mesma inicializacao `Serial2.begin(9600, SERIAL_8N1, 44, 43, true)` do LED que funcionou. Nano usa UART fisica no D0, sem SoftwareSerial e sem respostas no D1.
+- Painel web: ligar/desligar/piscar D13 cinco vezes, frente/re em PWM bruto 120 por 1 segundo e parada. Temporizacao de parada e local ao Nano, sem depender da pagina. Motores parados no boot; pausa de 150 ms antes de novo pulso. Sem camera/servos neste par. A pagina informa somente envio pelo ESP, nunca recepcao presumida no Nano.
+- Ambos os ambientes compilaram com sucesso; Nano sem dependencias externas. Conferidos pinos em relacao ao teste direto, inversao em relacao ao POC 1 e sintaxe JavaScript via node --check. Novo par ainda NAO validado fisicamente e NAO gravado nesta etapa, conforme pedido para deixar pronto para gravar depois.
+- Guia com comandos de compilacao e upload: `docs/pocs/LED_MOTORES_D0.md`. Ultimas portas observadas: Nano CH340 COM7; ESP CH343 COM5 (podem mudar). Credenciais Wi-Fi permanecem no arquivo local ignorado.
+- Estado das placas ao fim da preparacao: Nano permanece com o programa automatico `nano_motor_direto`; ESP com POC 1 de LED. O teste automatico anterior do Nano repete ao ligar/resetar, ate que outro firmware seja gravado.
+- Pendencia de alimentacao: usuario mediu 5 V no VIN do Nano alimentado pelo step-down e 4,1 V no pino 5V. Nao houve confirmacao de correcao dessa ligacao; nao declarar essa alimentacao validada.
+
+### Gravacao autorizada do par LED/motores D0 — 27/10/2026
+Usuario autorizou passar os firmwares preparados. Gravados `led_motores_d0_nano` na COM7 e `led_motores_d0_esp32` na COM8 (USB nativo ESP, mesmo MAC anterior), ambos com verificacao da flash bem-sucedida. GET em http://192.168.7.8/api/info confirmou firmware `led_motores_d0`, UART9600/D0, TX invertido e retorno desabilitado. Nao enviados comandos de LED ou motor nesta etapa. Estado atual: Nano substituiu `nano_motor_direto` e agora inicia parado; ESP serve o novo painel. Validacao fisica conjunta ainda pendente da observacao do usuario.
+
+### Controle D0 conjunto confirmado e integracao FPV gravada — 27/10/2026
+- Usuario confirmou que o par `led_motores_d0` funcionou, com LED e motores controlados pelo ESP via IO43 -> BC337 -> Nano D0. A confirmacao e fisica do usuario; nao veio de telemetria de retorno.
+- A seguir pediu pan/tilt, joysticks e video juntos. Criado par `rover_d0_nano` / `rover_d0_esp32`, fontes em `src/firmware/testes_bancada/rover_d0/`. Mantem UART fisica 9600, inicializacao invertida identica ao par confirmado, enlace somente de ida e PWM bruto limitado a120. Nano nao inclui SoftwareSerial nem transmite respostas.
+- Nano controla servos por Timer1 em D9/D10, motores continuam D3/D6 (demais pinos D4/D5/D7/D8, STBY D12). Pan30..150, Tilt40..140, centro90 no boot, velocidade inicial150 graus/s; limites conservadores do firmware, sem afirmar calibracao mecanica validada nesta sessao.
+- Motores param no boot, ao receber M0/X ou apos600ms sem comando de motor. Comandos de servo/LED nao renovam o prazo; partida/reversao com150ms de saidas desligadas sem repetir essa espera a cada pacote.
+- UI compartilhada corrigida: joystick como modo inicial do perfil D0; sliders PWM limitados a120; controles pan/tilt alinhados aos limites Nano; sem falso Nano off/LED OFF no enlace sem retorno. Ping e seletor de inversao desnecessarios ocultos nesse perfil. Stop cancela timers e ponteiros; soltar tracao para motores sem interromper servo mantido no outro joystick. Movimentos nao usam fallback HTTP para evitar comandos atrasados apos parar.
+- Testes em `tools/verificar_joysticks_rover.cjs` executam JS real com tempo/eventos simulados: heartbeat, PWM, pulso, emergencia, desconexao, multitouch, captura perdida, independencia dos controles, inicializacao do perfil e endereco de video. Passaram. Ambos os alvos compilaram; Nano sem dependencias externas. Gravados COM7 Nano e COM8 ESP com verificacao da flash. Nao foram enviados comandos de motor/servo/LED pelo agente na verificacao.
+- API ao vivo confirmou firmware rover_d0, cam/servo/motor, retorno:false e limites corretos em192.168.7.8. Camera OV5640 ok1, QVGA320x240, cliente1 e13fps na leitura. Uma tentativa de abrir outro stream nao respondeu no prazo; verificacao do video feita pelas estatisticas do cliente ja ativo, sem alegar decodificacao de quadros dessa tentativa.
+- Estado atual das placas: rover_d0_nano e rover_d0_esp32. Movimentos mecanicos conjuntos aguardam confirmacao do usuario. Guia: docs/pocs/ROVER_D0_INTEGRADO.md. Pendencia de alimentacao4,1V anterior mantida, sem confirmacao de correcao.
+- Verificacao final: testes do painel passaram apos separar M0 (para somente motores) de X (emergencia geral). Compilacao de regressao do ambiente compartilhado testes_bancada_esp32 tambem passou, sem upload. Pinos do novo Nano comparados ao teste direto; nenhuma SoftwareSerial ou escrita de resposta serial no novo Nano. Duas leituras do ESP com uptime10s->33s mostraram camera frames10->285 e FPS5->10, confirmando geracao de video para um cliente. Houve uma leitura anterior com uptime70s antes desse novo uptime; motivo da reinicializacao nao foi determinado (nao atribuir a firmware/alimentacao sem evidencia).
+
+### Troca de rede do ESP — 27/10/2026
+A pedido do usuario, credenciais locais ignoradas atualizadas para SSID `PET_PC 2902`; senha somente em credenciais.h, sem reproduzir na documentacao. Regravado apenas `rover_d0_esp32` via COM5 CH343, flash verificada com sucesso. Mesmo ESP MAC90:70:69:f7:fc:1c identificado no hotspot do PC pelo IP192.168.137.149. GET /api/info nesse endereco confirmou rover_d0, cam/servo/motor e perfil D0 de ida. Nano permanece rover_d0_nano; nenhuma nova gravacao nele ou comando de movimento nesta troca. Painel encaminhado para abrir no novo IP.
+
+### Logs dos comandos web — 28/10/2026
+Pedido: preservar o firmware rover_d0 que funciona e registrar comandos recebidos do site. Adicionados logs em Serial USB (115200), com origem WS/HTTP, millis e conteudo recebido, antes do processamento existente em esp_app.h. Comandos HTTP de inversao e ajustes/presets/registradores da camera tambem registrados. Serial2, pinagem, protocolo, movimentos e Nano preservados. Recepcao no ESP nao comprova recepcao no Nano (enlace somente ida). Gravacao pendente: PlatformIO, pyserial e PnP do Windows nao encontram portas COM nem ESP/CH34x conectados, apesar do usuario informar cabo conectado. Nao afirmar upload concluido.
+
+### Upload dos logs web concluído — 28/10/2026
+Após reconexão, ESP USB nativo voltou a aparecer na COM8, MAC 90:70:69:f7:fc:1c. Gravado rover_d0_esp32 com logs WEB RX de WS/HTTP e câmera; PlatformIO SUCCESS e hash da flash verificado. Nano não regravado. Tentativa de verificar API no endereço anterior 192.168.137.149 expirou e captura USB de poucos segundos não recebeu mensagens; portanto logs em execução ainda aguardam teste com comandos do usuário. Monitor COM8 a 115200 baud. Nenhum comando de movimento enviado nesta gravação.
+
+### Otimização Mobile Horizontal no Painel ESP32 (Cockpit FPV) — 29/10/2026
+- **Interface Web Landscape:** CSS adaptado com media query para orientação horizontal (`orientation: landscape` e altura <= 500px).
+- **Layout FPV de 3 colunas:**
+  - Coluna esquerda: Controles táteis de Tração 4WD (D-pad compacto).
+  - Coluna central: Stream de vídeo maximizado com HUD minimalista sobreposto (bateria, modo, latência).
+  - Coluna direita: Controles táteis de Pan/Tilt com botão de recentralização e controle de LEDs.
+- **Gravação bem-sucedida:** Gravado `rover_d0_esp32` via COM8 no ESP32-S3. Firmware rodando e respondendo em `192.168.137.188` (hotspot `PET_PC 2902`), com rotas `/api/info` e `/api/stats` validadas ao vivo.
+
+### App Mobile Expo: Head-Tracking com Giroscópio e Suporte a Expo Dev Client — 29/10/2026
+- **Objetivo:** Adicionar controle robusto por sensores de movimento (head-tracking do Pan/Tilt) no aplicativo Expo (`src/app_mobile/`) de forma fácil de testar no celular e em emuladores, sem alterar o código funcional do ESP32 ou do Arduino Nano.
+- **Arquitetura de Sensores em 3 Camadas (`src/app_mobile/src/services/sensors.ts`):**
+  1. *Camada 1 (Principal):* `DeviceMotion` com fusão inercial tridimensional nativa (rotação Euler Yaw/Pitch desacoplada).
+  2. *Camada 2 (Fallback Dinâmico):* Fusão de `Gyroscope` + `Accelerometer` com filtro complementar (96% taxa angular + 4% gravidade estática no Tilt) caso o aparelho não reporte quaternion/euler em `DeviceMotion`.
+  3. *Camada 3 (Fallback Virtual):* Backend simulado para emulador e navegador desktop, com injeção de variações angulares via `simulateMotion(deltaYaw, deltaPitch)`.
+- **Proteção dos Servos SG90:**
+  - Filtro EMA (Exponential Moving Average, $lpha = 0.28$) para eliminação de ruído/jitter.
+  - Deadband angular de 1.2° para evitar que micro-vibrações da mão enviem comandos desnecessários aos servos.
+  - Saturação estrita dentro dos limites mecânicos seguros (Pan: 30° a 150°, Tilt: 40° a 140°).
+  - Desacoplamento de gimbal lock com atenuação de falso yaw durante elevações verticais extremas.
+- **Ferramentas de Teste no App:**
+  - Componente `GyroscopeTestCard` integrado à aba de Calibração com retículo/radar móvel em tempo real, leituras numéricas de Pan/Tilt, indicador de backend ativo, taxa de amostragem em Hz, botões para inverter eixos e botões de teste rápido em quatro direções.
+  - Botão de recentralização / zerar visão flutuante na tela de pilotagem (`DriveScreen`) junto ao toggle do giroscópio.
+- **Configuração do Expo Dev Client & Build:**
+  - Biblioteca `expo-dev-client` instalada.
+  - `app.json` configurado com permissão `android.permission.HIGH_SAMPLING_RATE_SENSORS`, `NSMotionUsageDescription` (iOS), package `com.rover.fpv` e plugin `expo-dev-client`.
+  - Scripts adicionados ao `package.json`: `"dev"`, `"build:android"`, `"build:ios"`.
+  - Tipagem TypeScript validada com 0 erros (`tsc --noEmit`).

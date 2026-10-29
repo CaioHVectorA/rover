@@ -40,6 +40,7 @@ static void configurar(long id, long v) {
 }
 
 void setup() {
+  pinMode(LED_BUILTIN, OUTPUT);
   enlaceBegin();
   mot.begin(PIN_PWMA, PIN_AIN1, PIN_AIN2, PIN_PWMB, PIN_BIN1, PIN_BIN2, PIN_STBY);
   mot.P.rampaMs = 800;
@@ -55,6 +56,7 @@ void loop() {
   uint32_t agora = millis();
   ProtoFrame f;
   while (enlaceLer(f)) {
+    digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN)); // confirma quadro valido no D0
     switch (f.cmd) {
       case 'M': if (f.n >= 2) mot.comando((int)f.arg[0], (int)f.arg[1], agora); break;
       case 'X': mot.paradaImediata(); break;

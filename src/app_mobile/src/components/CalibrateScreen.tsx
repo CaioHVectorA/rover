@@ -20,13 +20,16 @@ import {
   ShieldAlert,
   Save,
 } from 'lucide-react-native';
-import { RoverTelemetry } from '../types';
+import { RoverTelemetry, HeadTrackingConfig } from '../types';
 import { theme } from '../theme';
+import { GyroscopeTestCard } from './GyroscopeTestCard';
 
 interface CalibrateScreenProps {
   telemetry: RoverTelemetry;
   onServoChange: (pan: number, tilt: number) => void;
   onRecenter: () => void;
+  headConfig?: HeadTrackingConfig;
+  onUpdateHeadConfig?: (config: Partial<HeadTrackingConfig>) => void;
 }
 
 const STORAGE_KEY_SERVO_TRIM = '@rover_servo_trim_v1';
@@ -35,6 +38,8 @@ export const CalibrateScreen: React.FC<CalibrateScreenProps> = ({
   telemetry,
   onServoChange,
   onRecenter,
+  headConfig,
+  onUpdateHeadConfig,
 }) => {
   const [panAngle, setPanAngle] = useState(telemetry.panAngle || 90);
   const [tiltAngle, setTiltAngle] = useState(telemetry.tiltAngle || 90);
@@ -119,6 +124,16 @@ export const CalibrateScreen: React.FC<CalibrateScreenProps> = ({
           Sincronização milimétrica e ajuste fino grau a grau dos servos SG90
         </Text>
       </View>
+
+      {/* CARD DE TESTE DO GIROSCÓPIO & HEAD-TRACKING */}
+      {headConfig && onUpdateHeadConfig && (
+        <GyroscopeTestCard
+          onRecenter={onRecenter}
+          onServoChange={onServoChange}
+          headConfig={headConfig}
+          onUpdateHeadConfig={onUpdateHeadConfig}
+        />
+      )}
 
       {/* PAINEL DE VISUALIZAÇÃO GRÁFICA / MIRA (CROSSHAIR) */}
       <View style={styles.card}>

@@ -53,7 +53,11 @@ static void apiInfo() {
 #endif
   if (caps.length() > 1) caps.remove(caps.length() - 1);
   caps += "]";
-  web.send(200, "application/json", String("{\"poc\":\"") + POC_NOME + "\",\"ip\":\"" + redeEndereco + "\",\"caps\":" + caps + "}");
+  String info = String("{\"poc\":\"") + POC_NOME + "\",\"ip\":\"" + redeEndereco + "\",\"caps\":" + caps;
+#if CONTROLE_D0_DIRETO
+  info += ",\"controle\":{\"retorno\":false,\"pwm_max\":120,\"pan_min\":30,\"pan_max\":150,\"tilt_min\":40,\"tilt_max\":140,\"vel_servo\":150}";
+#endif
+  web.send(200, "application/json", info + "}");
 }
 
 static void apiStats() {
@@ -69,6 +73,11 @@ static void apiStats() {
   const EnlaceStats &e = enlace.st;
   uint32_t hb = enlace.idadeHbMs(agora);
   s += ",\"link\":{";
+#if ENLACE_SO_IDA
+  s += "\"retorno\":false,";
+#else
+  s += "\"retorno\":true,";
+#endif
   s += "\"tx\":" + String(e.tx) + ",\"rx\":" + String(e.rx) + ",\"err\":" + String(e.rxErros);
   s += ",\"hb_age\":" + String(hb == 0xFFFFFFFF ? -1L : (long)hb);
   s += ",\"vbat\":" + String(e.vbat) + ",\"vmin\":" + String(e.vmin);
@@ -88,7 +97,11 @@ static void apiStats() {
 
 #if POC_USA_NANO
 // Valida e encaminha um quadro de texto vindo do celular.
-static bool tratarQuadro(const char *txt, size_t n) {
+static bool tratarQuadro(const char *txt, size_t n, const char *origem) {
+  // Serial USB de diagnostico; Serial2 permanece exclusiva do enlace com o Nano.
+  Serial.printf("[WEB RX %s %lu ms] ", origem, (unsigned long)millis());
+  Serial.write((const uint8_t *)txt, n);
+  Serial.println();
   static ProtoParser p;
   ProtoFrame f;
   bool ok = false;
@@ -118,7 +131,7 @@ static void aoEventoWS(uint8_t num, WStype_t type, uint8_t *payload, size_t len)
       break;
     case WStype_TEXT:
 #if POC_USA_NANO
-      tratarQuadro((const char *)payload, len);
+      tratarQuadro((const char *)payload, len, "WS");
 #endif
       break;
     default: break;
@@ -143,10 +156,11 @@ void setup() {
 #if POC_USA_NANO
   web.on("/api/cmd", []() {                       // fallback HTTP e testes com curl: /api/cmd?f=<S,900,900>
     String f = web.arg("f");
-    bool ok = tratarQuadro(f.c_str(), f.length());
+    bool ok = tratarQuadro(f.c_str(), f.length(), "HTTP");
     web.send(ok ? 200 : 400, "text/plain", ok ? "ok" : "quadro invalido");
   });
   web.on("/api/link/invert", []() {
+    Serial.printf("[WEB RX HTTP %lu ms] /api/link/invert inv=%s\n", (unsigned long)millis(), web.hasArg("inv") ? web.arg("inv").c_str() : "alternar");
     if (web.hasArg("inv")) enlace.setInversaoTx(web.arg("inv") == "1");
     else enlace.setInversaoTx(!enlace.txInvertido);
     web.send(200, "application/json", String("{\"tx_inv\":") + (enlace.txInvertido ? 1 : 0) + "}");

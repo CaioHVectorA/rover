@@ -155,14 +155,177 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   padding: 5px 2px; border-radius: 4px; font-size: 10px; cursor: pointer; text-align: center;
 }
 .btn-preset:active { background: var(--accent); color: #000; font-weight: 700; }
+.controls-grid.hidden { display: none !important; }
+
+/* Cockpit FPV em Modo Horizontal (Mobile Landscape) */
+@media (orientation: landscape) {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    overflow: hidden !important;
+  }
+  .app-container {
+    max-width: 100vw !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    display: grid !important;
+    grid-template-columns: minmax(130px, 180px) minmax(0, 1fr) minmax(130px, 180px) !important;
+    grid-template-rows: 32px minmax(0, 1fr) 34px !important;
+    gap: 4px !important;
+    padding: 4px !important;
+    box-sizing: border-box !important;
+  }
+  header {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    padding: 2px 8px !important;
+    height: 32px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+  }
+  header .title { font-size: 11px !important; }
+  .video-card {
+    grid-column: 2 !important;
+    grid-row: 2 !important;
+    min-height: 0 !important;
+    min-width: 0 !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    width: 100% !important;
+    border-radius: 6px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+    background: #000 !important;
+  }
+  #vid {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    object-fit: contain !important;
+    display: block !important;
+  }
+  .bottom-bar {
+    grid-column: 2 !important;
+    grid-row: 3 !important;
+    gap: 6px !important;
+    height: 34px !important;
+    margin: 0 !important;
+  }
+  .btn-stop, .btn-center {
+    padding: 6px 4px !important;
+    font-size: 11px !important;
+  }
+  .mode-switch {
+    display: none !important;
+  }
+  .header-mode-switch {
+    display: inline-flex !important;
+  }
+  #btnHdrDiag {
+    display: inline-block !important;
+  }
+  .controls-grid {
+    display: contents !important;
+  }
+  .controls-grid.hidden {
+    display: none !important;
+  }
+  .card-drive {
+    grid-column: 1 !important;
+    grid-row: 1 / 4 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-evenly !important;
+    align-items: center !important;
+    padding: 4px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  .card-pt {
+    grid-column: 3 !important;
+    grid-row: 1 / 4 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-evenly !important;
+    align-items: center !important;
+    padding: 4px !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+  .dpad {
+    display: grid !important;
+    grid-template-columns: repeat(3, 38px) !important;
+    grid-template-rows: repeat(3, 35px) !important;
+    gap: 3px !important;
+    justify-content: center !important;
+  }
+  .dpad button { height: 35px !important; font-size: 14px !important; }
+  .joy-zone {
+    width: 100px !important;
+    height: 100px !important;
+  }
+  .joy-knob {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .slider-group {
+    width: 90% !important;
+    margin-top: 2px !important;
+    gap: 2px !important;
+  }
+  .slider-item {
+    font-size: 10px !important;
+    gap: 4px !important;
+  }
+  .slider-item label {
+    font-size: 10px !important;
+    width: 28px !important;
+  }
+  .slider-item output {
+    font-size: 10px !important;
+    min-width: 26px !important;
+  }
+  .diag-card {
+    position: absolute !important;
+    top: 36px !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    width: 90% !important;
+    max-width: 440px !important;
+    z-index: 50 !important;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.85) !important;
+  }
+  .diag-card:not([open]) {
+    display: none !important;
+  }
+}
 </style>
 </head>
 <body>
 
 <div class="app-container">
   <header>
-    <div class="title">🚀 ROVER FPV</div>
-    <div style="display:flex;gap:6px;align-items:center">
+    <div style="display:flex;align-items:center;gap:6px">
+      <div class="title">🚀 ROVER</div>
+      <div class="header-mode-switch" style="display:none;gap:3px">
+        <button id="btnHdrDpad" class="btn-mode active" style="padding:2px 6px;font-size:10px" onclick="setModo('dpad')">🔲 D-Pad</button>
+        <button id="btnHdrJoy" class="btn-mode" style="padding:2px 6px;font-size:10px" onclick="setModo('joy')">🕹️ Joy</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:5px;align-items:center">
+      <button class="btn-cfg" id="btnHdrDiag" onclick="toggleDiag()" title="Diagnóstico de Bancada" style="display:none">🔧</button>
       <span class="status-pill" id="stNano">NANO</span>
       <span id="stBat" style="font-weight:700;color:var(--green)">-- V</span>
       <span class="status-pill" id="stWs">WS</span>
@@ -173,35 +336,38 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   <!-- Janela de Vídeo -->
   <div class="video-card">
     <div class="cam-btn-overlay">
+      <button class="btn-mini" id="btnCamPresetQuick" onclick="ciclarPresetCam()" title="Qualidade da Câmera">❄️ Frio</button>
       <button class="btn-mini" onclick="girarRotacao()">↻ Girar</button>
       <button class="btn-mini" onclick="recarregarVideo()">▶ Vídeo</button>
     </div>
     <img id="vid" src="" alt="Vídeo ao vivo">
   </div>
 
-  <!-- Barra de Diagnóstico de Bancada -->
-  <div class="ctrl-card" style="width:100%;padding:8px 10px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
-      <span class="ctrl-title">Diagnóstico & LED Nano (D13)</span>
+  <!-- Barra de Diagnóstico de Bancada (retrátil) -->
+  <details class="ctrl-card diag-card" id="cardDiag" style="width:100%;padding:6px 10px;">
+    <summary style="display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;list-style:none;">
+      <span class="ctrl-title">🔧 Diagnóstico Bancada & LED (D13) ▾</span>
       <span id="stLed" class="status-pill">LED OFF</span>
+    </summary>
+    <div style="width:100%;margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;gap:6px;width:100%;">
+        <button class="btn-preset" style="flex:1" onclick="setLed(1)">Ligar LED</button>
+        <button class="btn-preset" style="flex:1" onclick="setLed(0)">Desligar LED</button>
+        <button id="btnLed2" class="btn-preset" style="flex:1" onclick="setLed(2)">Alternar</button>
+        <button id="btnPing" class="btn-preset" style="flex:1" onclick="pingNano()">Ping <span id="rttPing"></span></button>
+      </div>
+      <div style="display:flex;gap:6px;width:100%;">
+        <button class="btn-preset" style="flex:1;background:#1e3a2b;color:#4ade80" onclick="testeMotor(150,150,1000)">4 Motores 1s</button>
+        <button class="btn-preset" style="flex:1" onclick="testeMotor(-150,-150,1000)">Ré 1s</button>
+        <button class="btn-preset" style="flex:1" onclick="testeMotor(-150,150,800)">Giro Esq</button>
+        <button class="btn-preset" style="flex:1" onclick="testeMotor(150,-150,800)">Giro Dir</button>
+      </div>
+      <div style="display:flex;gap:6px;width:100%;align-items:center;">
+        <span style="font-size:10px;color:var(--sub);white-space:nowrap">Fio TX ESP &rarr; Nano:</span>
+        <button id="btnTxInv" class="btn-preset" style="flex:1;font-size:10px" onclick="alternarTxInv()">Polaridade: carregando...</button>
+      </div>
     </div>
-    <div style="display:flex;gap:6px;width:100%;margin-top:6px;">
-      <button class="btn-preset" style="flex:1" onclick="setLed(1)">Ligar LED</button>
-      <button class="btn-preset" style="flex:1" onclick="setLed(0)">Desligar LED</button>
-      <button class="btn-preset" style="flex:1" onclick="setLed(2)">Alternar</button>
-      <button class="btn-preset" style="flex:1" onclick="pingNano()">Ping <span id="rttPing"></span></button>
-    </div>
-    <div style="display:flex;gap:6px;width:100%;margin-top:6px;">
-      <button class="btn-preset" style="flex:1;background:#1e3a2b;color:#4ade80" onclick="testeMotor(150,150,1000)">4 Motores 1s</button>
-      <button class="btn-preset" style="flex:1" onclick="testeMotor(-150,-150,1000)">Ré 1s</button>
-      <button class="btn-preset" style="flex:1" onclick="testeMotor(-150,150,800)">Giro Esq</button>
-      <button class="btn-preset" style="flex:1" onclick="testeMotor(150,-150,800)">Giro Dir</button>
-    </div>
-    <div style="display:flex;gap:6px;width:100%;margin-top:6px;align-items:center;">
-      <span style="font-size:10px;color:var(--sub);white-space:nowrap">Fio TX ESP &rarr; Nano:</span>
-      <button id="btnTxInv" class="btn-preset" style="flex:1;font-size:10px" onclick="alternarTxInv()">Polaridade: carregando...</button>
-    </div>
-  </div>
+  </details>
 
   <!-- Alternador de Modo de Pilotagem -->
   <div class="mode-switch">
@@ -212,7 +378,7 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   <!-- MODO 1: D-PAD TÁTIL -->
   <div id="viewDpad" class="controls-grid">
     <!-- Tração 4WD -->
-    <div class="ctrl-card">
+    <div class="ctrl-card card-drive">
       <div class="ctrl-title">Tração 4WD</div>
       <div class="dpad">
         <span></span>
@@ -228,14 +394,14 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
       <div class="slider-group" style="margin-top:4px">
         <div class="slider-item">
           <label>PWM</label>
-          <input type="range" id="rngPwm" min="80" max="255" value="180" oninput="outPwm.value=this.value">
-          <output id="outPwm">180</output>
+          <input type="range" id="rngPwm" min="0" max="255" value="120" oninput="outPwm.value=this.value; rngPwmJoy.value=this.value; outPwmJoy.value=this.value;">
+          <output id="outPwm">120</output>
         </div>
       </div>
     </div>
 
     <!-- Pan / Tilt -->
-    <div class="ctrl-card">
+    <div class="ctrl-card card-pt">
       <div class="ctrl-title">Pan / Tilt</div>
       <div class="dpad">
         <span></span>
@@ -264,9 +430,9 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   </div>
 
   <!-- MODO 2: JOYSTICKS VIRTUAIS PROPORCIONAIS (OCULTO POR PADRÃO) -->
-  <div id="viewJoy" class="controls-grid" style="display:none">
+  <div id="viewJoy" class="controls-grid hidden">
     <!-- Joy Tração 4WD -->
-    <div class="ctrl-card">
+    <div class="ctrl-card card-drive">
       <div class="ctrl-title">Tração 4WD</div>
       <div class="joy-zone" id="joyDriveBase">
         <div class="joy-knob" id="joyDriveKnob"></div>
@@ -274,14 +440,14 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
       <div class="slider-group" style="margin-top:4px">
         <div class="slider-item">
           <label>PWM</label>
-          <input type="range" id="rngPwmJoy" min="80" max="255" value="180" oninput="outPwmJoy.value=this.value; rngPwm.value=this.value; outPwm.value=this.value;">
-          <output id="outPwmJoy">180</output>
+          <input type="range" id="rngPwmJoy" min="0" max="255" value="120" oninput="outPwmJoy.value=this.value; rngPwm.value=this.value; outPwm.value=this.value;">
+          <output id="outPwmJoy">120</output>
         </div>
       </div>
     </div>
 
     <!-- Joy Pan / Tilt -->
-    <div class="ctrl-card">
+    <div class="ctrl-card card-pt">
       <div class="ctrl-title">Pan / Tilt</div>
       <div class="joy-zone" id="joyPTBase">
         <div class="joy-knob" id="joyPTKnob"></div>
@@ -313,9 +479,9 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     <div class="slider-item">
       <label style="width:70px">Resolução</label>
       <select id="selPresetCam" onchange="mudarPresetCam(this.value)" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:5px;border-radius:4px;font-size:11px">
-        <option value="frio">Frio (QVGA 320x240 - ~34°C)</option>
-        <option value="equilibrado">Equilibrado (VGA 640x480 - ~44°C)</option>
-        <option value="qualidade">Qualidade (SVGA 800x600 - ~52°C)</option>
+        <option value="frio">Frio (QVGA 320x240)</option>
+        <option value="equilibrado">Equilibrado (VGA 640x480)</option>
+        <option value="qualidade">Qualidade (SVGA 800x600)</option>
         <option value="maximo">Máximo (HD 1280x720 - Alta Def.)</option>
       </select>
     </div>
@@ -363,14 +529,54 @@ let invTilt = false;  // Inversao Tilt
 let rotAtual = 270;
 let ptTimer = null;
 let modoAtual = 'dpad';
+let limites = {panMin:30, panMax:150, tiltMin:0, tiltMax:155};
+let soIda = false;
+let testeMotorTimer = null;
+let testeMotorFim = null;
 
 function setModo(m) {
   modoAtual = m;
   parada();
-  document.getElementById('btnModoDpad').className = (m === 'dpad') ? 'btn-mode active' : 'btn-mode';
-  document.getElementById('btnModoJoy').className = (m === 'joy') ? 'btn-mode active' : 'btn-mode';
-  document.getElementById('viewDpad').style.display = (m === 'dpad') ? 'grid' : 'none';
-  document.getElementById('viewJoy').style.display = (m === 'joy') ? 'grid' : 'none';
+  const isDpad = (m === 'dpad');
+  document.getElementById('btnModoDpad').className = isDpad ? 'btn-mode active' : 'btn-mode';
+  document.getElementById('btnModoJoy').className = isDpad ? 'btn-mode' : 'btn-mode active';
+  const hDpad = document.getElementById('btnHdrDpad');
+  const hJoy = document.getElementById('btnHdrJoy');
+  if (hDpad) hDpad.className = isDpad ? 'btn-mode active' : 'btn-mode';
+  if (hJoy) hJoy.className = isDpad ? 'btn-mode' : 'btn-mode active';
+  const vDpad = document.getElementById('viewDpad');
+  const vJoy = document.getElementById('viewJoy');
+  if (isDpad) {
+    vDpad.classList.remove('hidden');
+    vJoy.classList.add('hidden');
+  } else {
+    vDpad.classList.add('hidden');
+    vJoy.classList.remove('hidden');
+  }
+}
+
+function toggleDiag() {
+  const d = document.getElementById('cardDiag');
+  if (d) d.open = !d.open;
+}
+
+const presetsCam = ['frio', 'equilibrado', 'qualidade'];
+async function ciclarPresetCam() {
+  const sel = document.getElementById('selPresetCam');
+  let idx = presetsCam.indexOf(sel.value);
+  idx = (idx + 1) % presetsCam.length;
+  const novo = presetsCam[idx];
+  sel.value = novo;
+  await mudarPresetCam(novo);
+}
+function atualizarBtnPresetQuick(n) {
+  const b = document.getElementById('btnCamPresetQuick');
+  if (b) {
+    if (n === 'frio') b.textContent = '❄️ Frio';
+    else if (n === 'equilibrado') b.textContent = '⚖️ VGA';
+    else if (n === 'qualidade') b.textContent = '✨ SVGA';
+    else b.textContent = 'HD';
+  }
 }
 
 function toggleModal(show) {
@@ -385,6 +591,7 @@ function aplicarVel(v) {
 }
 
 async function mudarPresetCam(n) {
+  atualizarBtnPresetQuick(n);
   await fetch(`/api/cam/preset?n=${n}`);
   recarregarVideo();
 }
@@ -392,19 +599,30 @@ async function mudarPresetCam(n) {
 function conectarWS() {
   ws = new WebSocket('ws://' + location.hostname + ':81/');
   const pill = document.getElementById('stWs');
-  ws.onopen = () => { pill.textContent = 'ONLINE'; pill.className = 'status-pill ok'; };
-  ws.onclose = () => { pill.textContent = 'OFF'; pill.className = 'status-pill bad'; setTimeout(conectarWS, 1500); };
+  ws.onopen = () => { parada(); pill.textContent = 'ONLINE'; pill.className = 'status-pill ok'; };
+  ws.onclose = () => { parada(); pill.textContent = 'OFF'; pill.className = 'status-pill bad'; setTimeout(conectarWS, 1500); };
 }
 function tx(cmd) {
   if (ws && ws.readyState === 1) { ws.send(cmd); return; }
+  // Movimento so por WebSocket: evita requisicoes HTTP atrasadas apos uma parada.
+  if (cmd.startsWith('<S,') || (cmd.startsWith('<M,') && cmd !== '<M,0,0>')) return;
   fetch('/api/cmd?f=' + encodeURIComponent(cmd)).catch(() => {});
 }
 function setLed(v) { tx(`<L,${v}>`); }
 function pingNano() { tx('<P,1>'); const el = document.getElementById('rttPing'); if (el) el.textContent = '...'; }
-async function testeMotor(e, d, ms) {
-  tx(`<M,${e},${d}>`);
-  await new Promise(r => setTimeout(r, ms));
-  tx('<M,0,0>');
+function cancelarTesteMotor() {
+  if (testeMotorTimer) clearInterval(testeMotorTimer);
+  if (testeMotorFim) clearTimeout(testeMotorFim);
+  testeMotorTimer = testeMotorFim = null;
+}
+function testeMotor(e, d, ms) {
+  parada();
+  if (!ws || ws.readyState !== 1) return;
+  const max = parseInt(document.getElementById('rngPwm').value);
+  const cmd = `<M,${Math.max(-max,Math.min(max,e))},${Math.max(-max,Math.min(max,d))}>`;
+  tx(cmd);
+  testeMotorTimer = setInterval(() => tx(cmd), 100);
+  testeMotorFim = setTimeout(() => { cancelarTesteMotor(); tx('<M,0,0>'); }, ms);
 }
 async function alternarTxInv() {
   try {
@@ -435,20 +653,37 @@ async function girarRotacao() {
 }
 
 // ---------------- Tração 4WD ----------------
+let driveHeartbeat = null;
+let driveCmd = null;
 function drive(fwd, turn) {
+  cancelarTesteMotor();
   const maxVal = parseInt(document.getElementById('rngPwm').value);
-  if (fwd === 0 && turn === 0) { tx('<M,0,0>'); return; }
+  if (fwd === 0 && turn === 0) {
+    if (driveHeartbeat) clearInterval(driveHeartbeat);
+    driveHeartbeat = null; driveCmd = null;
+    tx('<M,0,0>'); return;
+  }
+  if (!ws || ws.readyState !== 1) { parada(); return; }
   let left = fwd * maxVal + turn * (maxVal * 0.7);
   let right = fwd * maxVal - turn * (maxVal * 0.7);
   left = Math.round(Math.max(-maxVal, Math.min(maxVal, left)));
   right = Math.round(Math.max(-maxVal, Math.min(maxVal, right)));
-  tx(`<M,${left},${right}>`);
+  const cmd = `<M,${left},${right}>`;
+  if (cmd !== driveCmd) tx(cmd);
+  driveCmd = cmd;
+  if (!driveHeartbeat) driveHeartbeat = setInterval(() => {
+    if (!ws || ws.readyState !== 1) { parada(); return; }
+    tx(driveCmd);
+  }, 100);
 }
 
 function parada() {
+  cancelarTesteMotor();
+  window.dispatchEvent(new Event('roverstop'));
   stopPT();
   if (joyDriveTimer) { clearInterval(joyDriveTimer); joyDriveTimer = null; }
   if (joyPTTimer) { clearInterval(joyPTTimer); joyPTTimer = null; }
+  curDriveX = curDriveY = curPTX = curPTY = 0;
   drive(0, 0);
   tx('<X>');
 }
@@ -467,11 +702,11 @@ function enviarPT() {
 function stepPan(sinal) {
   stopPT();
   const d = (invPan ? -sinal : sinal) * passoGraus;
-  pan = Math.max(30, Math.min(150, pan + d));
+  pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + d));
   enviarPT();
   // Repetição rápida a cada 60 ms para movimento ágil e contínuo
   ptTimer = setInterval(() => {
-    pan = Math.max(30, Math.min(150, pan + d));
+    pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + d));
     enviarPT();
   }, 60);
 }
@@ -479,10 +714,10 @@ function stepPan(sinal) {
 function stepTilt(sinal) {
   stopPT();
   const d = (invTilt ? -sinal : sinal) * passoGraus;
-  tilt = Math.max(0, Math.min(155, tilt + d));
+  tilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + d));
   enviarPT();
   ptTimer = setInterval(() => {
-    tilt = Math.max(0, Math.min(155, tilt + d));
+    tilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + d));
     enviarPT();
   }, 60);
 }
@@ -512,27 +747,34 @@ function setupJoystick(baseId, knobId, onMove, onEnd) {
   const knob = document.getElementById(knobId);
   const R = 38;
   let active = false;
+  let pointer = null;
 
   base.addEventListener('pointerdown', e => {
+    if (active) return;
     active = true;
+    pointer = e.pointerId;
     base.setPointerCapture(e.pointerId);
     handle(e);
   });
 
   base.addEventListener('pointermove', e => {
-    if (!active) return;
+    if (!active || e.pointerId !== pointer) return;
     handle(e);
   });
 
-  function stop() {
+  function stop(e) {
     if (!active) return;
+    if (e && e.pointerId !== undefined && e.pointerId !== pointer) return;
     active = false;
+    pointer = null;
     knob.style.transform = 'translate(0px, 0px)';
     if (onEnd) onEnd();
   }
 
   base.addEventListener('pointerup', stop);
   base.addEventListener('pointercancel', stop);
+  base.addEventListener('lostpointercapture', stop);
+  window.addEventListener('roverstop', stop);
 
   function handle(e) {
     const rect = base.getBoundingClientRect();
@@ -559,8 +801,8 @@ function initJoysticks() {
     curDriveX = nx;
     curDriveY = ny;
     if (!joyDriveTimer) {
-      joyDriveTick();
       joyDriveTimer = setInterval(joyDriveTick, 50);
+      joyDriveTick();
     }
   }, () => {
     if (joyDriveTimer) { clearInterval(joyDriveTimer); joyDriveTimer = null; }
@@ -573,8 +815,8 @@ function initJoysticks() {
     curPTX = nx;
     curPTY = ny;
     if (!joyPTTimer) {
-      joyPTTick();
       joyPTTimer = setInterval(joyPTTick, 60);
+      joyPTTick();
     }
   }, () => {
     if (joyPTTimer) { clearInterval(joyPTTimer); joyPTTimer = null; }
@@ -597,14 +839,16 @@ function joyPTTick() {
   const dirTilt = (invTilt ? -1 : 1) * curPTY;
   
   // Taxa contínua proporcional à deflexão do joystick
-  pan = Math.max(30, Math.min(150, pan + dirPan * velServo * dt));
-  tilt = Math.max(0, Math.min(155, tilt + dirTilt * velServo * dt));
+  pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + dirPan * velServo * dt));
+  tilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + dirTilt * velServo * dt));
   enviarPT();
 }
 
 // ---------------- Proteção Global de Toque ----------------
 window.addEventListener('pointerup', () => { stopPT(); if (modoAtual === 'dpad') drive(0, 0); });
 window.addEventListener('pointercancel', () => { stopPT(); if (modoAtual === 'dpad') drive(0, 0); });
+window.addEventListener('blur', parada);
+document.addEventListener('visibilitychange', () => { if (document.hidden) parada(); });
 
 async function atualizarStats() {
   try {
@@ -612,17 +856,20 @@ async function atualizarStats() {
     const d = await r.json();
     if (d.link) {
       const l = d.link;
+      if (l.retorno === false) soIda = true;
       const ok = l.hb_age >= 0 && l.hb_age < 2500;
       const stNano = document.getElementById('stNano');
       if (stNano) {
-        stNano.className = 'status-pill ' + (ok ? 'ok' : 'bad');
-        stNano.textContent = ok ? 'NANO ok' : 'NANO off';
+        stNano.className = 'status-pill ' + (soIda ? '' : (ok ? 'ok' : 'bad'));
+        stNano.textContent = soIda ? 'ENVIO → NANO' : (ok ? 'NANO ok' : 'NANO off');
       }
       if (l.vbat) {
         document.getElementById('stBat').textContent = (l.vbat / 1000).toFixed(2) + ' V';
       }
       const stLed = document.getElementById('stLed');
-      if (stLed && l.led !== undefined) {
+      if (stLed && soIda) {
+        stLed.className = 'status-pill'; stLed.textContent = 'CONFIRA D13';
+      } else if (stLed && l.led !== undefined) {
         stLed.className = 'status-pill ' + (l.led ? 'ok' : '');
         stLed.textContent = l.led ? 'LED ON' : 'LED OFF';
       }
@@ -635,19 +882,54 @@ async function atualizarStats() {
     if (d.cam && d.cam.res) {
       const sel = document.getElementById('selPresetCam');
       if (document.activeElement !== sel) {
-        if (d.cam.res === 'qvga') sel.value = 'frio';
-        else if (d.cam.res === 'vga') sel.value = 'equilibrado';
-        else if (d.cam.res === 'svga') sel.value = 'qualidade';
-        else if (d.cam.res === 'hd') sel.value = 'maximo';
+        let p = 'frio';
+        if (d.cam.res === 'qvga') p = 'frio';
+        else if (d.cam.res === 'vga') p = 'equilibrado';
+        else if (d.cam.res === 'svga') p = 'qualidade';
+        else if (d.cam.res === 'hd') p = 'maximo';
+        sel.value = p;
+        atualizarBtnPresetQuick(p);
       }
     }
   } catch (e) {}
 }
 
-window.onload = () => {
+window.onload = async () => {
+  let joyInicial = false;
+  try {
+    const info = await (await fetch('/api/info')).json();
+    if (info.controle) {
+      const c = info.controle;
+      soIda = c.retorno === false;
+      limites = {panMin:c.pan_min, panMax:c.pan_max, tiltMin:c.tilt_min, tiltMax:c.tilt_max};
+      for (const id of ['rngPwm', 'rngPwmJoy']) {
+        document.getElementById(id).max = c.pwm_max;
+        document.getElementById(id).value = c.pwm_max;
+      }
+      document.getElementById('outPwm').value = c.pwm_max;
+      document.getElementById('outPwmJoy').value = c.pwm_max;
+      document.getElementById('rngPan').min = c.pan_min;
+      document.getElementById('rngPan').max = c.pan_max;
+      document.getElementById('rngTilt').min = c.tilt_min;
+      document.getElementById('rngTilt').max = c.tilt_max;
+      velServo = c.vel_servo;
+      document.getElementById('rngVel').value = velServo;
+      document.getElementById('outVel').value = velServo + '°/s';
+      if (soIda) {
+        document.getElementById('btnPing').hidden = true;
+        document.getElementById('stBat').hidden = true;
+        document.getElementById('btnLed2').textContent = 'Piscar 5x';
+        document.getElementById('btnTxInv').parentElement.style.display = 'none';
+        document.getElementById('stNano').textContent = 'ENVIO → NANO';
+        document.getElementById('stLed').textContent = 'CONFIRA D13';
+      }
+      joyInicial = true;
+    }
+  } catch (e) {}
   conectarWS();
   recarregarVideo();
   initJoysticks();
+  if (joyInicial) setModo('joy');
   setInterval(atualizarStats, 2000);
 };
 </script>

@@ -73,6 +73,22 @@ export interface HeadTrackingConfig {
   updateRateHz: number;
 }
 
+export interface GyroDiagnostics {
+  active: boolean;
+  backend: 'device-motion' | 'gyro-accel' | 'simulated' | 'none';
+  rawYaw: number;
+  rawPitch: number;
+  rawRoll: number;
+  smoothPan: number;
+  smoothTilt: number;
+  sentPan: number;
+  sentTilt: number;
+  hz: number;
+  samplesCount: number;
+  lastUpdateMs: number;
+  isLandscape: boolean;
+}
+
 export interface ConnectionConfig {
   mode: OperationMode;
   protocol: FirmwareProtocol;

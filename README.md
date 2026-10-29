@@ -4,10 +4,12 @@ Robô explorador terrestre com **tração integral 4WD**, cabeça articulada **P
 
 ---
 
-### 🟢 Status do Projeto: **Suíte de 6 POCs Validadas & Bancada Ativa**
-* **Hardware:** Todos os componentes recebidos e operacionais na bancada de testes.
-* **Firmware:** Suíte modular de **6 POCs incrementais** implementada e compilada com 100% de sucesso no PlatformIO, isolando testes de enlace serial, anti-rebolado dos servos, câmera fria (OV5640), transmissão e tração 4WD com rampa anti-reset.
-* **Próximo Passo:** Testes de rodagem no chão e finalização da modelagem CAD 3D do chassi.
+### 🟢 Status do Projeto: **Testes ativos de bancada**
+* **Hardware:** Todos os componentes recebidos e em mãos na bancada de testes.
+* **Validação em 27/10/2026:** Usuário confirmou o LED D13 pelo enlace IO43 → BC337 → D0 e, separadamente, os motores com PWM direto 120 por 1 segundo no Nano.
+* **Enlace validado:** Usuário confirmou LED e motores juntos pelo par [LED/motores D0](docs/pocs/LED_MOTORES_D0.md).
+* **Firmware atual gravado:** [Rover D0 integrado](docs/pocs/ROVER_D0_INTEGRADO.md), com joysticks, vídeo, pan/tilt e LED. Flash dos dois verificada e câmera transmitindo; movimento conjunto aguarda observação do usuário.
+* **Próximo passo:** Validar pan/tilt e tração simultâneos e revisar a alimentação antes da rodagem no chão e finalização do chassi CAD.
 
 ---
 

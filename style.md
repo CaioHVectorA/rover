@@ -94,3 +94,7 @@ Este documento registra o perfil técnico, tom de voz, ritmo e preferências de 
   * O usuário solicitou que a raiz do repositório seja mantida estritamente limpa e sem pastas de testes/compras soltas.
   * Validação prática antes da integração final: arquitetura em 6 POCs incrementais isolados (`poc1` a `poc6`), permitindo testar cada subsistema físico (Serial, Pan/Tilt sem rebolado, Câmera fria/soneca e Motores com rampa anti-brownout) antes de juntar tudo.
   * O usuário prefere subidas de Git apenas quando sinalizar expressamente o encerramento da rodada.
+
+* **2026-10-26 (Diagnóstico de bancada):** Priorizar somatório concreto de consumo e limites das fontes; distinguir estimativas, especificações e medições antes de afirmar causa ou componente danificado.
+
+* **2026-10-27 (Firmware de bancada):** Prefere código mínimo baseado no teste físico que funcionou. Preservar IO43 → BC337 → D0, UART física e controle visual pelo D13; não exigir telemetria de retorno num enlace de ida. Quando pedir código pronto para gravar depois, apenas preparar e compilar, sem upload. Informar claramente qual firmware está realmente em cada placa e não afirmar recepção ou movimento apenas porque a porta aceitou bytes.

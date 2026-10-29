@@ -38,8 +38,13 @@ class EnlaceNano {
 
   void begin() {
     Serial2.setRxBufferSize(512);
+#if ENLACE_SO_IDA
+    // Mesma inicializacao validada no par led_motores_d0.
+    Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, true);
+#else
     Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, false);
     Serial2.setTxInvert(txInvertido);   // true se passar pelo BC337; false se for direto no D0 do Nano
+#endif
   }
 
   void setInversaoTx(bool inv) {
@@ -51,19 +56,27 @@ class EnlaceNano {
     if (boxS.pend && agora - ultS >= LINK_INTERVALO_MS) { long a[3] = {boxS.a, boxS.b, boxS.c}; raw('S', a, boxS.c ? 3 : 2); boxS.pend = false; ultS = agora; }
     if (boxM.pend && agora - ultM >= LINK_INTERVALO_MS) { long a[2] = {boxM.a, boxM.b}; raw('M', a, 2); boxM.pend = false; ultM = agora; }
 
+#if !ENLACE_SO_IDA
     while (Serial2.available() > 0) {
       ProtoFrame f;
       if (parser.feed((char)Serial2.read(), f)) tratar(f, agora);
     }
     st.rxErros = parser.erros;
+#endif
   }
 
   // ---- saida ----
   void servo(long p10, long t10, long vel) {
     boxS.a = constrain(p10, 0, 1800); boxS.b = constrain(t10, 0, 1800); boxS.c = constrain(vel, 0, 6000); boxS.pend = true;
   }
-  void motores(long e, long d) { boxM.a = constrain(e, -255, 255); boxM.b = constrain(d, -255, 255); boxM.pend = true; }
-  void parar() { boxM.pend = false; raw('X', nullptr, 0); }
+  void motores(long e, long d) {
+    if (e == 0 && d == 0) {
+      boxM.pend = false;
+      long a[2] = {0, 0}; raw('M', a, 2); return;
+    }
+    boxM.a = constrain(e, -255, 255); boxM.b = constrain(d, -255, 255); boxM.pend = true;
+  }
+  void parar() { boxM.pend = boxS.pend = false; raw('X', nullptr, 0); }
   void ping() {
     long s = ++pingSeq;
     pingT[s & 15] = micros();

@@ -346,10 +346,18 @@ static void camPreset(const String &n) {
   camClamp();
 }
 
+static void camLogComando(WebServer &w) {
+  Serial.printf("[WEB RX HTTP %lu ms] %s", (unsigned long)millis(), w.uri().c_str());
+  for (int i = 0; i < w.args(); ++i)
+    Serial.printf(" %s=%s", w.argName(i).c_str(), w.arg(i).c_str());
+  Serial.println();
+}
+
 static void camRotas(WebServer &w) {
   w.on("/api/cam/cfg", HTTP_GET, [&w]() { w.send(200, "application/json", camCfgJson()); });
 
   w.on("/api/cam/set", HTTP_GET, [&w]() {
+    camLogComando(w);
     if (w.hasArg("res")) {
       String r = w.arg("res"); r.toLowerCase();
       for (int i = 0; i < RES_N; i++) if (r == RES_NOME[i]) camCfg.res = i;
@@ -377,6 +385,7 @@ static void camRotas(WebServer &w) {
   });
 
   w.on("/api/cam/preset", HTTP_GET, [&w]() {
+    camLogComando(w);
     camPreset(w.arg("n"));
     camReaplicar();
     w.send(200, "application/json", camCfgJson());
@@ -384,6 +393,7 @@ static void camRotas(WebServer &w) {
 
   // EXPERIMENTAL: le/escreve registrador do sensor. Ex.: /api/cam/reg?r=0x3008  |  ?r=0x3008&v=0x42&m=0xFF
   w.on("/api/cam/reg", HTTP_GET, [&w]() {
+    camLogComando(w);
     sensor_t *s = esp_camera_sensor_get();
     if (!s || !w.hasArg("r")) { w.send(400, "text/plain", "uso: ?r=0xREG[&v=0xVAL[&m=0xMASK]]"); return; }
     int reg = strtol(w.arg("r").c_str(), nullptr, 0);

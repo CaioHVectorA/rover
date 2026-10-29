@@ -26,7 +26,7 @@ const STORAGE_KEY_CONFIG = '@rover_config_e2e_v1';
 const DEFAULT_CONFIG: ConnectionConfig = {
   mode: 'simulation',
   protocol: 'hybrid',
-  ip: '192.168.7.25',
+  ip: '192.168.137.188',
   wsPort: 81,
   streamPort: 80,
   streamPath: '/view',
@@ -136,7 +136,7 @@ function MainApp() {
   }, []);
 
   useEffect(() => {
-    if (headConfig.enabled && (currentTab === 'vr' || currentTab === 'drive')) {
+    if (headConfig.enabled && (currentTab === 'vr' || currentTab === 'drive' || currentTab === 'calibrate')) {
       headTracking.start(handleHeadMotion);
     } else {
       headTracking.stop();
@@ -252,6 +252,11 @@ function MainApp() {
           telemetry={telemetry}
           onServoChange={handleManualServoChange}
           onRecenter={handleRecenter}
+          headConfig={headConfig}
+          onUpdateHeadConfig={(cfg) => {
+            setHeadConfig((prev) => ({ ...prev, ...cfg }));
+            headTracking.updateConfig(cfg);
+          }}
         />
       )}
 
