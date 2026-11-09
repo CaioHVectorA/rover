@@ -42,14 +42,14 @@ class EnlaceNano {
     // Mesma inicializacao validada no par led_motores_d0.
     Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, true);
 #else
-    Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, false);
-    Serial2.setTxInvert(txInvertido);   // true se passar pelo BC337; false se for direto no D0 do Nano
+    // Inicializa com inversao configurada:
+    Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, txInvertido);   // true se passar pelo BC337; false se for direto no D0 do Nano
 #endif
   }
 
   void setInversaoTx(bool inv) {
     txInvertido = inv;
-    Serial2.setTxInvert(txInvertido);
+    Serial2.begin(LINK_BAUD, SERIAL_8N1, PIN_LINK_RX, PIN_LINK_TX, txInvertido);
   }
 
   void loop(uint32_t agora) {

@@ -99,9 +99,9 @@ static void apiStats() {
 // Valida e encaminha um quadro de texto vindo do celular.
 static bool tratarQuadro(const char *txt, size_t n, const char *origem) {
   // Serial USB de diagnostico; Serial2 permanece exclusiva do enlace com o Nano.
-  Serial.printf("[WEB RX %s %lu ms] ", origem, (unsigned long)millis());
-  Serial.write((const uint8_t *)txt, n);
-  Serial.println();
+  if (Serial.availableForWrite() > 64) { Serial.printf("[WEB RX %s %lu ms] %.*s\n", origem, (unsigned long)millis(), (int)n, txt); }
+  // Sem bloqueio USB CDC quando monitor serial estiver fechado.
+  // ---
   static ProtoParser p;
   ProtoFrame f;
   bool ok = false;

@@ -3,6 +3,7 @@
 // PAINEL WEB COMPACTO E DIRETO
 // - Modos: D-Pad Tátil & Joystick Virtual Proporcional (sem bugs)
 // - Configurações: Inversão de Eixos, Velocidade Fluida, Passo e Qualidade de Vídeo
+// - Visão Computacional: Rosto (BlazeFace), Gestos (HandPose 21pts), Objetos (COCO-SSD) e Cor (HSV + Toque)
 // ====================================================================================
 #include <Arduino.h>
 
@@ -360,8 +361,8 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   </header>
 
   <!-- Janela de Vídeo -->
-  <div class="video-card" id="vidCard">
-    <div class="cam-btn-overlay">
+  <div class="video-card" id="vidCard" onclick="amostrarCorNoVideo(event)">
+    <div class="cam-btn-overlay" onclick="event.stopPropagation()">
       <button class="btn-mini" id="btnCvQuick" onclick="toggleCardCv()" title="Visão Computacional & Seguir Rosto">🎯 Visão IA</button>
       <button class="btn-mini" id="btnCamPresetQuick" onclick="ciclarPresetCam()" title="Qualidade da Câmera">❄️ Frio</button>
       <button class="btn-mini" onclick="girarRotacao()">↻ Girar</button>
@@ -369,7 +370,7 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     </div>
     <img id="vid" crossorigin="anonymous" src="" alt="Vídeo ao vivo">
     <canvas id="hudCv"></canvas>
-    <div class="cv-hud-bar" id="cvHudBar">
+    <div class="cv-hud-bar" id="cvHudBar" onclick="event.stopPropagation()">
       <span class="cv-badge" id="cvHudTxt">IA: OFF</span>
       <button class="btn-track-hud" id="btnTrackHud" onclick="toggleAutoTrack()">🎯 SEGUIR: OFF</button>
     </div>
@@ -378,15 +379,36 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   <!-- Painel de Visão Computacional & Auto-Tracking (retrátil) -->
   <details class="ctrl-card diag-card" id="cardCv" style="width:100%;padding:6px 10px;">
     <summary style="display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;list-style:none;">
-      <span class="ctrl-title">🎯 Visão Computacional & Seguir Rosto/Objeto ▾</span>
+      <span class="ctrl-title">🎯 Visão Computacional & Seguir Rosto/Mão/Objeto ▾</span>
       <span id="stCvPill" class="status-pill">IA OFF</span>
     </summary>
     <div style="width:100%;margin-top:6px;display:flex;flex-direction:column;gap:6px;">
-      <div style="display:flex;gap:5px;width:100%;">
-        <button id="btnCvFace" class="btn-preset" style="flex:1" onclick="setCvModo('face')">😊 Rosto (IA)</button>
-        <button id="btnCvObj" class="btn-preset" style="flex:1" onclick="setCvModo('obj')">📦 Objetos (IA)</button>
-        <button id="btnCvCor" class="btn-preset" style="flex:1" onclick="setCvModo('cor')" title="Funciona offline sem internet (segue objeto vermelho/laranja)">🔴 Cor (Offline)</button>
-        <button id="btnCvOff" class="btn-preset" style="flex:0.7" onclick="setCvModo('off')">🛑 Off</button>
+      <div style="display:flex;gap:4px;width:100%;">
+        <button id="btnCvFace" class="btn-preset" style="flex:1" onclick="setCvModo('face')">😊 Rosto</button>
+        <button id="btnCvGesto" class="btn-preset" style="flex:1" onclick="setCvModo('gesto')">✋ Gestos</button>
+        <button id="btnCvObj" class="btn-preset" style="flex:1" onclick="setCvModo('obj')">📦 Objetos</button>
+        <button id="btnCvCor" class="btn-preset" style="flex:1" onclick="setCvModo('cor')" title="Funciona offline sem internet (ou toque no vídeo para escolher a cor)">🎨 Cor</button>
+        <button id="btnCvOff" class="btn-preset" style="flex:0.65" onclick="setCvModo('off')">🛑 Off</button>
+      </div>
+      <div style="display:flex;gap:6px;width:100%;align-items:center;">
+        <span style="font-size:10px;color:var(--sub);white-space:nowrap">Potência IA:</span>
+        <select id="selCvPotencia" onchange="mudarPotenciaCv(this.value)" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:11px">
+          <option value="auto" selected>🤖 Auto (Modelos Full + Adapta p/ Notebook Fraco)</option>
+          <option value="ultra">🔥 Ultra (Full Range + MobileNetV2 + Zoom 2x)</option>
+          <option value="leve">⚡ Leve (Rápido p/ Notebook Fraco / Navegador Simples)</option>
+        </select>
+      </div>
+      <div id="rowGestoCfg" style="display:none;flex-direction:column;gap:4px;width:100%;background:#101622;border:1px solid var(--border);border-radius:6px;padding:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label style="font-size:11px;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer">
+            <input type="checkbox" id="chkGestoCmd" checked onchange="cvGestoCmd=this.checked"> ⚡ Comandar Robô por Gestos
+          </label>
+          <span id="lblGestoAtivo" style="font-size:10px;color:var(--green);font-weight:700">Mostre a mão...</span>
+        </div>
+        <div style="font-size:9.5px;color:var(--sub);line-height:1.35">
+          <b>☝️ 1 Dedo:</b> Mira na ponta do dedo &nbsp;|&nbsp; <b>✋ Aberta / ✊ Punho:</b> Parar<br>
+          <b>👍 Joia:</b> Frente + LED ON &nbsp;|&nbsp; <b>👎 Baixo:</b> Ré + LED OFF &nbsp;|&nbsp; <b>✌️ Paz:</b> Centro + Piscar
+        </div>
       </div>
       <div id="rowObjFiltro" style="display:none;gap:6px;width:100%;align-items:center;">
         <span style="font-size:10px;color:var(--sub);white-space:nowrap">Alvo Objeto:</span>
@@ -398,6 +420,17 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
           <option value="cat,dog,bird">Pet (Gato / Cachorro)</option>
         </select>
       </div>
+      <div id="rowCorFiltro" style="display:none;gap:6px;width:100%;align-items:center;">
+        <span style="font-size:10px;color:var(--sub);white-space:nowrap">Cor Alvo:</span>
+        <select id="selCorFiltro" onchange="cvCorAlvo=this.value;atualizarSwatchCor()" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:11px">
+          <option value="vermelho">🔴 Vermelho / Laranja</option>
+          <option value="verde">🟢 Verde</option>
+          <option value="azul">🔵 Azul</option>
+          <option value="amarelo">🟡 Amarelo</option>
+          <option value="custom">👆 Cor Tocada no Vídeo</option>
+        </select>
+        <span id="corSwatch" title="Dica: toque em qualquer objeto no vídeo para capturar a cor dele!" style="width:18px;height:18px;border-radius:4px;border:1px solid #fff;background:#ef4444;display:inline-block;flex-shrink:0"></span>
+      </div>
       <div style="display:flex;gap:6px;width:100%;align-items:center;">
         <button id="btnAutoTrack" class="btn-preset" style="flex:1.4;padding:7px 6px;font-weight:700;font-size:11px;border-color:#334155" onclick="toggleAutoTrack()">🎯 SEGUIR COM PAN/TILT: OFF</button>
         <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="chkCvInvPan" onchange="syncInvPan(this.checked)"> Inv.Pan</label>
@@ -405,8 +438,8 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
       </div>
       <div class="slider-item">
         <label style="width:65px">Ganho Track</label>
-        <input type="range" id="rngCvGanho" min="2" max="12" step="1" value="5" oninput="cvGanho=parseInt(this.value); outCvGanho.value=this.value+'°'">
-        <output id="outCvGanho">5°</output>
+        <input type="range" id="rngCvGanho" min="2" max="45" step="1" value="20" oninput="cvGanho=parseInt(this.value); outCvGanho.value=this.value+'°'">
+        <output id="outCvGanho">20°</output>
       </div>
     </div>
   </details>
@@ -784,14 +817,22 @@ function parada() {
 }
 
 // ---------------- Pan / Tilt ----------------
-function enviarPT() {
-  document.getElementById('rngPan').value = Math.round(pan);
-  document.getElementById('outPan').value = Math.round(pan) + '°';
-  document.getElementById('rngTilt').value = Math.round(tilt);
-  document.getElementById('outTilt').value = Math.round(tilt) + '°';
-  document.getElementById('lblJoyPan').textContent = Math.round(pan) + '°';
-  document.getElementById('lblJoyTilt').textContent = Math.round(tilt) + '°';
-  tx(`<S,${Math.round(pan * 10)},${Math.round(tilt * 10)},${velServo * 10}>`);
+let ultCmdPT = '';
+function enviarPT(velCustom) {
+  const p10 = Math.round(pan * 10);
+  const t10 = Math.round(tilt * 10);
+  const pDeg = Math.round(pan);
+  const tDeg = Math.round(tilt);
+  document.getElementById('rngPan').value = pDeg;
+  document.getElementById('outPan').value = pDeg + '°';
+  document.getElementById('rngTilt').value = tDeg;
+  document.getElementById('outTilt').value = tDeg + '°';
+  document.getElementById('lblJoyPan').textContent = pDeg + '°';
+  document.getElementById('lblJoyTilt').textContent = tDeg + '°';
+  const v = velCustom ? velCustom : velServo;
+  const cmd = `<S,${p10},${t10},${v * 10}>`;
+  ultCmdPT = cmd;
+  tx(cmd);
 }
 
 function stepPan(sinal) {
@@ -799,7 +840,6 @@ function stepPan(sinal) {
   const d = (invPan ? -sinal : sinal) * passoGraus;
   pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + d));
   enviarPT();
-  // Repetição rápida a cada 60 ms para movimento ágil e contínuo
   ptTimer = setInterval(() => {
     pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + d));
     enviarPT();
@@ -832,39 +872,105 @@ function setTiltDirect(v) {
 function centroPT() { stopPT(); pan = 90; tilt = 90; enviarPT(); }
 
 // ---------------- Visão Computacional & Auto-Tracking (No Navegador) ----------------
-let cvModo = 'off';           // 'off' | 'face' | 'obj' | 'cor'
+let cvModo = 'off';           // 'off' | 'face' | 'gesto' | 'obj' | 'cor'
+let cvPotencia = 'auto';      // 'auto' | 'ultra' | 'leve'
+let cvAutoRebaixado = false;  // true se o modo 'auto' detectou notebook fraco e ativou perfil Leve
+let cvLentoCont = 0;          // Contador de quadros lentos consecutivos
+let cvQuadroIdx = 0;          // Contador de quadros para busca Multi-Escala Zoom 2x
 let cvObjFiltro = 'person';   // filtro de classe no modo 'obj'
+let cvCorAlvo = 'vermelho';   // 'vermelho' | 'verde' | 'azul' | 'amarelo' | 'custom'
+let cvCorCustom = { r: 220, g: 40, b: 40, h: 0, s: 0.8, v: 0.85 };
+let cvGestoCmd = true;        // Executar comandos no robô ao manter um gesto firme
+let gestoAnt = '';
+let gestoCont = 0;
+let ultGestoCmdMs = 0;
 let autoTrack = false;        // Seguir alvo com Pan/Tilt
-let cvGanho = 5;              // Ganho proporcional (graus por ciclo para erro = 100%)
-const cvDeadzone = 0.08;      // 8% de zona morta central para não oscilar
-let faceModel = null;
-let objModel = null;
+let cvGanho = 20;             // Ganho máximo (graus por ciclo na borda; reduz progressivamente perto do centro)
+const cvDeadzone = 0.075;     // 7.5% de zona morta central de parada (com histerese até 12.5%)
+let trackTravadoX = false, trackTravadoY = false;
+let ultSinalX = 0, ultSinalY = 0;
+let faceModel = null, faceModelUltra = null, faceModelLeve = null;
+let handModel = null, handModelUltra = null, handModelLeve = null;
+let objModel = null, objModelUltra = null, objModelLeve = null;
 let cvCarregando = false;
+let cvRodando = false;        // Trava estrita contra loops paralelos
+let cvEpoch = 0;              // Token de geração para cancelar awaits antigos
 let cvTimer = null;
 let ultTrackMs = 0;
 let cvFps = 0, cvInfMs = 0;
 let errSuaveX = 0, errSuaveY = 0;
 
-const cvProc = document.createElement('canvas');
-const pCtx = cvProc.getContext('2d', { willReadFrequently: true });
+// Canvas GPU principal (sem willReadFrequently) para WebGL rápido
+const cvProc = document.createElement ? document.createElement('canvas') : { width: 0, height: 0, getContext: () => null };
+const pCtx = cvProc.getContext ? cvProc.getContext('2d') : null;
+
+// Canvas GPU secundário para recorte Multi-Escala (Zoom Central 2x para alvos distantes/pequenos)
+const cvZoom = document.createElement ? document.createElement('canvas') : { width: 0, height: 0, getContext: () => null };
+const zCtx = cvZoom.getContext ? cvZoom.getContext('2d') : null;
+
+// Canvas CPU compacto (máx 160px) exclusivo para leitura de pixels no modo Cor
+const cvCorCanvas = document.createElement ? document.createElement('canvas') : { width: 0, height: 0, getContext: () => null };
+const cCtx = cvCorCanvas.getContext ? cvCorCanvas.getContext('2d', { willReadFrequently: true }) : null;
 
 const TRAD_OBJ = {
   'person': 'PESSOA', 'cell phone': 'CELULAR', 'bottle': 'GARRAFA', 'cup': 'COPO',
   'cat': 'GATO', 'dog': 'CACHORRO', 'bird': 'AVE', 'chair': 'CADEIRA',
   'tv': 'TELA/TV', 'laptop': 'NOTEBOOK', 'mouse': 'MOUSE', 'keyboard': 'TECLADO',
-  'book': 'LIVRO', 'backpack': 'MOCHILA', 'car': 'CARRO', 'remote': 'CONTROLE'
+  'book': 'LIVRO', 'backpack': 'MOCHILA', 'car': 'CARRO', 'remote': 'CONTROLE',
+  'potted plant': 'PLANTA', 'dining table': 'MESA', 'couch': 'SOFÁ', 'bed': 'CAMA',
+  'clock': 'RELÓGIO', 'scissors': 'TESOURA', 'teddy bear': 'PELÚCIA', 'sports ball': 'BOLA'
 };
+
+function usarPerfilLeve() {
+  return cvPotencia === 'leve' || (cvPotencia === 'auto' && cvAutoRebaixado);
+}
+
+function otimizarBackendTf(modoLeve) {
+  if (!window.tf || !window.tf.env) return;
+  try {
+    // Libera texturas temporárias imediatamente para não estourar VRAM em notebooks integrados
+    window.tf.env().set('WEBGL_DELETE_TEXTURE_THRESHOLD', 0);
+    window.tf.env().set('WEBGL_PACK', true);
+    if (modoLeve) {
+      window.tf.env().set('WEBGL_FORCE_F16_TEXTURES', true);
+      window.tf.env().set('WEBGL_FLUSH_THRESHOLD', 1);
+    }
+  } catch (_) {}
+}
+
+async function mudarPotenciaCv(val) {
+  cvPotencia = val;
+  cvAutoRebaixado = false;
+  cvLentoCont = 0;
+  cvInfMs = 0;
+  if (cvModo !== 'off') {
+    await setCvModo(cvModo);
+  }
+}
 
 function carregarScriptCDN(url) {
   return new Promise((resolve, reject) => {
-    if (document.querySelector(`script[src="${url}"]`)) { resolve(); return; }
+    const ex = document.querySelector ? document.querySelector(`script[src="${url}"]`) : null;
+    if (ex && ex.dataset && ex.dataset.ok === '1') { resolve(); return; }
+    if (ex && ex.remove) ex.remove();
     const s = document.createElement('script');
     s.src = url;
     s.async = true;
-    s.onload = resolve;
-    s.onerror = () => reject(new Error('Sem internet p/ CDN'));
+    s.onload = () => { if (s.dataset) s.dataset.ok = '1'; resolve(); };
+    s.onerror = () => { if (s.remove) s.remove(); reject(new Error('Falha CDN')); };
     document.head.appendChild(s);
   });
+}
+
+function atualizarSwatchCor() {
+  const sw = document.getElementById('corSwatch');
+  if (!sw) return;
+  const mapa = { vermelho: '#ef4444', verde: '#22c55e', azul: '#3b82f6', amarelo: '#eab308' };
+  if (cvCorAlvo === 'custom') {
+    sw.style.background = `rgb(${cvCorCustom.r},${cvCorCustom.g},${cvCorCustom.b})`;
+  } else {
+    sw.style.background = mapa[cvCorAlvo] || '#ef4444';
+  }
 }
 
 function atualizarUiCv() {
@@ -873,14 +979,19 @@ function atualizarUiCv() {
   const bar = document.getElementById('cvHudBar');
   const btnQ = document.getElementById('btnCvQuick');
   const pill = document.getElementById('stCvPill');
+  const rowG = document.getElementById('rowGestoCfg');
   const rowF = document.getElementById('rowObjFiltro');
+  const rowC = document.getElementById('rowCorFiltro');
 
   if (hud) hud.style.display = ativo ? 'block' : 'none';
   if (bar) bar.className = ativo ? 'cv-hud-bar active' : 'cv-hud-bar';
   if (btnQ) btnQ.className = ativo ? 'btn-mini active' : 'btn-mini';
+  if (rowG) rowG.style.display = (cvModo === 'gesto') ? 'flex' : 'none';
   if (rowF) rowF.style.display = (cvModo === 'obj') ? 'flex' : 'none';
+  if (rowC) rowC.style.display = (cvModo === 'cor') ? 'flex' : 'none';
+  atualizarSwatchCor();
 
-  for (const [id, m] of [['btnCvFace','face'],['btnCvObj','obj'],['btnCvCor','cor'],['btnCvOff','off']]) {
+  for (const [id, m] of [['btnCvFace','face'],['btnCvGesto','gesto'],['btnCvObj','obj'],['btnCvCor','cor'],['btnCvOff','off']]) {
     const el = document.getElementById(id);
     if (el) {
       el.style.borderColor = (cvModo === m && m !== 'off') ? 'var(--accent)' : 'var(--border)';
@@ -888,8 +999,9 @@ function atualizarUiCv() {
     }
   }
   if (pill) {
+    const sufixo = usarPerfilLeve() ? ' LEVE' : ' ULTRA';
     pill.className = 'status-pill ' + (ativo ? 'ok' : '');
-    pill.textContent = ativo ? ('IA: ' + cvModo.toUpperCase()) : 'IA OFF';
+    pill.textContent = ativo ? ('IA: ' + cvModo.toUpperCase() + (cvModo === 'cor' ? '' : sufixo)) : 'IA OFF';
   }
   atualizarUiAutoTrack();
 }
@@ -909,177 +1021,670 @@ function atualizarUiAutoTrack() {
   }
 }
 
-function toggleAutoTrack() {
+async function toggleAutoTrack() {
+  errSuaveX = 0; errSuaveY = 0;
+  trackTravadoX = false; trackTravadoY = false;
+  ultSinalX = 0; ultSinalY = 0;
   if (cvModo === 'off') {
-    setCvModo('face').then(() => {
-      autoTrack = true;
-      atualizarUiAutoTrack();
-    });
+    autoTrack = true;
+    atualizarUiAutoTrack();
+    await setCvModo('face');
     return;
   }
   autoTrack = !autoTrack;
-  errSuaveX = 0; errSuaveY = 0;
   atualizarUiAutoTrack();
 }
 
+async function garantirModeloFace(leve, txt) {
+  if (!window.tf) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
+  otimizarBackendTf(leve);
+  // Sempre garante o BlazeFace carregado (usado tanto no modo Leve quanto como suporte rápido no Ultra)
+  if (!faceModelLeve) {
+    if (txt) txt.textContent = '⏳ Baixando IA Rosto (BlazeFace)...';
+    if (!window.blazeface) {
+      try {
+        await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js');
+      } catch (_) {
+        await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.umd.js');
+      }
+    }
+    faceModelLeve = await window.blazeface.load({ maxFaces: 4, scoreThreshold: 0.42 });
+  }
+  if (!leve && !faceModelUltra) {
+    try {
+      if (txt) txt.textContent = '⏳ Baixando IA Rosto Ultra (MediaPipe Full-Range 5m)...';
+      if (!window.faceDetection) {
+        await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection@1.0.3/dist/face-detection.min.js');
+      }
+      faceModelUltra = await window.faceDetection.createDetector(
+        window.faceDetection.SupportedModels.MediaPipeFaceDetector,
+        { runtime: 'tfjs', modelType: 'full', maxFaces: 5 }
+      );
+    } catch (_) {
+      faceModelUltra = faceModelLeve;
+    }
+  }
+  faceModel = (!leve && faceModelUltra) ? faceModelUltra : faceModelLeve;
+}
+
+async function garantirModeloMao(leve, txt) {
+  if (!window.tf) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
+  otimizarBackendTf(leve);
+  if (!leve && !handModelUltra) {
+    try {
+      if (txt) txt.textContent = '⏳ Baixando IA Gestos Ultra (MediaPipe Hands Full 2 Mãos)...';
+      if (!window.handPoseDetection) {
+        await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js');
+      }
+      handModelUltra = await window.handPoseDetection.createDetector(
+        window.handPoseDetection.SupportedModels.MediaPipeHands,
+        { runtime: 'tfjs', modelType: 'full', maxHands: 2 }
+      );
+    } catch (_) {}
+  }
+  if ((leve || !handModelUltra) && !handModelLeve) {
+    if (txt) txt.textContent = '⏳ Baixando IA Gestos Leve (HandPose 21pts)...';
+    if (!window.handpose) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose@0.0.7/dist/handpose.min.js');
+    handModelLeve = await window.handpose.load({ detectionConfidence: 0.60 });
+  }
+  handModel = (!leve && handModelUltra) ? handModelUltra : (handModelLeve || handModelUltra);
+}
+
+async function garantirModeloObj(leve, txt) {
+  if (!window.tf) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
+  otimizarBackendTf(leve);
+  if (!window.cocoSsd) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js');
+  if (!leve && !objModelUltra) {
+    try {
+      if (txt) txt.textContent = '⏳ Baixando IA Objetos Ultra (COCO-SSD MobileNetV2 Full)...';
+      objModelUltra = await window.cocoSsd.load({ base: 'mobilenet_v2' });
+    } catch (_) {}
+  }
+  if ((leve || !objModelUltra) && !objModelLeve) {
+    if (txt) txt.textContent = '⏳ Baixando IA Objetos Leve (COCO-SSD Lite)...';
+    objModelLeve = await window.cocoSsd.load({ base: 'lite_mobilenet_v2' });
+  }
+  objModel = (!leve && objModelUltra) ? objModelUltra : (objModelLeve || objModelUltra);
+}
+
 async function setCvModo(m) {
+  const myEpoch = ++cvEpoch;
   if (cvTimer) { clearTimeout(cvTimer); cvTimer = null; }
   cvModo = m;
+  cvInfMs = 0;
+  cvLentoCont = 0;
+  cvQuadroIdx = 0;
+  gestoAnt = ''; gestoCont = 0;
   if (m === 'off') {
     autoTrack = false;
+    cvCarregando = false;
     const hud = document.getElementById('hudCv');
-    if (hud) { const ctx = hud.getContext('2d'); ctx.clearRect(0, 0, hud.width, hud.height); }
+    if (hud && hud.getContext) { const ctx = hud.getContext('2d'); ctx.clearRect(0, 0, hud.width, hud.height); }
     atualizarUiCv();
     return;
   }
   atualizarUiCv();
   const txt = document.getElementById('cvHudTxt');
+  const leve = usarPerfilLeve();
   try {
     cvCarregando = true;
-    if (m === 'face' && !faceModel) {
-      if (txt) txt.textContent = '⏳ Baixando IA Rosto (BlazeFace)...';
-      if (!window.tf) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
-      if (!window.blazeface) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js');
-      faceModel = await window.blazeface.load({ maxFaces: 3, scoreThreshold: 0.65 });
-    } else if (m === 'obj' && !objModel) {
-      if (txt) txt.textContent = '⏳ Baixando IA Objetos (COCO-SSD)...';
-      if (!window.tf) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
-      if (!window.cocoSsd) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js');
-      objModel = await window.cocoSsd.load({ base: 'lite_mobilenet_v2' });
-    }
+    if (m === 'face') await garantirModeloFace(leve, txt);
+    else if (m === 'gesto') await garantirModeloMao(leve, txt);
+    else if (m === 'obj') await garantirModeloObj(leve, txt);
+    if (myEpoch !== cvEpoch) return;
     cvCarregando = false;
-    loopVisao();
+    atualizarUiCv();
+    loopVisao(myEpoch);
   } catch (err) {
+    if (myEpoch !== cvEpoch) return;
     cvCarregando = false;
-    if (txt) txt.textContent = '⚠️ Sem Internet p/ IA -> Usando modo Cor Offline';
+    if (txt) txt.textContent = '⚠️ Falha CDN IA -> Modo Cor Offline ativo';
     cvModo = 'cor';
     atualizarUiCv();
-    loopVisao();
+    loopVisao(myEpoch);
   }
 }
 
-// Detector offline de objeto vermelho/laranja vivo (não exige internet)
-function detectarCorOffline(pw, ph) {
-  const data = pCtx.getImageData(0, 0, pw, ph).data;
-  let sumX = 0, sumY = 0, count = 0;
-  let minX = pw, minY = ph, maxX = 0, maxY = 0;
+// Classificador geométrico dos 21 pontos da mão (compatível com MediaPipe Hands Full e HandPose)
+function classificarGestoMao(lm) {
+  const d = (i, j) => Math.hypot(lm[i][0] - lm[j][0], lm[i][1] - lm[j][1]);
+  const palma = Math.max(10, d(0, 9));
+
+  // Dedos esticados se a ponta (TIP) estiver claramente mais longe do punho (0) que a articulação PIP/MCP
+  const ind = d(0, 8) > d(0, 6) * 1.08 && d(0, 8) > d(0, 5) * 1.15;
+  const med = d(0, 12) > d(0, 10) * 1.12 && d(0, 12) > d(0, 9) * 1.22;
+  const ane = d(0, 16) > d(0, 14) * 1.10 && d(0, 16) > d(0, 13) * 1.20;
+  const min = d(0, 20) > d(0, 18) * 1.10 && d(0, 20) > d(0, 17) * 1.18;
+  const pol = d(4, 17) > d(2, 17) * 1.14 && d(4, 5) > palma * 0.46;
+  const n4 = (ind ? 1 : 0) + (med ? 1 : 0) + (ane ? 1 : 0) + (min ? 1 : 0);
+
+  // Detecta dedo indicador apontando mesmo que os outros dedos estejam apenas semi-dobrados
+  const indDestacado = ind && (d(0, 8) > Math.max(d(0, 12), d(0, 16), d(0, 20)) * 1.14);
+
+  if (n4 === 0 && !indDestacado) {
+    if (d(4, 6) > palma * 0.48 && d(4, 2) > palma * 0.40) {
+      if (lm[4][1] < lm[2][1] - palma * 0.16) return { id: 'joia', label: '👍 JOIA', mira: lm[4] };
+      if (lm[4][1] > lm[2][1] + palma * 0.16) return { id: 'baixo', label: '👎 BAIXO', mira: lm[4] };
+    }
+    return { id: 'punho', label: '✊ PUNHO', mira: lm[9] };
+  }
+  if ((ind && !med && !ane && !min) || (indDestacado && n4 <= 2 && !min)) {
+    return { id: 'apontar', label: '☝️ APONTAR', mira: lm[8] };
+  }
+  if (ind && med && !ane && !min)  return { id: 'paz', label: '✌️ PAZ (2)', mira: lm[8] };
+  if (ind && !med && !ane && min)  return { id: 'rock', label: '🤟 ROCK', mira: lm[9] };
+  if (n4 === 3)                    return { id: 'tres', label: '👌 TRÊS (3)', mira: lm[8] };
+  if (n4 >= 4)                     return { id: 'aberta', label: '✋ ABERTA (5)', mira: lm[9] };
+  return { id: 'mao', label: `✋ MÃO (${n4 + (pol ? 1 : 0)})`, mira: ind ? lm[8] : lm[9] };
+}
+
+function processarComandoGesto(gId) {
+  const lbl = document.getElementById('lblGestoAtivo');
+  if (gId === gestoAnt) gestoCont++;
+  else { gestoAnt = gId; gestoCont = 1; }
+
+  if (!cvGestoCmd) {
+    if (lbl) lbl.textContent = 'Ações OFF';
+    return;
+  }
+  if (gId === 'apontar') {
+    if (lbl) lbl.textContent = '☝️ Seguindo ponta do dedo';
+    return;
+  }
+  // Exige 3 quadros seguidos do mesmo gesto + cooldown de 1.2s para evitar disparos acidentais
+  if (gestoCont < 3) return;
+  const agora = performance.now();
+  if (agora - ultGestoCmdMs < 1200) return;
+
+  if (gId === 'aberta' || gId === 'punho') {
+    cancelarTesteMotor();
+    drive(0, 0);
+    ultGestoCmdMs = agora;
+    if (lbl) lbl.textContent = '🛑 Motores Parados';
+  } else if (gId === 'paz') {
+    centroPT();
+    setLed(2);
+    ultGestoCmdMs = agora;
+    if (lbl) lbl.textContent = '✌️ Centro + Pisca LED';
+  } else if (gId === 'joia') {
+    setLed(1);
+    testeMotor(120, 120, 400);
+    ultGestoCmdMs = agora;
+    if (lbl) lbl.textContent = '👍 LED ON + Frente 0.4s';
+  } else if (gId === 'baixo') {
+    setLed(0);
+    testeMotor(-120, -120, 400);
+    ultGestoCmdMs = agora;
+    if (lbl) lbl.textContent = '👎 LED OFF + Ré 0.4s';
+  } else if (gId === 'rock') {
+    setLed(2);
+    ultGestoCmdMs = agora;
+    if (lbl) lbl.textContent = '🤟 Pisca LED D13';
+  }
+}
+
+function rgbParaHsv(r, g, b) {
+  const rf = r / 255, gf = g / 255, bf = b / 255;
+  const max = Math.max(rf, gf, bf), min = Math.min(rf, gf, bf);
+  const d = max - min;
+  let h = 0;
+  if (d > 0.0001) {
+    if (max === rf) h = ((gf - bf) / d + (gf < bf ? 6 : 0)) * 60;
+    else if (max === gf) h = ((bf - rf) / d + 2) * 60;
+    else h = ((rf - gf) / d + 4) * 60;
+  }
+  const s = max === 0 ? 0 : d / max;
+  return [h, s, max];
+}
+
+function diffAnguloHue(h1, h2) {
+  const d = Math.abs(h1 - h2) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+function pixelBateCor(r, g, b) {
+  const [h, s, v] = rgbParaHsv(r, g, b);
+  if (cvCorAlvo === 'vermelho') {
+    return (s >= 0.35 && v >= 0.22 && (h <= 26 || h >= 338)) ||
+           (r > 125 && r > g * 1.35 && r > b * 1.35 && (r - Math.max(g, b)) > 32);
+  }
+  if (cvCorAlvo === 'verde') {
+    return (s >= 0.28 && v >= 0.20 && h >= 70 && h <= 168) ||
+           (g > 105 && g > r * 1.25 && g > b * 1.20 && (g - Math.max(r, b)) > 25);
+  }
+  if (cvCorAlvo === 'azul') {
+    return (s >= 0.30 && v >= 0.20 && h >= 185 && h <= 260) ||
+           (b > 110 && b > r * 1.30 && b > g * 1.18 && (b - Math.max(r, g)) > 28);
+  }
+  if (cvCorAlvo === 'amarelo') {
+    return (s >= 0.32 && v >= 0.32 && h >= 34 && h <= 69) ||
+           (r > 135 && g > 120 && b < 95 && (Math.min(r, g) - b) > 45);
+  }
+  // Modo 'custom' (cor amostrada por toque no vídeo)
+  const dh = diffAnguloHue(h, cvCorCustom.h);
+  const ds = Math.abs(s - cvCorCustom.s);
+  const dv = Math.abs(v - cvCorCustom.v);
+  const drgb = Math.hypot(r - cvCorCustom.r, g - cvCorCustom.g, b - cvCorCustom.b);
+  if (cvCorCustom.s < 0.2) return drgb < 48 && dv < 0.25;
+  return (dh <= 24 && ds <= 0.35 && dv <= 0.40) || drgb <= 52;
+}
+
+// Permite tocar em qualquer objeto no vídeo quando no modo 'cor' para travar na cor dele
+function amostrarCorNoVideo(ev) {
+  if (cvModo !== 'cor' || !cCtx) return;
+  const card = document.getElementById('vidCard');
+  const img = document.getElementById('vid');
+  if (!card || !img || !img.naturalWidth) return;
+
+  const rect = card.getBoundingClientRect();
+  const clickX = ev.clientX - rect.left;
+  const clickY = ev.clientY - rect.top;
+
+  const rawW = img.naturalWidth, rawH = img.naturalHeight;
+  const trocado = (rotAtual % 180 !== 0);
+  const cw = card.clientWidth, ch = card.clientHeight;
+  const fit = Math.min((img.clientWidth || cw) / rawW, (img.clientHeight || ch) / rawH);
+  const visW = trocado ? (rawH * fit) : (rawW * fit);
+  const visH = trocado ? (rawW * fit) : (rawH * fit);
+  const offX = (cw - visW) / 2;
+  const offY = (ch - visH) / 2;
+
+  const nx = (clickX - offX) / visW;
+  const ny = (clickY - offY) / visH;
+  if (nx < 0 || nx > 1 || ny < 0 || ny > 1) return;
+
+  const cwProc = cvCorCanvas.width, chProc = cvCorCanvas.height;
+  if (!cwProc || !chProc) return;
+  const px = Math.max(2, Math.min(cwProc - 3, Math.round(nx * cwProc)));
+  const py = Math.max(2, Math.min(chProc - 3, Math.round(ny * chProc)));
+  try {
+    const patch = cCtx.getImageData(px - 2, py - 2, 5, 5).data;
+    let sr = 0, sg = 0, sb = 0, n = 0;
+    for (let i = 0; i < patch.length; i += 4) {
+      sr += patch[i]; sg += patch[i + 1]; sb += patch[i + 2]; n++;
+    }
+    const r = Math.round(sr / n), g = Math.round(sg / n), b = Math.round(sb / n);
+    const [h, s, v] = rgbParaHsv(r, g, b);
+    cvCorCustom = { r, g, b, h, s, v };
+    cvCorAlvo = 'custom';
+    const sel = document.getElementById('selCorFiltro');
+    if (sel) sel.value = 'custom';
+    atualizarSwatchCor();
+  } catch (_) {}
+}
+
+// Detector offline de cor (2 passadas com filtro espacial contra ruído de fundo)
+function detectarCorOffline(img, rawW, rawH, trocado) {
+  if (!cCtx) return [];
+  const esc = Math.min(1, 160 / Math.max(rawW, rawH));
+  const sw = Math.max(1, Math.round(rawW * esc));
+  const sh = Math.max(1, Math.round(rawH * esc));
+  const pw = trocado ? sh : sw;
+  const ph = trocado ? sw : sh;
+
+  if (cvCorCanvas.width !== pw || cvCorCanvas.height !== ph) {
+    cvCorCanvas.width = pw; cvCorCanvas.height = ph;
+  }
+  cCtx.save();
+  cCtx.translate(pw / 2, ph / 2);
+  cCtx.rotate((rotAtual * Math.PI) / 180);
+  cCtx.drawImage(img, -sw / 2, -sh / 2, sw, sh);
+  cCtx.restore();
+
+  const data = cCtx.getImageData(0, 0, pw, ph).data;
+  const pts = [];
+  let sumX = 0, sumY = 0;
   const passo = 2;
   for (let y = 0; y < ph; y += passo) {
     for (let x = 0; x < pw; x += passo) {
       const i = (y * pw + x) * 4;
-      const r = data[i], g = data[i + 1], b = data[i + 2];
-      if (r > 145 && r > g * 1.45 && r > b * 1.45 && (r - Math.max(g, b)) > 45) {
-        sumX += x; sumY += y; count++;
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+      if (pixelBateCor(data[i], data[i + 1], data[i + 2])) {
+        pts.push([x, y]);
+        sumX += x; sumY += y;
       }
     }
   }
-  if (count < 12) return [];
-  const bw = Math.max(16, maxX - minX);
-  const bh = Math.max(16, maxY - minY);
-  const cx = (sumX / count) / pw;
-  const cy = (sumY / count) / ph;
+  if (pts.length < 8) return [];
+
+  // Passada 2: filtra apenas os pixels próximos ao centroide denso para ignorar ruído distante
+  const mx = sumX / pts.length, my = sumY / pts.length;
+  const raioMax = Math.max(pw, ph) * 0.36;
+  let fSumX = 0, fSumY = 0, fCount = 0;
+  let minX = pw, minY = ph, maxX = 0, maxY = 0;
+  for (let k = 0; k < pts.length; k++) {
+    const x = pts[k][0], y = pts[k][1];
+    if (Math.hypot(x - mx, y - my) <= raioMax) {
+      fSumX += x; fSumY += y; fCount++;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    }
+  }
+  if (fCount < 6) return [];
+
+  const bw = Math.max(12, maxX - minX);
+  const bh = Math.max(12, maxY - minY);
+  const cx = (fSumX / fCount) / pw;
+  const cy = (fSumY / fCount) / ph;
+  const nomes = { vermelho: 'COR VERM', verde: 'COR VERDE', azul: 'COR AZUL', amarelo: 'COR AMAR', custom: 'COR ALVO' };
   return [{
-    label: 'ALVO COR',
-    score: Math.min(0.99, 0.5 + count / 200),
+    label: nomes[cvCorAlvo] || 'ALVO COR',
+    score: Math.min(0.99, 0.55 + fCount / 140),
     nx: minX / pw, ny: minY / ph, nw: bw / pw, nh: bh / ph,
     cx, cy, area: (bw * bh) / (pw * ph)
   }];
 }
 
-async function loopVisao() {
-  if (cvModo === 'off' || cvCarregando) return;
+// Prepara recorte central ampliado 2x (55% central do quadro) para detectar rostos/mãos/objetos distantes
+function prepararZoomCentral(pw, ph) {
+  if (!zCtx) return null;
+  const zw = Math.max(128, Math.round(pw * 0.56));
+  const zh = Math.max(128, Math.round(ph * 0.56));
+  if (cvZoom.width !== zw || cvZoom.height !== zh) {
+    cvZoom.width = zw; cvZoom.height = zh;
+  }
+  const sx = Math.round(pw * 0.22), sy = Math.round(ph * 0.22);
+  const sw = Math.round(pw * 0.56), sh = Math.round(ph * 0.56);
+  zCtx.drawImage(cvProc, sx, sy, sw, sh, 0, 0, zw, zh);
+  return { zw, zh, offX: 0.22, offY: 0.22, scale: 0.56 };
+}
+
+// Converte predições de rosto (tanto MediaPipeFaceDetector Full quanto BlazeFace) para coordenadas normalizadas
+function converterPredsRosto(preds, w, h, offX, offY, scale) {
+  const res = [];
+  if (!Array.isArray(preds)) return res;
+  for (const p of preds) {
+    let x1 = 0, y1 = 0, bw = 0, bh = 0, sc = 0.9, noseX = null, noseY = null;
+    if (p.box) {
+      // Formato @tensorflow-models/face-detection (MediaPipeFaceDetector Full-Range)
+      x1 = p.box.xMin; y1 = p.box.yMin;
+      bw = p.box.width; bh = p.box.height;
+      sc = Array.isArray(p.score) ? p.score[0] : (p.score || 0.9);
+      if (p.keypoints && p.keypoints.length > 0) {
+        const nose = p.keypoints.find(k => k.name === 'noseTip') || p.keypoints[2];
+        if (nose) { noseX = nose.x; noseY = nose.y; }
+      }
+    } else if (p.topLeft && p.bottomRight) {
+      // Formato @tensorflow-models/blazeface
+      x1 = p.topLeft[0]; y1 = p.topLeft[1];
+      bw = p.bottomRight[0] - x1; bh = p.bottomRight[1] - y1;
+      sc = Array.isArray(p.probability) ? p.probability[0] : (p.probability || 0.9);
+      if (p.landmarks && p.landmarks.length >= 3) {
+        noseX = p.landmarks[2][0]; noseY = p.landmarks[2][1];
+      }
+    } else continue;
+
+    if (bw < 6 || bh < 6) continue;
+    let cx = (x1 + bw / 2) / w;
+    let cy = (y1 + bh / 2) / h;
+    if (noseX !== null && noseY !== null) {
+      cx = (cx * 0.35) + (noseX / w) * 0.65;
+      cy = (cy * 0.35) + (noseY / h) * 0.65;
+    }
+    const nx = offX + (x1 / w) * scale;
+    const ny = offY + (y1 / h) * scale;
+    const nw = (bw / w) * scale;
+    const nh = (bh / h) * scale;
+    res.push({
+      label: scale < 1 ? 'ROSTO (ZOOM)' : 'ROSTO',
+      score: sc,
+      nx, ny, nw, nh,
+      cx: offX + cx * scale,
+      cy: offY + cy * scale,
+      area: nw * nh
+    });
+  }
+  return res;
+}
+
+// Converte predições de mão (tanto MediaPipeHands Full 2 Mãos quanto HandPose)
+function converterPredsMao(preds, w, h, offX, offY, scale) {
+  const res = [];
+  if (!Array.isArray(preds)) return res;
+  for (const p of preds) {
+    let lm = null, sc = 0.9;
+    if (p.keypoints && p.keypoints.length >= 21) {
+      // Formato @tensorflow-models/hand-pose-detection (MediaPipeHands Full)
+      lm = p.keypoints.map(k => [k.x, k.y, k.z || 0]);
+      sc = p.score || 0.92;
+    } else if (p.landmarks && p.landmarks.length >= 21) {
+      // Formato @tensorflow-models/handpose
+      lm = p.landmarks;
+      sc = p.handInViewConfidence || 0.9;
+    } else continue;
+
+    let minX = w, minY = h, maxX = 0, maxY = 0;
+    for (let i = 0; i < 21; i++) {
+      if (lm[i][0] < minX) minX = lm[i][0];
+      if (lm[i][0] > maxX) maxX = lm[i][0];
+      if (lm[i][1] < minY) minY = lm[i][1];
+      if (lm[i][1] > maxY) maxY = lm[i][1];
+    }
+    const padX = Math.max(6, (maxX - minX) * 0.12);
+    const padY = Math.max(6, (maxY - minY) * 0.12);
+    const x1 = Math.max(0, minX - padX), y1 = Math.max(0, minY - padY);
+    const bw = Math.max(12, Math.min(w - x1, (maxX - minX) + padX * 2));
+    const bh = Math.max(12, Math.min(h - y1, (maxY - minY) + padY * 2));
+
+    const g = classificarGestoMao(lm);
+    processarComandoGesto(g.id);
+    const ptsNorm = lm.map(pt => [offX + (pt[0] / w) * scale, offY + (pt[1] / h) * scale]);
+    const nw = (bw / w) * scale;
+    const nh = (bh / h) * scale;
+    res.push({
+      label: g.label,
+      gestoId: g.id,
+      score: sc,
+      nx: offX + (x1 / w) * scale,
+      ny: offY + (y1 / h) * scale,
+      nw, nh,
+      cx: offX + (g.mira[0] / w) * scale,
+      cy: offY + (g.mira[1] / h) * scale,
+      area: nw * nh,
+      pts: ptsNorm
+    });
+  }
+  return res;
+}
+
+function converterPredsObj(preds, filtros, w, h, offX, offY, scale) {
+  const res = [];
+  if (!Array.isArray(preds)) return res;
+  for (const p of preds) {
+    if (filtros && !filtros.includes(p.class)) continue;
+    const [bx, by, bw, bh] = p.bbox;
+    const isPerson = (p.class === 'person');
+    const nw = (bw / w) * scale;
+    const nh = (bh / h) * scale;
+    res.push({
+      label: TRAD_OBJ[p.class] || p.class.toUpperCase(),
+      score: p.score,
+      nx: offX + (bx / w) * scale,
+      ny: offY + (by / h) * scale,
+      nw, nh,
+      cx: offX + ((bx + bw / 2) / w) * scale,
+      cy: offY + ((by + bh * (isPerson ? 0.28 : 0.5)) / h) * scale,
+      area: nw * nh
+    });
+  }
+  return res;
+}
+
+async function loopVisao(epoch) {
+  if (epoch !== cvEpoch || cvModo === 'off' || cvCarregando) return;
+  if (cvRodando) {
+    cvTimer = setTimeout(() => loopVisao(epoch), 60);
+    return;
+  }
   const img = document.getElementById('vid');
   if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) {
-    cvTimer = setTimeout(loopVisao, 150);
+    cvTimer = setTimeout(() => loopVisao(epoch), 150);
     return;
   }
 
+  cvRodando = true;
+  cvQuadroIdx++;
   const t0 = performance.now();
   const rawW = img.naturalWidth, rawH = img.naturalHeight;
-  // Redimensiona para no máx 320px no maior lado e rotaciona conforme rotAtual (imagem em pé!)
-  const esc = Math.min(1, 320 / Math.max(rawW, rawH));
+  const leve = usarPerfilLeve();
+
+  // Resolução adaptativa: até 448px no Ultra/Auto rápido, 300px no intermediário e 224px no Notebook Fraco (Leve)
+  let maxDim = 416;
+  if (leve) maxDim = 224;
+  else if (cvPotencia === 'ultra') maxDim = 480;
+  else if (cvInfMs > 120) maxDim = 272;
+  else if (cvInfMs > 75) maxDim = 336;
+
+  const esc = Math.min(1, maxDim / Math.max(rawW, rawH));
   const sw = Math.max(1, Math.round(rawW * esc));
   const sh = Math.max(1, Math.round(rawH * esc));
   const trocado = (rotAtual % 180 !== 0);
   const pw = trocado ? sh : sw;
   const ph = trocado ? sw : sh;
 
-  if (cvProc.width !== pw || cvProc.height !== ph) {
-    cvProc.width = pw; cvProc.height = ph;
-  }
-
   let dets = [];
   try {
-    pCtx.save();
-    pCtx.translate(pw / 2, ph / 2);
-    pCtx.rotate((rotAtual * Math.PI) / 180);
-    pCtx.drawImage(img, -sw / 2, -sh / 2, sw, sh);
-    pCtx.restore();
+    if (cvModo === 'cor') {
+      dets = detectarCorOffline(img, rawW, rawH, trocado);
+    } else if (pCtx) {
+      if (cvProc.width !== pw || cvProc.height !== ph) {
+        cvProc.width = pw; cvProc.height = ph;
+      }
+      pCtx.save();
+      pCtx.imageSmoothingEnabled = true;
+      pCtx.translate(pw / 2, ph / 2);
+      pCtx.rotate((rotAtual * Math.PI) / 180);
+      pCtx.drawImage(img, -sw / 2, -sh / 2, sw, sh);
+      pCtx.restore();
 
-    if (cvModo === 'face' && faceModel) {
-      const preds = await faceModel.estimateFaces(cvProc, false);
-      for (const p of preds) {
-        const x1 = p.topLeft[0], y1 = p.topLeft[1];
-        const bw = p.bottomRight[0] - x1, bh = p.bottomRight[1] - y1;
-        const sc = Array.isArray(p.probability) ? p.probability[0] : (p.probability || 0.9);
-        dets.push({
-          label: 'ROSTO', score: sc,
-          nx: x1 / pw, ny: y1 / ph, nw: bw / pw, nh: bh / ph,
-          cx: (x1 + bw / 2) / pw, cy: (y1 + bh / 2) / ph,
-          area: (bw * bh) / (pw * ph)
-        });
+      // Permite Zoom Central 2x em quadros alternados quando buscando alvo nos modos Ultra ou Auto rápido
+      const podeZoom2x = !leve && (cvPotencia === 'ultra' || cvInfMs < 95) && (cvQuadroIdx % 2 === 0);
+
+      if (cvModo === 'face') {
+        const modAtivo = (!leve && faceModelUltra) ? faceModelUltra : faceModelLeve;
+        if (modAtivo) {
+          const preds = await modAtivo.estimateFaces(cvProc, false);
+          dets = converterPredsRosto(preds, pw, ph, 0, 0, 1);
+          // Se o detector Full não achou e temos o BlazeFace carregado, consulta o BlazeFace também
+          if (dets.length === 0 && faceModelLeve && modAtivo !== faceModelLeve) {
+            const p2 = await faceModelLeve.estimateFaces(cvProc, false);
+            dets = converterPredsRosto(p2, pw, ph, 0, 0, 1);
+          }
+          // Busca Multi-Escala Zoom 2x para rostos pequenos/distantes
+          if (dets.length === 0 && podeZoom2x) {
+            const z = prepararZoomCentral(pw, ph);
+            if (z) {
+              const pz = await modAtivo.estimateFaces(cvZoom, false);
+              dets = converterPredsRosto(pz, z.zw, z.zh, z.offX, z.offY, z.scale);
+            }
+          }
+        }
+      } else if (cvModo === 'gesto') {
+        const modAtivo = (!leve && handModelUltra) ? handModelUltra : (handModelLeve || handModelUltra);
+        if (modAtivo) {
+          const preds = await modAtivo.estimateHands(cvProc);
+          dets = converterPredsMao(preds, pw, ph, 0, 0, 1);
+          if (dets.length === 0 && podeZoom2x) {
+            const z = prepararZoomCentral(pw, ph);
+            if (z) {
+              const pz = await modAtivo.estimateHands(cvZoom);
+              dets = converterPredsMao(pz, z.zw, z.zh, z.offX, z.offY, z.scale);
+            }
+          }
+          if (dets.length === 0) {
+            gestoAnt = ''; gestoCont = 0;
+            const lbl = document.getElementById('lblGestoAtivo');
+            if (lbl) lbl.textContent = 'Mostre a mão...';
+          }
+        }
+      } else if (cvModo === 'obj') {
+        const modAtivo = (!leve && objModelUltra) ? objModelUltra : (objModelLeve || objModelUltra);
+        if (modAtivo) {
+          const limScore = leve ? 0.38 : 0.30;
+          const maxBoxes = leve ? 6 : 10;
+          const filtros = cvObjFiltro === 'all' ? null : cvObjFiltro.split(',');
+          const preds = await modAtivo.detect(cvProc, maxBoxes, limScore);
+          dets = converterPredsObj(preds, filtros, pw, ph, 0, 0, 1);
+          // Busca Multi-Escala Zoom 2x para objetos pequenos/distantes (ex: celular, copo, pessoa longe)
+          if (dets.length === 0 && podeZoom2x) {
+            const z = prepararZoomCentral(pw, ph);
+            if (z) {
+              const pz = await modAtivo.detect(cvZoom, 6, limScore);
+              dets = converterPredsObj(pz, filtros, z.zw, z.zh, z.offX, z.offY, z.scale);
+            }
+          }
+        }
       }
-    } else if (cvModo === 'obj' && objModel) {
-      const preds = await objModel.detect(cvProc, 6, 0.42);
-      const filtros = cvObjFiltro === 'all' ? null : cvObjFiltro.split(',');
-      for (const p of preds) {
-        if (filtros && !filtros.includes(p.class)) continue;
-        const [bx, by, bw, bh] = p.bbox;
-        dets.push({
-          label: TRAD_OBJ[p.class] || p.class.toUpperCase(),
-          score: p.score,
-          nx: bx / pw, ny: by / ph, nw: bw / pw, nh: bh / ph,
-          cx: (bx + bw / 2) / pw, cy: (by + bh / 2) / ph,
-          area: (bw * bh) / (pw * ph)
-        });
-      }
-    } else if (cvModo === 'cor') {
-      dets = detectarCorOffline(pw, ph);
     }
   } catch (e) {
+    cvRodando = false;
+    if (epoch !== cvEpoch || cvModo === 'off') return;
     const txt = document.getElementById('cvHudTxt');
     if (txt) txt.textContent = '⚠️ Aguardando stream CORS (:82)...';
-    cvTimer = setTimeout(loopVisao, 300);
+    cvTimer = setTimeout(() => loopVisao(epoch), 300);
     return;
   }
+
+  cvRodando = false;
+  if (epoch !== cvEpoch || cvModo === 'off') return;
 
   // Ordena pelo maior alvo na tela (prioriza o rosto/objeto principal mais próximo)
   dets.sort((a, b) => (b.area * b.score) - (a.area * a.score));
   const alvo = dets.length > 0 ? dets[0] : null;
 
   const dtInf = performance.now() - t0;
-  cvInfMs = cvInfMs ? (cvInfMs * 0.7 + dtInf * 0.3) : dtInf;
-  const intervaloAlvo = (cvModo === 'obj') ? 95 : 70;
-  const cicloTotal = Math.max(intervaloAlvo, dtInf);
-  cvFps = 1000 / cicloTotal;
+  // Ignora o pico único de compilação de shaders WebGL nos 2 primeiros quadros para não distorcer a média
+  const dtUtil = (cvQuadroIdx <= 2 && dtInf > 160) ? 65 : dtInf;
+  cvInfMs = cvInfMs ? (cvInfMs * 0.7 + dtUtil * 0.3) : dtUtil;
+
+  // Auto-proteção para Notebook Fraco no modo 'auto':
+  // Se após aquecer os shaders a máquina demorar > 210ms por 5 quadros seguidos, ativa automaticamente o perfil Leve
+  if (cvPotencia === 'auto' && !cvAutoRebaixado && cvModo !== 'cor' && cvQuadroIdx > 2) {
+    if (dtInf > 210) {
+      cvLentoCont++;
+      if (cvLentoCont >= 5) {
+        cvAutoRebaixado = true;
+        cvLentoCont = 0;
+        atualizarUiCv();
+        if (cvModo === 'face' && !faceModelLeve) garantirModeloFace(true, null).catch(() => {});
+        else if (cvModo === 'gesto' && !handModelLeve) garantirModeloMao(true, null).catch(() => {});
+        else if (cvModo === 'obj' && !objModelLeve) garantirModeloObj(true, null).catch(() => {});
+      }
+    } else {
+      cvLentoCont = 0;
+    }
+  }
+
+  // Pausa elástica: garante sempre tempo livre de CPU/GPU para o navegador do notebook nunca travar
+  const pausaBase = (cvModo === 'obj' || cvModo === 'gesto') ? 50 : 38;
+  const pausaMin = Math.max(pausaBase, Math.min(200, Math.round(dtInf * 0.55)));
+  const intervaloAlvo = (cvModo === 'obj' || cvModo === 'gesto') ? 105 : 75;
+  const espera = Math.max(pausaMin, intervaloAlvo - Math.round(dtInf));
+  cvFps = 1000 / (dtInf + espera);
 
   desenharHudCv(dets, alvo, rawW, rawH, trocado);
-  if (autoTrack && alvo) aplicarAutoTrack(alvo);
+  // Segue o alvo se o Auto-Track estiver ligado OU automaticamente ao apontar 1 dedo no modo Gestos
+  const seguirDedoAuto = (cvModo === 'gesto' && cvGestoCmd && alvo && (alvo.gestoId === 'apontar' || alvo.gestoId === 'mao'));
+  if ((autoTrack || seguirDedoAuto) && alvo) aplicarAutoTrack(alvo);
 
   const txt = document.getElementById('cvHudTxt');
   if (txt) {
-    const nomeModo = cvModo === 'face' ? 'ROSTO' : (cvModo === 'obj' ? 'OBJ' : 'COR');
+    const mapaNome = { face: 'ROSTO', gesto: 'GESTO', obj: 'OBJ', cor: 'COR' };
+    const tagPot = cvModo === 'cor' ? '' : (usarPerfilLeve() ? '⚡' : '🔥');
+    const nomeModo = (mapaNome[cvModo] || 'IA') + tagPot;
     const stAlvo = alvo ? `🎯 ${alvo.label} ${Math.round(alvo.score * 100)}%` : 'BUSCANDO...';
-    txt.textContent = `${nomeModo} | ${stAlvo} | ${Math.round(cvInfMs)}ms (${cvFps.toFixed(0)} FPS)`;
+    const stPt = autoTrack ? ` | P:${Math.round(pan)}° T:${Math.round(tilt)}°` : '';
+    txt.textContent = `${nomeModo} | ${stAlvo}${stPt} | ${Math.round(cvInfMs)}ms (${cvFps.toFixed(0)} FPS)`;
   }
 
-  const espera = Math.max(15, intervaloAlvo - Math.round(dtInf));
-  cvTimer = setTimeout(loopVisao, espera);
+  cvTimer = setTimeout(() => loopVisao(epoch), espera);
 }
+
+const MAO_TRACOS = [
+  [0,1,2,3,4], [0,5,6,7,8], [0,9,10,11,12],
+  [0,13,14,15,16], [0,17,18,19,20], [5,9,13,17,0]
+];
 
 function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
   const hud = document.getElementById('hudCv');
@@ -1116,10 +1721,35 @@ function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
     const y = offY + d.ny * visH;
     const w = d.nw * visW;
     const h = d.nh * visH;
-    const cx = x + w / 2;
-    const cy = y + h / 2;
+    const cx = offX + d.cx * visW;
+    const cy = offY + d.cy * visH;
     const principal = (idx === 0);
     const cor = principal ? (autoTrack ? '#22c55e' : '#38bdf8') : '#f59e0b';
+
+    // Desenha esqueleto de 21 pontos da mão (quando no modo Gestos)
+    if (d.pts && d.pts.length === 21) {
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.85)';
+      ctx.lineWidth = 1.6;
+      for (const tr of MAO_TRACOS) {
+        ctx.beginPath();
+        for (let i = 0; i < tr.length; i++) {
+          const px = offX + d.pts[tr[i]][0] * visW;
+          const py = offY + d.pts[tr[i]][1] * visH;
+          if (i === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+      }
+      for (let i = 0; i < 21; i++) {
+        const px = offX + d.pts[i][0] * visW;
+        const py = offY + d.pts[i][1] * visH;
+        const ponta = (i === 4 || i === 8 || i === 12 || i === 16 || i === 20);
+        ctx.fillStyle = ponta ? '#22c55e' : '#e6edf7';
+        ctx.beginPath();
+        ctx.arc(px, py, ponta ? 3.2 : 2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
     // Caixa translúcida + cantoneiras estilo HUD Aviônica
     ctx.strokeStyle = cor;
@@ -1136,7 +1766,7 @@ function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
       ctx.moveTo(x + w - cLen, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - cLen);
       ctx.stroke();
 
-      // Linha de vetor do centro até o alvo
+      // Linha de vetor do centro até o ponto de mira do alvo
       ctx.lineWidth = 1.2;
       ctx.setLineDash([4, 3]);
       ctx.beginPath();
@@ -1147,7 +1777,7 @@ function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
 
       ctx.fillStyle = cor;
       ctx.beginPath();
-      ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+      ctx.arc(cx, cy, 4, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -1165,19 +1795,31 @@ function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
 
 function aplicarAutoTrack(alvo) {
   const agora = performance.now();
-  if (agora - ultTrackMs < 85) return; // Máx ~11 comandos/s para proteger o link 9600 bps
+  // Intervalo de 125ms dá tempo para o servo mover fisicamente e o stream MJPEG entregar o novo quadro atualizado
+  if (agora - ultTrackMs < 125) return;
   if (ptTimer || joyPTTimer) return;   // Prioridade ao toque manual do usuário
 
   // Erro normalizado de -1.0 a +1.0 em relação ao centro do quadro
-  const ex = (alvo.cx - 0.5) * 2;
-  const ey = (alvo.cy - 0.5) * 2;
+  const ex = Math.max(-1, Math.min(1, (alvo.cx - 0.5) * 2));
+  const ey = Math.max(-1, Math.min(1, (alvo.cy - 0.5) * 2));
 
-  // Filtro exponencial leve para suavizar ruído da caixa (bounding box jitter)
-  errSuaveX = errSuaveX * 0.35 + ex * 0.65;
-  errSuaveY = errSuaveY * 0.35 + ey * 0.65;
+  // Filtro exponencial anti-ruído: amortece variações bruscas de caixa/landmark de um quadro para outro
+  errSuaveX = errSuaveX * 0.45 + ex * 0.55;
+  errSuaveY = errSuaveY * 0.45 + ey * 0.55;
 
-  const foraX = Math.abs(errSuaveX) > cvDeadzone;
-  const foraY = Math.abs(errSuaveY) > cvDeadzone;
+  const magX = Math.abs(errSuaveX);
+  const magY = Math.abs(errSuaveY);
+
+  // Histerese de zona morta central:
+  // Quando chega perto do centro (< 7.5%), trava em repouso absoluto e só volta a corrigir se sair além de 12.5%
+  if (magX < cvDeadzone) trackTravadoX = true;
+  else if (magX > 0.125) trackTravadoX = false;
+
+  if (magY < cvDeadzone) trackTravadoY = true;
+  else if (magY > 0.125) trackTravadoY = false;
+
+  const foraX = !trackTravadoX && magX > cvDeadzone;
+  const foraY = !trackTravadoY && magY > cvDeadzone;
   if (!foraX && !foraY) return;
 
   // ex > 0 (alvo à direita) -> gira p/ direita (mesmo sinal do botão ►: stepPan(-1))
@@ -1185,19 +1827,38 @@ function aplicarAutoTrack(alvo) {
   const sPan = invPan ? 1 : -1;
   const sTilt = invTilt ? -1 : 1;
 
-  let dPan = foraX ? (sPan * errSuaveX * cvGanho) : 0;
-  let dTilt = foraY ? (sTilt * (-errSuaveY) * cvGanho) : 0;
+  // Lei de Controle com Ganho Variável Progressivo:
+  // O ganho efetivo diminui quadraticamente conforme o erro se aproxima de zero (evita loop esquerda-direita!)
+  let dPan = 0, dTilt = 0;
+  if (foraX) {
+    const uX = Math.min(1, (magX - cvDeadzone) / (1 - cvDeadzone));
+    const ganhoEfetivoX = cvGanho * (0.15 * uX + 0.85 * uX * uX);
+    const sinalX = Math.sign(errSuaveX);
+    // Se acabou de cruzar o centro (inverteu esquerda <-> direita), freia 70% do passo para cortar oscilação
+    const freioInvX = (ultSinalX !== 0 && sinalX !== ultSinalX) ? 0.30 : 1.0;
+    ultSinalX = sinalX;
+    dPan = sPan * sinalX * ganhoEfetivoX * freioInvX;
+  }
+  if (foraY) {
+    const uY = Math.min(1, (magY - cvDeadzone) / (1 - cvDeadzone));
+    const ganhoEfetivoY = cvGanho * (0.15 * uY + 0.85 * uY * uY);
+    const sinalY = Math.sign(errSuaveY);
+    const freioInvY = (ultSinalY !== 0 && sinalY !== ultSinalY) ? 0.30 : 1.0;
+    ultSinalY = sinalY;
+    dTilt = sTilt * (-sinalY) * ganhoEfetivoY * freioInvY;
+  }
 
-  // Limita o degrau máximo por ciclo a 8 graus para movimento orgânico sem overshoot
-  dPan = Math.max(-8, Math.min(8, dPan));
-  dTilt = Math.max(-8, Math.min(8, dTilt));
+  // Limita o degrau máximo a 22 graus (rápido quando longe, milimétrico quando perto)
+  dPan = Math.max(-22, Math.min(22, dPan));
+  dTilt = Math.max(-22, Math.min(22, dTilt));
 
-  if (Math.abs(dPan) < 0.45 && Math.abs(dTilt) < 0.45) return;
+  if (Math.abs(dPan) < 0.25 && Math.abs(dTilt) < 0.25) return;
 
   pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + dPan));
   tilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + dTilt));
   ultTrackMs = agora;
-  enviarPT();
+  // Comanda em alta velocidade (mínimo 480°/s) para o servo SG90 ir direto ao ponto sem tremer
+  enviarPT(Math.max(velServo, 480));
 }
 
 // ---------------- Lógica dos Joysticks Virtuais ----------------

@@ -8,7 +8,13 @@ const html = fs.readFileSync(path.join(__dirname, '../src/firmware/comum/esp_pai
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 
 class Target {
-  constructor() { this.listeners = {}; this.style = {}; this.value = '120'; this.parentElement = {style:{}}; }
+  constructor() {
+    this.listeners = {}; this.style = {}; this.value = '120'; this.parentElement = {style:{}};
+    this.classList = {
+      add: c => { if (c === 'hidden') this.style.display = 'none'; },
+      remove: c => { if (c === 'hidden') this.style.display = 'grid'; }
+    };
+  }
   addEventListener(type, fn) { (this.listeners[type] ||= []).push(fn); }
   dispatchEvent(event) { for (const fn of this.listeners[event.type] || []) fn(event); }
   setPointerCapture() {}
