@@ -47,12 +47,12 @@ audit = []
 def q(s):
     return json.dumps(s, ensure_ascii=False)
 
-def font(size=1.5):
-    return f"(font (size {size} {size}))"
+def font(size=1.5, bold=False):
+    b = " (bold yes)" if bold else ""
+    return f"(font (size {size} {size}){b})"
 
 def note(s, x, y, size=1.5, bold=False):
-    b = " (bold yes)" if bold else ""
-    texts.append(f'(text {q(s)} (at {x} {y} 0) (effects {font(size)}{b} (justify left top)) (uuid "{uid()}"))')
+    texts.append(f'(text {q(s)} (at {x} {y} 0) (effects {font(size, bold)} (justify left top)) (uuid "{uid()}"))')
 
 def block(ref, title, x, y, w, h, pins):
     """
@@ -358,9 +358,16 @@ stub(J_OLED['SDA'], 'OLED-SDA', 'R', 8)
 # MONTAGEM FINAL DO ESQUEMÁTICO (.kicad_sch)
 # ==============================================================================
 sch_body = f'''(kicad_sch (version 20251024) (generator "eeschema") (generator_version "10.0") (uuid "{root_uuid}") (paper "A3")
-(lib_symbols {' '.join(libs)})
-{' '.join(parts + wires + labels + junctions + texts)}
-(sheet_instances (path "/" (page "1"))) (embedded_fonts no))'''
+(lib_symbols
+  {chr(10).join(libs)}
+)
+{chr(10).join(parts)}
+{chr(10).join(wires)}
+{chr(10).join(labels)}
+{chr(10).join(junctions)}
+{chr(10).join(texts)}
+(sheet_instances (path "/" (page "1"))) (embedded_fonts no))
+'''
 
 sch_path = OUT / "rover_pcb_v2_chassi.kicad_sch"
 sch_path.write_text(sch_body, encoding="utf-8")
