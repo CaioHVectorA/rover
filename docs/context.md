@@ -848,5 +848,6 @@ Após reconexão, ESP USB nativo voltou a aparecer na COM8, MAC 90:70:69:f7:fc:1
 ### Projeto no KiCad Gerado (`docs/hardware/kicad/rover_pcb_v2_chassi/`):
 - `rover_pcb_v2_chassi.kicad_pro`: Projeto KiCad 7/8/9/10.
 - `rover_pcb_v2_chassi.kicad_sch`: Esquemático elétrico modular completo com blocos de Alimentação (J1, SW1, U3 Mini 560), Divisor Bateria (R3/R4 -> D34), Sensor Temp DS18B20 (U6 -> D4), MCU U1 (ESP32 DevKit 30p), Tração U2 (TB6612FNG -> J3/J6), Áudio I2S (U4 MAX98357A + J_SPK, U5 INMP441) e Conectores J_CAM (2p), J4 (Pan), J5 (Tilt), J_LED (WS2812B) e J_OLED (SSD1306).
-- `tools/gerar_kicad_v2_chassi.py`: Script gerador do esquemático e projeto KiCad.
+- `rover_pcb_v2_chassi.kicad_pcb`: Layout físico compacto da PCB (**85,0 mm × 65,0 mm** — redução de ~60% na área em relação à perfurada 90×150 mm), com 4 furos de fixação M3 nos cantos (`H1..H4`), footprints passo 2,54 mm para todos os módulos e conectores, nets atribuídas e trilhas principais roteadas em `F.Cu` e `B.Cu`.
+- `tools/gerar_kicad_v2_chassi.py` e `tools/gerar_pcb_v2_chassi.py`: Scripts geradores do esquemático e da PCB no KiCad.
 

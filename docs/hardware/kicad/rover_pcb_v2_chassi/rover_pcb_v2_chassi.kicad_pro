@@ -5,7 +5,8 @@
   },
   "project": {
     "files": [
-      "rover_pcb_v2_chassi.kicad_sch"
+      "rover_pcb_v2_chassi.kicad_sch",
+      "rover_pcb_v2_chassi.kicad_pcb"
     ]
   },
   "schematic": {

@@ -382,7 +382,10 @@ pro_content = {
         "version": 1
     },
     "project": {
-        "files": ["rover_pcb_v2_chassi.kicad_sch"]
+        "files": [
+            "rover_pcb_v2_chassi.kicad_sch",
+            "rover_pcb_v2_chassi.kicad_pcb"
+        ]
     },
     "schematic": {
         "annotate_start_num": 1,
