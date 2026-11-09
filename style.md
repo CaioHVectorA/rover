@@ -98,3 +98,6 @@ Este documento registra o perfil técnico, tom de voz, ritmo e preferências de 
 * **2026-10-26 (Diagnóstico de bancada):** Priorizar somatório concreto de consumo e limites das fontes; distinguir estimativas, especificações e medições antes de afirmar causa ou componente danificado.
 
 * **2026-10-27 (Firmware de bancada):** Prefere código mínimo baseado no teste físico que funcionou. Preservar IO43 → BC337 → D0, UART física e controle visual pelo D13; não exigir telemetria de retorno num enlace de ida. Quando pedir código pronto para gravar depois, apenas preparar e compilar, sem upload. Informar claramente qual firmware está realmente em cada placa e não afirmar recepção ou movimento apenas porque a porta aceitou bytes.
+
+* **2026-11-08 (Projeto da PCB Dedicada `v2_2esps` no KiCad):** Migração do chassi do Arduino Nano para um segundo ESP32 (`ESP32-DEVKIT-V1` 30 pinos) em PCB compacta (~50×65 mm) para diminuir o volume do chassi 3D em ABS, integrando áudio digital I2S (`MAX98357A` + `INMP441`), OLED 0,96" I2C (`SSD1306`) e sensor `DS18B20` no chassi, eliminando o transistor `BC337` e adotando o "Jeito 1" (stream MJPEG direto da cabeça + WebSocket direto no chassi, com conector universal `J_CAM` de 4 pinos). Conduzir o esquemático `.kicad_sch` e a PCB `.kicad_pcb` estritamente passo a passo.
+

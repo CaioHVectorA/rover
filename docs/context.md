@@ -108,11 +108,12 @@ As compras foram finalizadas com os seguintes itens e especificações físicas:
       * O **Arduino Nano fica fixo dentro do chassi**, recebendo os comandos seriais e comandando os 6 pinos do TB6612FNG, os 2 servos SG90, buzzer e iluminação sem qualquer disputa de pinos com a câmera.
 
 * **Fase Atual (Bancada com Cabo USB Único):** É possível usar **apenas 1 cabo USB** ligado na placa principal (ex: USB-C do ESP32-S3-CAM). Basta puxar um jumper do pino **5V do ESP32 para o pino 5V do Nano** e outro do **GND para o GND**. Ambas as placas ligarão e se comunicarão perfeitamente na bancada.
-* 📊 **Arquivo Oficial:** [`docs/hardware/tabela_pinagem_esp32_nano.xlsx`](file:///home/usuario/Documentos/rover/docs/hardware/tabela_pinagem_esp32_nano.xlsx)
+* 📊 **Arquivo Oficial:** [`docs/hardware/tabela_pinagem_esp32_nano.xlsx`](file:///home/antigravity/CaioHVectorA/rover/docs/hardware/tabela_pinagem_esp32_nano.xlsx)
   * **Aba 1: `S3_CAM_Sem_Nano`** $\rightarrow$ Configuração *Single-Board*: o ESP32-S3-CAM controla sozinho os 4 motores (modo 4 pinos TB6612), os 2 servos Pan/Tilt, a leitura analógica de bateria (ADC1) e os 8 LEDs WS2812B.
   * **Aba 2: `S3_CAM_Com_Nano`** $\rightarrow$ Configuração *Distribuída*: o ESP32-S3-CAM fica na cabeça móvel e envia comandos seriais via chicote ultra-leve de **3 fios** (`5V`, `GND`, `TX -> Nano RX`), deixando 6 GPIOs livres na cabeça.
   * **Aba 3: `ESP32_CAM_RoboCore`** $\rightarrow$ Mapeamento completo dos 16 pinos físicos do modelo clássico AI-Thinker / OV2640.
   * **Aba 4: `Arduino_Nano_Chassi`** $\rightarrow$ Mapeamento do Nano concentrando a potência e sensores no chassi em 5V nativo, com 8 pinos livres para expansões.
+  * **Aba 5: `v2_2esps`** $\rightarrow$ Nova arquitetura da PCB compacta no KiCad substituindo o Arduino Nano por um segundo ESP32 (`ESP32-DEVKIT-V1` 30 pinos) no chassi, com suporte nativo a áudio digital I2S (`MAX98357A` + `INMP441`), display OLED 0,96" I2C (`SSD1306`), sensor de temperatura `DS18B20`, leitura de bateria em `ADC1` (`GPIO 34`), tração 4WD (`TB6612FNG`), servos Pan/Tilt (`GPIO 18/19`) e conector universal de 4 pinos (`J_CAM`) sem necessidade de inversor `BC337`.
 
 ---
 
@@ -815,3 +816,37 @@ Após reconexão, ESP USB nativo voltou a aparecer na COM8, MAC 90:70:69:f7:fc:1
 - **Inversão de Tilt Padronizada (`sensors.ts`):**
   - Ajustado `invertTilt: true` por padrão para compatibilizar com a montagem física do servo SG90 (erguer o celular agora comanda inclinação para cima; abaixar o celular inclina para baixo).
 - **Validação de Tipagem:** TypeScript 100% verificado (`tsc --noEmit`, 0 erros).
+
+---
+
+## 🛠️ 18. Arquitetura `v2_2esps` — Nova PCB Dedicada no KiCad (`ESP32-DEVKIT-V1` 30 Pinos no Chassi + `ESP32-S3-CAM` na Cabeça) — 08/11/2026
+
+### Racional Técnico da Migração (Nano V3 $\rightarrow$ `ESP32-DEVKIT-V1` 30 Pinos no Chassi):
+1. **Áudio Digital I2S Nativo no Chassi (`MAX98357A` + `INMP441`):**
+   - Inclusão de amplificador I2S de 3W (`MAX98357A`) e microfone digital MEMS I2S (`INMP441`) diretamente na PCB do chassi (sem peso nem fios extras nos servos SG90 da cabeça Pan/Tilt).
+2. **Folga de RAM para Display OLED 0,96" I2C (`SSD1306`) e Temperatura (`DS18B20`):**
+   - Com 320 KB+ de RAM e I2C nativo (`GPIO 21/22`), o `ESP32` do chassi atualiza gráficos, tensão da bateria 2S e temperatura OneWire (`DS18B20` no `GPIO 4`) sem impactar motores ou servos.
+3. **Eliminação do Transistor `BC337` e de Conversor de Nível Lógico (3.3V $\leftrightarrow$ 3.3V):**
+   - Ambos os microcontroladores (`ESP32-S3-CAM` na cabeça e `ESP32-DEVKIT-V1` no chassi) operam em 3.3V nativo. Qualquer enlace UART entre eles é direto pino a pino, eliminando `Q1 (BC337)`, `R1 (1k)` e `R2 (10k)`.
+4. **Descarte de ESP-NOW / Bluetooth entre Cabeça e Chassi:**
+   - Evita disputa de antena/canal 2.4 GHz no `ESP32-S3-CAM`, cujo rádio Wi-Fi já opera dedicado ao streaming MJPEG (20–30 FPS).
+5. **Arquitetura "Jeito 1" + Conector Universal de 4 Pinos (`J_CAM`) na PCB:**
+   - **Jeito 1 (Sincronização Direta no App/Web):** O App/Web consome o stream MJPEG direto do IP do `ESP32-S3-CAM` (`porta 82`) e conecta via WebSocket direto ao IP do `ESP32 do Chassi` (`porta 81`) para áudio I2S, telemetria (`VBAT`, `DS18B20`), servos e motores.
+   - **Conector `J_CAM` (4 pinos: `+5V`, `RX2`, `TX2`, `GND`):** Permite usar apenas 2 fios ultra-flexíveis de silicone (28–30 AWG: `+5V` e `GND`) pelo eixo do Pan no Jeito 1 puro, ou 4 fios com UART2 3.3V direta (`GPIO 16/17`) para troca opcional de IP/telemetria.
+
+### Mapeamento Oficial de Pinos (`v2_2esps` — `ESP32-DEVKIT-V1` 30 Pinos na PCB do Chassi):
+- **Alimentação:** `P30 (VIN)` $\leftarrow$ `+5.0V` do Step-Down `MP1584 / Mini 560`; `P01 (3V3)` $\rightarrow$ Barramento 3.3V lógico (TB6612, OLED, INMP441 e DS18B20); `P02` e `P29` $\rightarrow$ `GND`.
+- **Tração 4WD (`TB6612FNG`):** `P21 (D32)` $\rightarrow$ `PWMA`; `P22 (D33)` $\rightarrow$ `AIN1`; `P23 (D25)` $\rightarrow$ `AIN2`; `P24 (D26)` $\rightarrow$ `PWMB`; `P25 (D27)` $\rightarrow$ `BIN1`; `P26 (D14)` $\rightarrow$ `BIN2`; `P28 (D13)` $\rightarrow$ `STBY` (`P27 / D12` mantido desconectado `NC` por proteção de boot).
+- **Servos Pan & Tilt (`SG90`):** `P09 (D18)` $\rightarrow$ `SERVO-PAN` (`J4`); `P10 (D19)` $\rightarrow$ `SERVO-TILT` (`J5`).
+- **Áudio Digital I2S (`MAX98357A` + `INMP441`):** `P03 (D15)` $\rightarrow$ `I2S-WS` (`LRC` + `WS`); `P08 (D5)` $\rightarrow$ `I2S-BCLK` (`BCLK` + `SCK`); `P15 (D23)` $\rightarrow$ `I2S-DOUT` (`DIN` do amplificador); `P20 (D35)` $\leftarrow$ `I2S-DIN` (`SD` do microfone).
+- **Display OLED 0,96" I2C (`J_OLED`) & Temperatura:** `P11 (D21)` $\rightarrow$ `OLED-SDA`; `P14 (D22)` $\rightarrow$ `OLED-SCL`; `P05 (D4)` $\leftrightarrow$ `TEMP-DATA` (`DS18B20` DQ com pull-up 4.7k no 3.3V).
+- **Bateria 2S:** `P19 (D34 / ADC1)` $\leftarrow$ `VBAT-SENSE` (divisor `R3 = 10k` ao `BAT+` e `R4 = 4.7k` ao `GND`).
+- **Farol WS2812B (Barra 8 LEDs RGB):** `P04 (D2 / GPIO 2)` $\rightarrow$ `LED-DIN` (`J_LED`).
+- **Pinos Livres no Chassi:** `P06 (RX2 / GPIO 16)` e `P07 (TX2 / GPIO 17)` 100% livres para expansão (sem fios de serial para a câmera); `P12/P13 (USB RX/TX)` livres para depuração/boot; `P17 (VP)` e `P18 (VN)` livres (`ADC1`).
+- **Conexão com a Cabeça Pan/Tilt (`J_CAM`):** Apenas **2 pinos** (`+5.0V` e `GND`), pois a câmera opera 100% via Wi-Fi no "Jeito 1".
+
+### Projeto no KiCad Gerado (`docs/hardware/kicad/rover_pcb_v2_chassi/`):
+- `rover_pcb_v2_chassi.kicad_pro`: Projeto KiCad 7/8/9/10.
+- `rover_pcb_v2_chassi.kicad_sch`: Esquemático elétrico modular completo com blocos de Alimentação (J1, SW1, U3 Mini 560), Divisor Bateria (R3/R4 -> D34), Sensor Temp DS18B20 (U6 -> D4), MCU U1 (ESP32 DevKit 30p), Tração U2 (TB6612FNG -> J3/J6), Áudio I2S (U4 MAX98357A + J_SPK, U5 INMP441) e Conectores J_CAM (2p), J4 (Pan), J5 (Tilt), J_LED (WS2812B) e J_OLED (SSD1306).
+- `tools/gerar_kicad_v2_chassi.py`: Script gerador do esquemático e projeto KiCad.
+
