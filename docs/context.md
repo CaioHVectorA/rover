@@ -851,3 +851,15 @@ Após reconexão, ESP USB nativo voltou a aparecer na COM8, MAC 90:70:69:f7:fc:1
 - `rover_pcb_v2_chassi.kicad_pcb`: Layout físico compacto da PCB (**85,0 mm × 65,0 mm** — redução de ~60% na área em relação à perfurada 90×150 mm), com 4 furos de fixação M3 nos cantos (`H1..H4`), footprints passo 2,54 mm para todos os módulos e conectores, nets atribuídas e trilhas principais roteadas em `F.Cu` e `B.Cu`.
 - `tools/gerar_kicad_v2_chassi.py` e `tools/gerar_pcb_v2_chassi.py`: Scripts geradores do esquemático e da PCB no KiCad.
 
+---
+
+### Visão Computacional no Navegador (Rosto, Objetos & Auto-Tracking Pan/Tilt) — 08/11/2026
+- **Implementação em [`src/firmware/comum/esp_painel.h`](file:///home/antigravity/CaioHVectorA/rover/src/firmware/comum/esp_painel.h) (código pronto para gravar, aguardando teste físico em bancada):**
+  - **Zero Carga no ESP32-S3:** Toda a inferência roda na GPU (WebGL) do navegador cliente sobre o stream MJPEG da porta `:82` (`crossorigin="anonymous"`), mantendo o ESP32-S3 frio e o Arduino Nano intocado.
+  - **Compensação de Rotação da Câmera (`rotAtual`):** Antes da inferência, o quadro é desenhado já desrotacionado (`0°`, `90°`, `180°` ou `270°`) num canvas offscreen de até 320px (`cvProc`), garantindo que rostos e objetos fiquem em pé para a rede neural e que os eixos `(X, Y)` correspondam diretamente a Pan e Tilt.
+  - **3 Modos de Detecção Selecionáveis no Painel:**
+    1. **Rosto (`BlazeFace` via TensorFlow.js WebGL):** ~8–18 ms por quadro (~12–15 FPS).
+    2. **Objetos (`COCO-SSD lite_mobilenet_v2`):** 80 classes com filtro rápido (Pessoa, Celular, Garrafa/Copo, Pet, Qualquer), ~20–55 ms por quadro (~10 FPS).
+    3. **Cor Offline:** Rastreador local de alvos vermelhos/laranjas em JS puro (< 2 ms), operando mesmo sem internet no modo AP isolado.
+  - **Malha Fechada de Auto-Tracking (`aplicarAutoTrack`):** Controle proporcional com filtro exponencial, zona morta central de 8% (`cvDeadzone = 0.08`) para evitar oscilação, teto de ~11 comandos/s (`85 ms`) para não saturar o enlace serial de 9600 bps, e desarme imediato ao acionar `PARADA IMEDIATA`.
+

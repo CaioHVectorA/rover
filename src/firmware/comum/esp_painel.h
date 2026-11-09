@@ -55,12 +55,38 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   justify-content: center; min-height: 200px; max-height: 36vh;
 }
 #vid { width: 100%; height: 100%; object-fit: contain; display: block; }
-.cam-btn-overlay { position: absolute; top: 6px; right: 6px; display: flex; gap: 6px; z-index: 10; }
+#hudCv {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none; z-index: 6; display: none;
+}
+.cam-btn-overlay { position: absolute; top: 6px; right: 6px; display: flex; gap: 5px; z-index: 10; flex-wrap: wrap; justify-content: flex-end; }
+.cv-hud-bar {
+  position: absolute; bottom: 6px; left: 6px; right: 6px;
+  display: none; align-items: center; justify-content: space-between; gap: 6px;
+  z-index: 10; pointer-events: none;
+}
+.cv-hud-bar.active { display: flex; }
+.cv-badge {
+  background: rgba(9, 12, 18, 0.82); border: 1px solid rgba(56, 189, 248, 0.45);
+  color: #e6edf7; padding: 3px 7px; border-radius: 4px;
+  font: 600 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+  letter-spacing: 0.3px; pointer-events: auto;
+}
+.btn-track-hud {
+  background: rgba(15, 23, 42, 0.85); border: 1px solid var(--border);
+  color: var(--sub); padding: 4px 8px; border-radius: 4px;
+  font: 700 10px ui-monospace, SFMono-Regular, Consolas, monospace;
+  cursor: pointer; pointer-events: auto;
+}
+.btn-track-hud.on {
+  background: rgba(20, 83, 45, 0.9); border-color: var(--green); color: #86efac;
+}
 .btn-mini {
   background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(255, 255, 255, 0.2);
   color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;
   backdrop-filter: blur(4px);
 }
+.btn-mini.active { background: rgba(56, 189, 248, 0.22); border-color: var(--accent); color: var(--accent); font-weight: 700; }
 .btn-mini:active { background: var(--accent); color: #000; }
 
 /* Seletor de Modo (D-Pad vs Joystick) */
@@ -334,14 +360,56 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   </header>
 
   <!-- Janela de Vídeo -->
-  <div class="video-card">
+  <div class="video-card" id="vidCard">
     <div class="cam-btn-overlay">
+      <button class="btn-mini" id="btnCvQuick" onclick="toggleCardCv()" title="Visão Computacional & Seguir Rosto">🎯 Visão IA</button>
       <button class="btn-mini" id="btnCamPresetQuick" onclick="ciclarPresetCam()" title="Qualidade da Câmera">❄️ Frio</button>
       <button class="btn-mini" onclick="girarRotacao()">↻ Girar</button>
       <button class="btn-mini" onclick="recarregarVideo()">▶ Vídeo</button>
     </div>
-    <img id="vid" src="" alt="Vídeo ao vivo">
+    <img id="vid" crossorigin="anonymous" src="" alt="Vídeo ao vivo">
+    <canvas id="hudCv"></canvas>
+    <div class="cv-hud-bar" id="cvHudBar">
+      <span class="cv-badge" id="cvHudTxt">IA: OFF</span>
+      <button class="btn-track-hud" id="btnTrackHud" onclick="toggleAutoTrack()">🎯 SEGUIR: OFF</button>
+    </div>
   </div>
+
+  <!-- Painel de Visão Computacional & Auto-Tracking (retrátil) -->
+  <details class="ctrl-card diag-card" id="cardCv" style="width:100%;padding:6px 10px;">
+    <summary style="display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;list-style:none;">
+      <span class="ctrl-title">🎯 Visão Computacional & Seguir Rosto/Objeto ▾</span>
+      <span id="stCvPill" class="status-pill">IA OFF</span>
+    </summary>
+    <div style="width:100%;margin-top:6px;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;gap:5px;width:100%;">
+        <button id="btnCvFace" class="btn-preset" style="flex:1" onclick="setCvModo('face')">😊 Rosto (IA)</button>
+        <button id="btnCvObj" class="btn-preset" style="flex:1" onclick="setCvModo('obj')">📦 Objetos (IA)</button>
+        <button id="btnCvCor" class="btn-preset" style="flex:1" onclick="setCvModo('cor')" title="Funciona offline sem internet (segue objeto vermelho/laranja)">🔴 Cor (Offline)</button>
+        <button id="btnCvOff" class="btn-preset" style="flex:0.7" onclick="setCvModo('off')">🛑 Off</button>
+      </div>
+      <div id="rowObjFiltro" style="display:none;gap:6px;width:100%;align-items:center;">
+        <span style="font-size:10px;color:var(--sub);white-space:nowrap">Alvo Objeto:</span>
+        <select id="selObjFiltro" onchange="cvObjFiltro=this.value" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:11px">
+          <option value="person">Pessoa (person)</option>
+          <option value="all">Qualquer Objeto (80 classes)</option>
+          <option value="cell phone">Celular (cell phone)</option>
+          <option value="bottle,cup">Garrafa / Copo</option>
+          <option value="cat,dog,bird">Pet (Gato / Cachorro)</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:6px;width:100%;align-items:center;">
+        <button id="btnAutoTrack" class="btn-preset" style="flex:1.4;padding:7px 6px;font-weight:700;font-size:11px;border-color:#334155" onclick="toggleAutoTrack()">🎯 SEGUIR COM PAN/TILT: OFF</button>
+        <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="chkCvInvPan" onchange="syncInvPan(this.checked)"> Inv.Pan</label>
+        <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="chkCvInvTilt" onchange="syncInvTilt(this.checked)"> Inv.Tilt</label>
+      </div>
+      <div class="slider-item">
+        <label style="width:65px">Ganho Track</label>
+        <input type="range" id="rngCvGanho" min="2" max="12" step="1" value="5" oninput="cvGanho=parseInt(this.value); outCvGanho.value=this.value+'°'">
+        <output id="outCvGanho">5°</output>
+      </div>
+    </div>
+  </details>
 
   <!-- Barra de Diagnóstico de Bancada (retrátil) -->
   <details class="ctrl-card diag-card" id="cardDiag" style="width:100%;padding:6px 10px;">
@@ -489,8 +557,8 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     <!-- Seção de Inversão de Eixos -->
     <div class="cfg-sec">🔄 Inversão de Eixos dos Servos</div>
     <div class="chk-row">
-      <label><input type="checkbox" id="chkInvPan" onchange="invPan=this.checked"> Inverter Pan (Horizontal)</label>
-      <label><input type="checkbox" id="chkInvTilt" onchange="invTilt=this.checked"> Inverter Tilt (Vertical)</label>
+      <label><input type="checkbox" id="chkInvPan" onchange="syncInvPan(this.checked)"> Inverter Pan (Horizontal)</label>
+      <label><input type="checkbox" id="chkInvTilt" onchange="syncInvTilt(this.checked)"> Inverter Tilt (Vertical)</label>
     </div>
 
     <!-- Seção de Velocidade e Fluidez dos Servos -->
@@ -534,6 +602,21 @@ let soIda = false;
 let testeMotorTimer = null;
 let testeMotorFim = null;
 
+function syncInvPan(v) {
+  invPan = !!v;
+  const c1 = document.getElementById('chkInvPan');
+  const c2 = document.getElementById('chkCvInvPan');
+  if (c1) c1.checked = invPan;
+  if (c2) c2.checked = invPan;
+}
+function syncInvTilt(v) {
+  invTilt = !!v;
+  const c1 = document.getElementById('chkInvTilt');
+  const c2 = document.getElementById('chkCvInvTilt');
+  if (c1) c1.checked = invTilt;
+  if (c2) c2.checked = invTilt;
+}
+
 function setModo(m) {
   modoAtual = m;
   parada();
@@ -558,6 +641,13 @@ function setModo(m) {
 function toggleDiag() {
   const d = document.getElementById('cardDiag');
   if (d) d.open = !d.open;
+}
+
+function toggleCardCv() {
+  const c = document.getElementById('cardCv');
+  if (!c) return;
+  c.open = !c.open;
+  if (c.open && cvModo === 'off') setCvModo('face');
 }
 
 const presetsCam = ['frio', 'equilibrado', 'qualidade'];
@@ -642,6 +732,7 @@ function atualizarBtnTxInv(inv) {
 
 function recarregarVideo() {
   const img = document.getElementById('vid');
+  img.crossOrigin = 'anonymous';
   img.src = 'http://' + location.hostname + ':82/stream?t=' + Date.now();
   img.style.transform = `rotate(${rotAtual}deg)`;
 }
@@ -679,6 +770,10 @@ function drive(fwd, turn) {
 
 function parada() {
   cancelarTesteMotor();
+  if (typeof autoTrack !== 'undefined' && autoTrack) {
+    autoTrack = false;
+    atualizarUiAutoTrack();
+  }
   window.dispatchEvent(new Event('roverstop'));
   stopPT();
   if (joyDriveTimer) { clearInterval(joyDriveTimer); joyDriveTimer = null; }
@@ -735,6 +830,375 @@ function setTiltDirect(v) {
 }
 
 function centroPT() { stopPT(); pan = 90; tilt = 90; enviarPT(); }
+
+// ---------------- Visão Computacional & Auto-Tracking (No Navegador) ----------------
+let cvModo = 'off';           // 'off' | 'face' | 'obj' | 'cor'
+let cvObjFiltro = 'person';   // filtro de classe no modo 'obj'
+let autoTrack = false;        // Seguir alvo com Pan/Tilt
+let cvGanho = 5;              // Ganho proporcional (graus por ciclo para erro = 100%)
+const cvDeadzone = 0.08;      // 8% de zona morta central para não oscilar
+let faceModel = null;
+let objModel = null;
+let cvCarregando = false;
+let cvTimer = null;
+let ultTrackMs = 0;
+let cvFps = 0, cvInfMs = 0;
+let errSuaveX = 0, errSuaveY = 0;
+
+const cvProc = document.createElement('canvas');
+const pCtx = cvProc.getContext('2d', { willReadFrequently: true });
+
+const TRAD_OBJ = {
+  'person': 'PESSOA', 'cell phone': 'CELULAR', 'bottle': 'GARRAFA', 'cup': 'COPO',
+  'cat': 'GATO', 'dog': 'CACHORRO', 'bird': 'AVE', 'chair': 'CADEIRA',
+  'tv': 'TELA/TV', 'laptop': 'NOTEBOOK', 'mouse': 'MOUSE', 'keyboard': 'TECLADO',
+  'book': 'LIVRO', 'backpack': 'MOCHILA', 'car': 'CARRO', 'remote': 'CONTROLE'
+};
+
+function carregarScriptCDN(url) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${url}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = url;
+    s.async = true;
+    s.onload = resolve;
+    s.onerror = () => reject(new Error('Sem internet p/ CDN'));
+    document.head.appendChild(s);
+  });
+}
+
+function atualizarUiCv() {
+  const ativo = cvModo !== 'off';
+  const hud = document.getElementById('hudCv');
+  const bar = document.getElementById('cvHudBar');
+  const btnQ = document.getElementById('btnCvQuick');
+  const pill = document.getElementById('stCvPill');
+  const rowF = document.getElementById('rowObjFiltro');
+
+  if (hud) hud.style.display = ativo ? 'block' : 'none';
+  if (bar) bar.className = ativo ? 'cv-hud-bar active' : 'cv-hud-bar';
+  if (btnQ) btnQ.className = ativo ? 'btn-mini active' : 'btn-mini';
+  if (rowF) rowF.style.display = (cvModo === 'obj') ? 'flex' : 'none';
+
+  for (const [id, m] of [['btnCvFace','face'],['btnCvObj','obj'],['btnCvCor','cor'],['btnCvOff','off']]) {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.borderColor = (cvModo === m && m !== 'off') ? 'var(--accent)' : 'var(--border)';
+      el.style.color = (cvModo === m && m !== 'off') ? 'var(--accent)' : 'var(--text)';
+    }
+  }
+  if (pill) {
+    pill.className = 'status-pill ' + (ativo ? 'ok' : '');
+    pill.textContent = ativo ? ('IA: ' + cvModo.toUpperCase()) : 'IA OFF';
+  }
+  atualizarUiAutoTrack();
+}
+
+function atualizarUiAutoTrack() {
+  const b1 = document.getElementById('btnAutoTrack');
+  const b2 = document.getElementById('btnTrackHud');
+  if (b1) {
+    b1.textContent = autoTrack ? '🎯 SEGUINDO ALVO (Pan/Tilt): ON' : '🎯 SEGUIR COM PAN/TILT: OFF';
+    b1.style.background = autoTrack ? '#14532d' : '#1c2638';
+    b1.style.borderColor = autoTrack ? 'var(--green)' : '#334155';
+    b1.style.color = autoTrack ? '#86efac' : 'var(--text)';
+  }
+  if (b2) {
+    b2.textContent = autoTrack ? '🎯 SEGUINDO: ON' : '🎯 SEGUIR: OFF';
+    b2.className = autoTrack ? 'btn-track-hud on' : 'btn-track-hud';
+  }
+}
+
+function toggleAutoTrack() {
+  if (cvModo === 'off') {
+    setCvModo('face').then(() => {
+      autoTrack = true;
+      atualizarUiAutoTrack();
+    });
+    return;
+  }
+  autoTrack = !autoTrack;
+  errSuaveX = 0; errSuaveY = 0;
+  atualizarUiAutoTrack();
+}
+
+async function setCvModo(m) {
+  if (cvTimer) { clearTimeout(cvTimer); cvTimer = null; }
+  cvModo = m;
+  if (m === 'off') {
+    autoTrack = false;
+    const hud = document.getElementById('hudCv');
+    if (hud) { const ctx = hud.getContext('2d'); ctx.clearRect(0, 0, hud.width, hud.height); }
+    atualizarUiCv();
+    return;
+  }
+  atualizarUiCv();
+  const txt = document.getElementById('cvHudTxt');
+  try {
+    cvCarregando = true;
+    if (m === 'face' && !faceModel) {
+      if (txt) txt.textContent = '⏳ Baixando IA Rosto (BlazeFace)...';
+      if (!window.tf) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
+      if (!window.blazeface) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.1.0/dist/blazeface.min.js');
+      faceModel = await window.blazeface.load({ maxFaces: 3, scoreThreshold: 0.65 });
+    } else if (m === 'obj' && !objModel) {
+      if (txt) txt.textContent = '⏳ Baixando IA Objetos (COCO-SSD)...';
+      if (!window.tf) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.20.0/dist/tf.min.js');
+      if (!window.cocoSsd) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js');
+      objModel = await window.cocoSsd.load({ base: 'lite_mobilenet_v2' });
+    }
+    cvCarregando = false;
+    loopVisao();
+  } catch (err) {
+    cvCarregando = false;
+    if (txt) txt.textContent = '⚠️ Sem Internet p/ IA -> Usando modo Cor Offline';
+    cvModo = 'cor';
+    atualizarUiCv();
+    loopVisao();
+  }
+}
+
+// Detector offline de objeto vermelho/laranja vivo (não exige internet)
+function detectarCorOffline(pw, ph) {
+  const data = pCtx.getImageData(0, 0, pw, ph).data;
+  let sumX = 0, sumY = 0, count = 0;
+  let minX = pw, minY = ph, maxX = 0, maxY = 0;
+  const passo = 2;
+  for (let y = 0; y < ph; y += passo) {
+    for (let x = 0; x < pw; x += passo) {
+      const i = (y * pw + x) * 4;
+      const r = data[i], g = data[i + 1], b = data[i + 2];
+      if (r > 145 && r > g * 1.45 && r > b * 1.45 && (r - Math.max(g, b)) > 45) {
+        sumX += x; sumY += y; count++;
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+  if (count < 12) return [];
+  const bw = Math.max(16, maxX - minX);
+  const bh = Math.max(16, maxY - minY);
+  const cx = (sumX / count) / pw;
+  const cy = (sumY / count) / ph;
+  return [{
+    label: 'ALVO COR',
+    score: Math.min(0.99, 0.5 + count / 200),
+    nx: minX / pw, ny: minY / ph, nw: bw / pw, nh: bh / ph,
+    cx, cy, area: (bw * bh) / (pw * ph)
+  }];
+}
+
+async function loopVisao() {
+  if (cvModo === 'off' || cvCarregando) return;
+  const img = document.getElementById('vid');
+  if (!img || !img.complete || !img.naturalWidth || !img.naturalHeight) {
+    cvTimer = setTimeout(loopVisao, 150);
+    return;
+  }
+
+  const t0 = performance.now();
+  const rawW = img.naturalWidth, rawH = img.naturalHeight;
+  // Redimensiona para no máx 320px no maior lado e rotaciona conforme rotAtual (imagem em pé!)
+  const esc = Math.min(1, 320 / Math.max(rawW, rawH));
+  const sw = Math.max(1, Math.round(rawW * esc));
+  const sh = Math.max(1, Math.round(rawH * esc));
+  const trocado = (rotAtual % 180 !== 0);
+  const pw = trocado ? sh : sw;
+  const ph = trocado ? sw : sh;
+
+  if (cvProc.width !== pw || cvProc.height !== ph) {
+    cvProc.width = pw; cvProc.height = ph;
+  }
+
+  let dets = [];
+  try {
+    pCtx.save();
+    pCtx.translate(pw / 2, ph / 2);
+    pCtx.rotate((rotAtual * Math.PI) / 180);
+    pCtx.drawImage(img, -sw / 2, -sh / 2, sw, sh);
+    pCtx.restore();
+
+    if (cvModo === 'face' && faceModel) {
+      const preds = await faceModel.estimateFaces(cvProc, false);
+      for (const p of preds) {
+        const x1 = p.topLeft[0], y1 = p.topLeft[1];
+        const bw = p.bottomRight[0] - x1, bh = p.bottomRight[1] - y1;
+        const sc = Array.isArray(p.probability) ? p.probability[0] : (p.probability || 0.9);
+        dets.push({
+          label: 'ROSTO', score: sc,
+          nx: x1 / pw, ny: y1 / ph, nw: bw / pw, nh: bh / ph,
+          cx: (x1 + bw / 2) / pw, cy: (y1 + bh / 2) / ph,
+          area: (bw * bh) / (pw * ph)
+        });
+      }
+    } else if (cvModo === 'obj' && objModel) {
+      const preds = await objModel.detect(cvProc, 6, 0.42);
+      const filtros = cvObjFiltro === 'all' ? null : cvObjFiltro.split(',');
+      for (const p of preds) {
+        if (filtros && !filtros.includes(p.class)) continue;
+        const [bx, by, bw, bh] = p.bbox;
+        dets.push({
+          label: TRAD_OBJ[p.class] || p.class.toUpperCase(),
+          score: p.score,
+          nx: bx / pw, ny: by / ph, nw: bw / pw, nh: bh / ph,
+          cx: (bx + bw / 2) / pw, cy: (by + bh / 2) / ph,
+          area: (bw * bh) / (pw * ph)
+        });
+      }
+    } else if (cvModo === 'cor') {
+      dets = detectarCorOffline(pw, ph);
+    }
+  } catch (e) {
+    const txt = document.getElementById('cvHudTxt');
+    if (txt) txt.textContent = '⚠️ Aguardando stream CORS (:82)...';
+    cvTimer = setTimeout(loopVisao, 300);
+    return;
+  }
+
+  // Ordena pelo maior alvo na tela (prioriza o rosto/objeto principal mais próximo)
+  dets.sort((a, b) => (b.area * b.score) - (a.area * a.score));
+  const alvo = dets.length > 0 ? dets[0] : null;
+
+  const dtInf = performance.now() - t0;
+  cvInfMs = cvInfMs ? (cvInfMs * 0.7 + dtInf * 0.3) : dtInf;
+  const intervaloAlvo = (cvModo === 'obj') ? 95 : 70;
+  const cicloTotal = Math.max(intervaloAlvo, dtInf);
+  cvFps = 1000 / cicloTotal;
+
+  desenharHudCv(dets, alvo, rawW, rawH, trocado);
+  if (autoTrack && alvo) aplicarAutoTrack(alvo);
+
+  const txt = document.getElementById('cvHudTxt');
+  if (txt) {
+    const nomeModo = cvModo === 'face' ? 'ROSTO' : (cvModo === 'obj' ? 'OBJ' : 'COR');
+    const stAlvo = alvo ? `🎯 ${alvo.label} ${Math.round(alvo.score * 100)}%` : 'BUSCANDO...';
+    txt.textContent = `${nomeModo} | ${stAlvo} | ${Math.round(cvInfMs)}ms (${cvFps.toFixed(0)} FPS)`;
+  }
+
+  const espera = Math.max(15, intervaloAlvo - Math.round(dtInf));
+  cvTimer = setTimeout(loopVisao, espera);
+}
+
+function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
+  const hud = document.getElementById('hudCv');
+  const card = document.getElementById('vidCard');
+  const img = document.getElementById('vid');
+  if (!hud || !card || !img) return;
+
+  const cw = card.clientWidth, ch = card.clientHeight;
+  if (hud.width !== cw || hud.height !== ch) { hud.width = cw; hud.height = ch; }
+  const ctx = hud.getContext('2d');
+  ctx.clearRect(0, 0, cw, ch);
+
+  const fit = Math.min((img.clientWidth || cw) / rawW, (img.clientHeight || ch) / rawH);
+  const visW = trocado ? (rawH * fit) : (rawW * fit);
+  const visH = trocado ? (rawW * fit) : (rawH * fit);
+  const offX = (cw - visW) / 2;
+  const offY = (ch - visH) / 2;
+  const midX = offX + visW / 2;
+  const midY = offY + visH / 2;
+
+  // Retículo central (zona morta de travamento)
+  const dzW = visW * cvDeadzone;
+  const dzH = visH * cvDeadzone;
+  ctx.strokeStyle = autoTrack ? 'rgba(34, 197, 94, 0.45)' : 'rgba(129, 145, 171, 0.35)';
+  ctx.lineWidth = 1;
+  ctx.strokeRect(midX - dzW, midY - dzH, dzW * 2, dzH * 2);
+  ctx.beginPath();
+  ctx.moveTo(midX - 8, midY); ctx.lineTo(midX + 8, midY);
+  ctx.moveTo(midX, midY - 8); ctx.lineTo(midX, midY + 8);
+  ctx.stroke();
+
+  dets.forEach((d, idx) => {
+    const x = offX + d.nx * visW;
+    const y = offY + d.ny * visH;
+    const w = d.nw * visW;
+    const h = d.nh * visH;
+    const cx = x + w / 2;
+    const cy = y + h / 2;
+    const principal = (idx === 0);
+    const cor = principal ? (autoTrack ? '#22c55e' : '#38bdf8') : '#f59e0b';
+
+    // Caixa translúcida + cantoneiras estilo HUD Aviônica
+    ctx.strokeStyle = cor;
+    ctx.lineWidth = principal ? 1.5 : 1;
+    ctx.strokeRect(x, y, w, h);
+
+    if (principal) {
+      const cLen = Math.max(8, Math.min(18, Math.min(w, h) * 0.25));
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x, y + cLen); ctx.lineTo(x, y); ctx.lineTo(x + cLen, y);
+      ctx.moveTo(x + w - cLen, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w, y + cLen);
+      ctx.moveTo(x, y + h - cLen); ctx.lineTo(x, y + h); ctx.lineTo(x + cLen, y + h);
+      ctx.moveTo(x + w - cLen, y + h); ctx.lineTo(x + w, y + h); ctx.lineTo(x + w, y + h - cLen);
+      ctx.stroke();
+
+      // Linha de vetor do centro até o alvo
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(midX, midY);
+      ctx.lineTo(cx, cy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = cor;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Etiqueta superior do alvo
+    const txt = `${d.label} ${Math.round(d.score * 100)}%`;
+    ctx.font = '700 10px ui-monospace, SFMono-Regular, Consolas, monospace';
+    const tw = ctx.measureText(txt).width + 8;
+    const ty = Math.max(offY + 14, y);
+    ctx.fillStyle = 'rgba(9, 12, 18, 0.85)';
+    ctx.fillRect(x, ty - 14, tw, 14);
+    ctx.fillStyle = cor;
+    ctx.fillText(txt, x + 4, ty - 3);
+  });
+}
+
+function aplicarAutoTrack(alvo) {
+  const agora = performance.now();
+  if (agora - ultTrackMs < 85) return; // Máx ~11 comandos/s para proteger o link 9600 bps
+  if (ptTimer || joyPTTimer) return;   // Prioridade ao toque manual do usuário
+
+  // Erro normalizado de -1.0 a +1.0 em relação ao centro do quadro
+  const ex = (alvo.cx - 0.5) * 2;
+  const ey = (alvo.cy - 0.5) * 2;
+
+  // Filtro exponencial leve para suavizar ruído da caixa (bounding box jitter)
+  errSuaveX = errSuaveX * 0.35 + ex * 0.65;
+  errSuaveY = errSuaveY * 0.35 + ey * 0.65;
+
+  const foraX = Math.abs(errSuaveX) > cvDeadzone;
+  const foraY = Math.abs(errSuaveY) > cvDeadzone;
+  if (!foraX && !foraY) return;
+
+  // ex > 0 (alvo à direita) -> gira p/ direita (mesmo sinal do botão ►: stepPan(-1))
+  // ey < 0 (alvo acima)     -> inclina p/ cima (mesmo sinal do botão ▲: stepTilt(1))
+  const sPan = invPan ? 1 : -1;
+  const sTilt = invTilt ? -1 : 1;
+
+  let dPan = foraX ? (sPan * errSuaveX * cvGanho) : 0;
+  let dTilt = foraY ? (sTilt * (-errSuaveY) * cvGanho) : 0;
+
+  // Limita o degrau máximo por ciclo a 8 graus para movimento orgânico sem overshoot
+  dPan = Math.max(-8, Math.min(8, dPan));
+  dTilt = Math.max(-8, Math.min(8, dTilt));
+
+  if (Math.abs(dPan) < 0.45 && Math.abs(dTilt) < 0.45) return;
+
+  pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + dPan));
+  tilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + dTilt));
+  ultTrackMs = agora;
+  enviarPT();
+}
 
 // ---------------- Lógica dos Joysticks Virtuais ----------------
 let joyDriveTimer = null;
