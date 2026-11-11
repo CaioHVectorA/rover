@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Gera o projeto KiCad da nova PCB do Chassi do Rover 4WD (v2_2esps):
+Reproduz em pasta temporária o projeto KiCad histórico da PCB do Chassi do Rover 4WD (v2_2esps):
 - docs/hardware/kicad/rover_pcb_v2_chassi/rover_pcb_v2_chassi.kicad_pro
 - docs/hardware/kicad/rover_pcb_v2_chassi/rover_pcb_v2_chassi.kicad_sch
 
@@ -26,11 +26,12 @@ Componentes da placa:
 """
 
 import json
+import tempfile
 import uuid
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "docs/hardware/kicad/rover_pcb_v2_chassi"
+# Gerador histórico. A revisão de face simples é editada diretamente no KiCad.
+OUT = Path(tempfile.gettempdir()) / "rover_kicad_v2_original"
 OUT.mkdir(parents=True, exist_ok=True)
 
 uid = lambda: str(uuid.uuid4())

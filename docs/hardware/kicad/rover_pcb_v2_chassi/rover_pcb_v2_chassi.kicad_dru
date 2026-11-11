@@ -1,0 +1,4 @@
+(version 1)
+(rule "Roteamento somente na face inferior"
+  (layer "F.Cu")
+  (constraint disallow track via zone))

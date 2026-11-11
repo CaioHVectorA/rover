@@ -1,0 +1,102 @@
+(footprint "U3"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Mini 560: pontos IN+, IN-, OUT+, OUT-. O encaixe direto depende de medicao. Volume mecanico oculto por padrao.")
+	(property "Reference" "REF**"
+		(at 4 7 0)
+		(layer "F.SilkS")
+		(uuid "e2745477-274a-4426-bb1e-ebcd19e422bb")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "Mini 560"
+		(at 4 8.5 0)
+		(layer "F.Fab")
+		(uuid "022da308-4a14-44a9-a8d0-2d892fa702df")
+		(effects
+			(font
+				(size 0.9 0.9)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "af57b737-7593-46b3-966b-c849cd370b6e")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "b8826cd0-c7c5-4064-a4b5-4ab500495f90")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(pad "1" thru_hole rect
+		(at 0 0)
+		(size 2 2)
+		(drill 1.1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "f838a9a6-6c29-427a-8d85-25bd7cd84621")
+	)
+	(pad "2" thru_hole circle
+		(at 0 14)
+		(size 2 2)
+		(drill 1.1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "ace93e32-ce37-4186-9e0d-cf6b7229e052")
+	)
+	(pad "3" thru_hole circle
+		(at 8 0)
+		(size 2 2)
+		(drill 1.1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "28e313e0-1539-4d93-9824-9ada5a32ff43")
+	)
+	(pad "4" thru_hole circle
+		(at 8 14)
+		(size 2 2)
+		(drill 1.1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "7ebe5b7b-e1aa-47e0-8198-73b735762c19")
+	)
+	(embedded_fonts no)
+	(model "${KIPRJMOD}/modelos_3d/Mini560_volume_29x18x5p4.step"
+		(hide yes)
+		(offset
+			(xyz 0 0 3)
+		)
+		(scale
+			(xyz 1 1 1)
+		)
+		(rotate
+			(xyz 0 0 0)
+		)
+	)
+)

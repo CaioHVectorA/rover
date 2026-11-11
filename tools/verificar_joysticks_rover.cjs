@@ -30,7 +30,7 @@ function ambiente() {
     return nodes.get(name);
   };
   const timer = (fn, ms, repeat) => { const key = ++id; timers.set(key, {fn, at:now+ms, ms, repeat}); return key; };
-  const context = vm.createContext({window, document, location:{hostname:'rover.test'},
+  const context = vm.createContext({performance:{now:()=>now}, window, document, location:{hostname:'rover.test'},
     Event:class {constructor(type) {this.type=type;}},
     WebSocket:class {constructor() {this.readyState=1;} send(s) {enviados.push(s);}},
     fetch:uri => {http.push(uri); return Promise.resolve({json:async()=>uri==='/api/info'
@@ -134,3 +134,76 @@ function movimentos(a) { return a.enviados.filter(s=>s.startsWith('<M,') && s!==
   assert.equal(a.document.getElementById('stLed').textContent, 'CONFIRA D13');
   console.log('OK: heartbeat, limite PWM, parada, pulso, desconexao, multitouch, captura, perfil de ida e video.');
 })().catch(e => {console.error(e); process.exitCode=1;});
+
+// Gestos reais do painel: direções, debounce, parada, perda de mão e trava.
+{
+  const a = ambiente();
+  a.run("var direcoes=[]; drive=(f,t)=>direcoes.push([f,t]);");
+  a.run("processarComandoGesto('aberta')");
+  assert.equal(a.run('direcoes.length'), 0);
+  a.run("processarComandoGesto('aberta')");
+  assert.equal(a.run('direcoes.at(-1)[0]'), .85);
+  a.run("processarComandoGesto('punho');processarComandoGesto('punho')");
+  assert.equal(a.run('direcoes.at(-1)[0]'), -.85);
+  a.advance(699);
+  assert.equal(a.run('direcoes.at(-1)[0]'), -.85, 'Deve tolerar ausência menor que 700 ms');
+  a.advance(1);
+  assert.equal(a.run('direcoes.at(-1)[0]'), 0, 'Perda de mão deve parar');
+  a.run("processarComandoGesto('aberta');processarComandoGesto('aberta')");
+  for(let i=0;i<47;i++) { a.advance(100); a.run("processarComandoGesto('aberta')"); }
+  assert.equal(a.run('gestoPausaSeguranca'), true);
+  assert.equal(a.run('direcoes.at(-1)[0]'), 0);
+  a.run("processarComandoGesto('punho');processarComandoGesto('punho')");
+  assert.equal(a.run('direcoes.at(-1)[0]'), 0, 'Punho não pode liberar a trava');
+  a.run("processarComandoGesto('apontar')");
+  assert.equal(a.run('gestoPausaSeguranca'), false);
+  a.run("processarComandoGesto('punho');processarComandoGesto('punho')");
+  assert.equal(a.run('direcoes.at(-1)[0]'), -.85);
+  a.run("processarComandoGesto('joia')");
+  assert.equal(a.run('direcoes.at(-1)[0]'), 0);
+  console.log('OK: aberta frente, punho ré, debounce, watchdog, teto, rearme e parada.');
+}
+
+// O mesmo V comanda os dois sentidos pela posição normalizada no vídeo.
+{
+  const a = ambiente();
+  a.run("var direcoes=[]; drive=(f,t)=>direcoes.push([f,t]);");
+  a.run("processarComandoGesto('paz', .2)");
+  assert.equal(a.run('direcoes.length'), 0, 'Dois quadros exigidos no início');
+  a.run("processarComandoGesto('paz', .2)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), -.75);
+  a.run("processarComandoGesto('paz', .38)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), -.75, 'Histerese mantém lado perto da borda');
+  a.run("processarComandoGesto('paz', .5)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), 0, 'Centro para no primeiro quadro');
+  a.run("processarComandoGesto('paz', .62);processarComandoGesto('paz', .62)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), 0, 'Não iniciar giro dentro da margem');
+  a.run("processarComandoGesto('paz', .8);processarComandoGesto('paz', .8)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), .75);
+  a.advance(699);
+  assert.equal(a.run('direcoes.at(-1)[1]'), .75);
+  a.advance(1);
+  assert.equal(a.run('direcoes.at(-1)[1]'), 0, 'Perda da mão por 700 ms para o giro');
+  for (const x of ['null', 'NaN', 'Infinity', '-.1', '1.1']) {
+    a.run("processarComandoGesto('paz', .2);processarComandoGesto('paz', .2)");
+    a.run(`processarComandoGesto('paz', ${x})`);
+    assert.equal(a.run('direcoes.at(-1)[1]'), 0, 'Coordenada inválida não pode girar');
+  }
+  a.run("processarComandoGesto('paz', .2);processarComandoGesto('paz', .2)");
+  for(let i=0;i<47;i++) { a.advance(100); a.run("processarComandoGesto('paz', .2)"); }
+  assert.equal(a.run('gestoPausaSeguranca'), true);
+  a.run("processarComandoGesto('paz', .5);processarComandoGesto('paz', .8);processarComandoGesto('paz', .8)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), 0, 'Centro e lado oposto não rearmam a trava');
+  a.run("processarComandoGesto('apontar');processarComandoGesto('paz', .8);processarComandoGesto('paz', .8)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), .75);
+  a.run("processarComandoGesto('tres')");
+  assert.equal(a.run('direcoes.at(-1)[1]'), 0, 'Três dedos não comandam mais giro');
+  // O conversor precisa usar os offsets do zoom, não o centro do recorte.
+  a.run("classificarGestoMao=()=>({id:'paz', label:'V', mira:[25,25]}); var pontos=Array.from({length:21},(_,i)=>[25,i]);");
+  a.run("converterPredsMao([{landmarks:pontos}],100,100,.25,0,.5);converterPredsMao([{landmarks:pontos}],100,100,.25,0,.5)");
+  assert.equal(a.run('direcoes.at(-1)[1]'), 0, 'Zoom: .25 + .25*.5 = .375, não aciona lado desde o centro');
+  const result = a.run("converterPredsMao([{landmarks:pontos}],100,100,.25,0,.5)");
+  assert.equal(result[0].maoX, .375);
+  assert.equal(result[0].cx, .375);
+  console.log('OK: V por posição, centro, histerese, zoom, coordenadas inválidas, 700 ms, trava e três dedos neutro.');
+}

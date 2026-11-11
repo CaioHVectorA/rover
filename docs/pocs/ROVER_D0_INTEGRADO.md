@@ -85,3 +85,30 @@ a cada 100 ms e param ao fim do intervalo ou ao cancelar o teste.
   do usuario; dados de envio do ESP nao comprovam recepcao no Nano.
 - A leitura anterior de 4,1 V no pino 5V do Nano permanece no historico;
   nao houve confirmacao explicita de correcao da alimentacao nesta sessao.
+
+## Atualização local do painel — 10/11/2026
+
+Visual sem emojis, paleta preservada e temperatura interna do chip ESP sobre o
+vídeo, atualizada pela API de estatísticas. Sem conexão, indica `ESP -- °C`.
+Gestos: mão aberta = frente; mão fechada = ré; V à esquerda/direita do vídeo = giros; V no centro = parar; três dedos sem movimento; apontar ou
+polegar = parar/rearmar. Perder a mão por 700 ms interrompe o movimento; teto contínuo
+permanece 4,5 s, com rearme por gesto de parada. Botão PARADA IMEDIATA mantido.
+Compilação e testes locais aprovados. Upload desta atualização concluído na COM29 em 10/11/2026, com flash verificada.
+
+## Preparar modelos (nova versão local)
+
+1. Na primeira preparação, use internet no dispositivo que abrirá o painel.
+2. Abra o vídeo, enquadre rosto e mão, expanda Visão Computacional e clique em
+   **PREPARAR MODELOS**. O botão seleciona Leve e desliga comandos gestuais.
+3. Espere o estado PRONTO. Se pedir rosto/mão ou vídeo, corrija enquadramento e
+   repita. Ative Rosto + Gestos para ensaiar; habilite comandos somente depois.
+
+Bibliotecas e arquivos dos modelos são guardados em IndexedDB. Testado com os
+modelos reais carregando após recarga sem rede externa. Use o mesmo navegador,
+dispositivo e endereço do painel; apagar dados ou mudar IP/hostname perde acesso
+a esse cache. Mantenha a aba aberta para preservar também os modelos inicializados.
+Cache reduz downloads; não elimina o custo de inferência nem garante FPS.
+Nenhum download manual é necessário no fluxo implementado. Sem armazenamento
+local disponível, a carga depende de internet.
+
+Atualização gravada no ESP pela COM29 em 10/11/2026, com hash da flash verificado. Nano preservado. Último endereço conhecido: http://192.168.137.233/; o acesso HTTP após este upload não foi confirmado pelo PC.

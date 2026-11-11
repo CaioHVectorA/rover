@@ -338,6 +338,37 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     display: none !important;
   }
 }
+/* Refinamento visual preservando os breakpoints do cockpit. */
+header .title { letter-spacing: 1.6px; }
+header, .ctrl-card, .video-card { border-radius: 5px; }
+.ctrl-card { min-width: 0; }
+button, select, input { font: inherit; }
+button { transition: background-color .12s, border-color .12s; }
+button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.status-pill, output, .esp-temperature { font-variant-numeric: tabular-nums; }
+.esp-temperature {
+  position: absolute; top: 8px; left: 8px; z-index: 10; pointer-events: none;
+  background: rgba(9,12,18,.88); border: 1px solid var(--border);
+  border-radius: 3px; padding: 5px 7px; color: var(--text);
+  font: 600 10px ui-monospace, Consolas, monospace; letter-spacing: .3px;
+}
+.cam-btn-overlay { left: 90px; }
+select { min-width: 0; max-width: 100%; }
+#cardCv > div, #cardCv > div > div { min-width: 0; max-width: 100%; }
+#cardCv > div > div { flex-wrap: wrap; }
+#rowGestoCfg > div:first-child { flex-wrap: wrap; gap: 4px; }
+#lblGestoAtivo { overflow-wrap: anywhere; }
+.slider-item input[type=range] { min-width: 0; width: 0; }
+@media (prefers-reduced-motion: reduce) { button { transition: none; } }
+@media (orientation: landscape) and (max-width: 760px) {
+  .app-container { grid-template-rows: 58px minmax(0, 1fr) 34px !important; grid-template-columns: minmax(116px, 22vw) minmax(0, 1fr) minmax(116px, 22vw) !important; }
+  header { height: 58px !important; flex-direction: column; justify-content: center !important; gap: 4px; }
+  header > div { flex-shrink: 0; }
+  header .btn-mode, header .status-pill { white-space: nowrap; }
+  .diag-card { top: 64px !important; }
+}
 </style>
 </head>
 <body>
@@ -345,69 +376,78 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 <div class="app-container">
   <header>
     <div style="display:flex;align-items:center;gap:6px">
-      <div class="title">🚀 ROVER</div>
+      <div class="title"> ROVER</div>
       <div class="header-mode-switch" style="display:none;gap:3px">
-        <button id="btnHdrDpad" class="btn-mode active" style="padding:2px 6px;font-size:10px" onclick="setModo('dpad')">🔲 D-Pad</button>
-        <button id="btnHdrJoy" class="btn-mode" style="padding:2px 6px;font-size:10px" onclick="setModo('joy')">🕹️ Joy</button>
+        <button id="btnHdrDpad" class="btn-mode active" style="padding:2px 6px;font-size:10px" onclick="setModo('dpad')"> D-Pad</button>
+        <button id="btnHdrJoy" class="btn-mode" style="padding:2px 6px;font-size:10px" onclick="setModo('joy')"> Joy</button>
       </div>
     </div>
     <div style="display:flex;gap:5px;align-items:center">
-      <button class="btn-cfg" id="btnHdrDiag" onclick="toggleDiag()" title="Diagnóstico de Bancada" style="display:none">🔧</button>
+      <button class="btn-cfg" id="btnHdrDiag" onclick="toggleDiag()" title="Diagnóstico de Bancada" style="display:none">Diag</button>
       <span class="status-pill" id="stNano">NANO</span>
       <span id="stBat" style="font-weight:700;color:var(--green)">-- V</span>
       <span class="status-pill" id="stWs">WS</span>
-      <button class="btn-cfg" onclick="toggleModal(true)">⚙️ Config</button>
+      <button class="btn-cfg" onclick="toggleModal(true)"> Config</button>
     </div>
   </header>
 
   <!-- Janela de Vídeo -->
   <div class="video-card" id="vidCard" onclick="amostrarCorNoVideo(event)">
     <div class="cam-btn-overlay" onclick="event.stopPropagation()">
-      <button class="btn-mini" id="btnCvQuick" onclick="toggleCardCv()" title="Visão Computacional & Seguir Rosto">🎯 Visão IA</button>
-      <button class="btn-mini" id="btnCamPresetQuick" onclick="ciclarPresetCam()" title="Qualidade da Câmera">❄️ Frio</button>
+      <button class="btn-mini" id="btnCvQuick" onclick="toggleCardCv()" title="Visão Computacional & Seguir Rosto"> Visão IA</button>
+      <button class="btn-mini" id="btnCamPresetQuick" onclick="ciclarPresetCam()" title="Qualidade da Câmera"> Frio</button>
       <button class="btn-mini" onclick="girarRotacao()">↻ Girar</button>
       <button class="btn-mini" onclick="recarregarVideo()">▶ Vídeo</button>
     </div>
     <img id="vid" crossorigin="anonymous" src="" alt="Vídeo ao vivo">
     <canvas id="hudCv"></canvas>
+    <span class="esp-temperature" id="stTemp" title="Temperatura interna do chip ESP32; não é a temperatura da câmera">ESP -- °C</span>
     <div class="cv-hud-bar" id="cvHudBar" onclick="event.stopPropagation()">
       <span class="cv-badge" id="cvHudTxt">IA: OFF</span>
-      <button class="btn-track-hud" id="btnTrackHud" onclick="toggleAutoTrack()">🎯 SEGUIR: OFF</button>
+      <button class="btn-track-hud" id="btnTrackHud" onclick="toggleAutoTrack()"> SEGUIR: OFF</button>
     </div>
   </div>
 
   <!-- Painel de Visão Computacional & Auto-Tracking (retrátil) -->
   <details class="ctrl-card diag-card" id="cardCv" style="width:100%;padding:6px 10px;">
     <summary style="display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;list-style:none;">
-      <span class="ctrl-title">🎯 Visão Computacional & Seguir Rosto/Mão/Objeto ▾</span>
+      <span class="ctrl-title"> Visão Computacional & Seguir Rosto/Mão/Objeto ▾</span>
       <span id="stCvPill" class="status-pill">IA OFF</span>
     </summary>
     <div style="width:100%;margin-top:6px;display:flex;flex-direction:column;gap:6px;">
-      <div style="display:flex;gap:4px;width:100%;">
-        <button id="btnCvFace" class="btn-preset" style="flex:1" onclick="setCvModo('face')">😊 Rosto</button>
-        <button id="btnCvGesto" class="btn-preset" style="flex:1" onclick="setCvModo('gesto')">✋ Gestos</button>
-        <button id="btnCvObj" class="btn-preset" style="flex:1" onclick="setCvModo('obj')">📦 Objetos</button>
-        <button id="btnCvCor" class="btn-preset" style="flex:1" onclick="setCvModo('cor')" title="Funciona offline sem internet (ou toque no vídeo para escolher a cor)">🎨 Cor</button>
-        <button id="btnCvOff" class="btn-preset" style="flex:0.65" onclick="setCvModo('off')">🛑 Off</button>
+      <div style="display:flex;gap:4px;width:100%;flex-wrap:wrap;">
+        <button id="btnCvApres" class="btn-preset" style="flex:1.4;font-weight:700" onclick="setCvModo('apresentador')"> Rosto + Gestos</button>
+        <button id="btnCvFace" class="btn-preset" style="flex:1" onclick="setCvModo('face')"> Rosto</button>
+        <button id="btnCvGesto" class="btn-preset" style="flex:1" onclick="setCvModo('gesto')"> Gestos</button>
+        <button id="btnCvObj" class="btn-preset" style="flex:0.9" onclick="setCvModo('obj')"> Obj</button>
+        <button id="btnCvCor" class="btn-preset" style="flex:0.8" onclick="setCvModo('cor')" title="Funciona offline sem internet (ou toque no vídeo para escolher a cor)"> Cor</button>
+        <button id="btnCvOff" class="btn-preset" style="flex:0.7" onclick="setCvModo('off')"> Off</button>
       </div>
       <div style="display:flex;gap:6px;width:100%;align-items:center;">
         <span style="font-size:10px;color:var(--sub);white-space:nowrap">Potência IA:</span>
         <select id="selCvPotencia" onchange="mudarPotenciaCv(this.value)" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:11px">
-          <option value="auto" selected>🤖 Auto (Modelos Full + Adapta p/ Notebook Fraco)</option>
-          <option value="ultra">🔥 Ultra (Full Range + MobileNetV2 + Zoom 2x)</option>
-          <option value="leve">⚡ Leve (Rápido p/ Notebook Fraco / Navegador Simples)</option>
+          <option value="auto" selected> Auto (Modelos Full + Adapta p/ Notebook Fraco)</option>
+          <option value="ultra"> Ultra (Full Range + MobileNetV2 + Zoom 2x)</option>
+          <option value="leve"> Leve (Rápido p/ Notebook Fraco / Navegador Simples)</option>
         </select>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:5px;width:100%">
+        <button id="btnPrepararIa" class="btn-preset" onclick="prepararModelos()">PREPARAR MODELOS</button>
+        <span id="stPreparoIa" role="status" style="font-size:10px;color:var(--sub);line-height:1.5">Carrega e guarda os modelos neste navegador.</span>
       </div>
       <div id="rowGestoCfg" style="display:none;flex-direction:column;gap:4px;width:100%;background:#101622;border:1px solid var(--border);border-radius:6px;padding:6px;">
         <div style="display:flex;justify-content:space-between;align-items:center;">
           <label style="font-size:11px;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:5px;cursor:pointer">
-            <input type="checkbox" id="chkGestoCmd" checked onchange="cvGestoCmd=this.checked"> ⚡ Comandar Robô por Gestos
+            <input type="checkbox" id="chkGestoCmd" checked onchange="cvGestoCmd=this.checked;if(!this.checked&&typeof pararMovimentoGesto==='function')pararMovimentoGesto('Gestos OFF');">  Comandar Robô por Gestos
           </label>
           <span id="lblGestoAtivo" style="font-size:10px;color:var(--green);font-weight:700">Mostre a mão...</span>
         </div>
-        <div style="font-size:9.5px;color:var(--sub);line-height:1.35">
-          <b>☝️ 1 Dedo:</b> Mira na ponta do dedo &nbsp;|&nbsp; <b>✋ Aberta / ✊ Punho:</b> Parar<br>
-          <b>👍 Joia:</b> Frente + LED ON &nbsp;|&nbsp; <b>👎 Baixo:</b> Ré + LED OFF &nbsp;|&nbsp; <b>✌️ Paz:</b> Centro + Piscar
+        <div style="font-size:9.5px;color:var(--sub);line-height:1.4">
+          <b>Mão aberta:</b> <span style="color:#4ade80;font-weight:700">FRENTE</span> &nbsp;|&nbsp; <b>Mão fechada:</b> <span style="color:#f59e0b;font-weight:700">RÉ</span> &nbsp;|&nbsp; 
+          <b>V no vídeo:</b> <span style="color:#38bdf8;font-weight:700">ESQUERDA / CENTRO PARA / DIREITA</span><br>
+          <b>Apontar / polegar:</b> <span style="color:#ef4444;font-weight:700">PARAR / REARMAR</span> &nbsp;|&nbsp; 
+          
+          <span style="color:#94a3b8"> Perda da mão: 700 ms | Limite contínuo: 4,5 s</span>
         </div>
       </div>
       <div id="rowObjFiltro" style="display:none;gap:6px;width:100%;align-items:center;">
@@ -423,23 +463,31 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
       <div id="rowCorFiltro" style="display:none;gap:6px;width:100%;align-items:center;">
         <span style="font-size:10px;color:var(--sub);white-space:nowrap">Cor Alvo:</span>
         <select id="selCorFiltro" onchange="cvCorAlvo=this.value;atualizarSwatchCor()" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:11px">
-          <option value="vermelho">🔴 Vermelho / Laranja</option>
-          <option value="verde">🟢 Verde</option>
-          <option value="azul">🔵 Azul</option>
-          <option value="amarelo">🟡 Amarelo</option>
-          <option value="custom">👆 Cor Tocada no Vídeo</option>
+          <option value="vermelho"> Vermelho / Laranja</option>
+          <option value="verde"> Verde</option>
+          <option value="azul"> Azul</option>
+          <option value="amarelo"> Amarelo</option>
+          <option value="custom"> Cor Tocada no Vídeo</option>
         </select>
         <span id="corSwatch" title="Dica: toque em qualquer objeto no vídeo para capturar a cor dele!" style="width:18px;height:18px;border-radius:4px;border:1px solid #fff;background:#ef4444;display:inline-block;flex-shrink:0"></span>
       </div>
       <div style="display:flex;gap:6px;width:100%;align-items:center;">
-        <button id="btnAutoTrack" class="btn-preset" style="flex:1.4;padding:7px 6px;font-weight:700;font-size:11px;border-color:#334155" onclick="toggleAutoTrack()">🎯 SEGUIR COM PAN/TILT: OFF</button>
+        <button id="btnAutoTrack" class="btn-preset" style="flex:1.4;padding:7px 6px;font-weight:700;font-size:11px;border-color:#334155" onclick="toggleAutoTrack()"> SEGUIR COM PAN/TILT: OFF</button>
         <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="chkCvInvPan" onchange="syncInvPan(this.checked)"> Inv.Pan</label>
         <label style="font-size:10px;color:var(--sub);display:flex;align-items:center;gap:3px;cursor:pointer"><input type="checkbox" id="chkCvInvTilt" onchange="syncInvTilt(this.checked)"> Inv.Tilt</label>
       </div>
-      <div class="slider-item">
-        <label style="width:65px">Ganho Track</label>
-        <input type="range" id="rngCvGanho" min="2" max="45" step="1" value="20" oninput="cvGanho=parseInt(this.value); outCvGanho.value=this.value+'°'">
-        <output id="outCvGanho">20°</output>
+      <div class="slider-item" style="gap:5px">
+        <label style="width:52px">Ganho</label>
+        <label title="Ajusta o ganho sozinho: baixo perto do centro (sem tremer) e alto quando longe!" style="font-size:10px;color:var(--accent);font-weight:700;display:flex;align-items:center;gap:3px;cursor:pointer;white-space:nowrap">
+          <input type="checkbox" id="chkGanhoAuto" checked onchange="cvGanhoAuto=this.checked; atualizarLabelGanho(cvGanho)">  Auto
+        </label>
+        <input type="range" id="rngCvGanho" min="4" max="40" step="1" value="22" oninput="cvGanho=parseInt(this.value); atualizarLabelGanho(this.value)">
+        <output id="outCvGanho" style="min-width:60px;text-align:right">Auto 22°</output>
+      </div>
+      <div class="slider-item" id="rowCvCoef" style="gap:5px">
+        <label style="width:78px;font-size:10px" title="Coeficiente de variação: quanto maior, mais calmo fica perto do centro para não tremer">Coef. Auto (α)</label>
+        <input type="range" id="rngCvCoef" min="0" max="95" step="5" value="70" oninput="cvCoefAuto=parseInt(this.value)/100; outCvCoef.value=this.value+'%'; atualizarLabelGanho(cvGanho)">
+        <output id="outCvCoef" style="min-width:38px;text-align:right">70%</output>
       </div>
     </div>
   </details>
@@ -447,7 +495,7 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   <!-- Barra de Diagnóstico de Bancada (retrátil) -->
   <details class="ctrl-card diag-card" id="cardDiag" style="width:100%;padding:6px 10px;">
     <summary style="display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;list-style:none;">
-      <span class="ctrl-title">🔧 Diagnóstico Bancada & LED (D13) ▾</span>
+      <span class="ctrl-title"> Diagnóstico Bancada & LED (D13) ▾</span>
       <span id="stLed" class="status-pill">LED OFF</span>
     </summary>
     <div style="width:100%;margin-top:6px;display:flex;flex-direction:column;gap:6px;">
@@ -472,8 +520,8 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 
   <!-- Alternador de Modo de Pilotagem -->
   <div class="mode-switch">
-    <button id="btnModoDpad" class="btn-mode active" onclick="setModo('dpad')">🔲 Modo Botões D-Pad</button>
-    <button id="btnModoJoy" class="btn-mode" onclick="setModo('joy')">🕹️ Modo Joysticks Virtuais</button>
+    <button id="btnModoDpad" class="btn-mode active" onclick="setModo('dpad')"> Modo Botões D-Pad</button>
+    <button id="btnModoJoy" class="btn-mode" onclick="setModo('joy')"> Modo Joysticks Virtuais</button>
   </div>
 
   <!-- MODO 1: D-PAD TÁTIL -->
@@ -571,12 +619,12 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
 <div class="modal-overlay" id="modalCfg" onclick="if(event.target===this) toggleModal(false)">
   <div class="modal-box">
     <div class="modal-header">
-      <h3>⚙️ Configurações do Rover</h3>
-      <button class="modal-close" onclick="toggleModal(false)">✕</button>
+      <h3> Configurações do Rover</h3>
+      <button class="modal-close" onclick="toggleModal(false)" aria-label="Fechar configurações">Fechar</button>
     </div>
 
     <!-- Seção de Vídeo -->
-    <div class="cfg-sec">📹 Qualidade de Vídeo (OV5640)</div>
+    <div class="cfg-sec"> Qualidade de Vídeo (OV5640)</div>
     <div class="slider-item">
       <label style="width:70px">Resolução</label>
       <select id="selPresetCam" onchange="mudarPresetCam(this.value)" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:5px;border-radius:4px;font-size:11px">
@@ -588,14 +636,14 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     </div>
 
     <!-- Seção de Inversão de Eixos -->
-    <div class="cfg-sec">🔄 Inversão de Eixos dos Servos</div>
+    <div class="cfg-sec"> Inversão de Eixos dos Servos</div>
     <div class="chk-row">
       <label><input type="checkbox" id="chkInvPan" onchange="syncInvPan(this.checked)"> Inverter Pan (Horizontal)</label>
       <label><input type="checkbox" id="chkInvTilt" onchange="syncInvTilt(this.checked)"> Inverter Tilt (Vertical)</label>
     </div>
 
     <!-- Seção de Velocidade e Fluidez dos Servos -->
-    <div class="cfg-sec">⚡ Velocidade e Movimento dos Servos</div>
+    <div class="cfg-sec"> Velocidade e Movimento dos Servos</div>
     <div class="slider-item">
       <label style="width:75px">Velocidade</label>
       <input type="range" id="rngVel" min="60" max="600" step="20" value="420" oninput="aplicarVel(this.value)">
@@ -695,9 +743,9 @@ async function ciclarPresetCam() {
 function atualizarBtnPresetQuick(n) {
   const b = document.getElementById('btnCamPresetQuick');
   if (b) {
-    if (n === 'frio') b.textContent = '❄️ Frio';
-    else if (n === 'equilibrado') b.textContent = '⚖️ VGA';
-    else if (n === 'qualidade') b.textContent = '✨ SVGA';
+    if (n === 'frio') b.textContent = ' Frio';
+    else if (n === 'equilibrado') b.textContent = ' VGA';
+    else if (n === 'qualidade') b.textContent = ' SVGA';
     else b.textContent = 'HD';
   }
 }
@@ -803,6 +851,7 @@ function drive(fwd, turn) {
 
 function parada() {
   cancelarTesteMotor();
+  if (typeof pararMovimentoGesto === 'function') pararMovimentoGesto(' Parada de Emergência');
   if (typeof autoTrack !== 'undefined' && autoTrack) {
     autoTrack = false;
     atualizarUiAutoTrack();
@@ -872,7 +921,7 @@ function setTiltDirect(v) {
 function centroPT() { stopPT(); pan = 90; tilt = 90; enviarPT(); }
 
 // ---------------- Visão Computacional & Auto-Tracking (No Navegador) ----------------
-let cvModo = 'off';           // 'off' | 'face' | 'gesto' | 'obj' | 'cor'
+let cvModo = 'off';           // 'off' | 'face' | 'gesto' | 'obj' | 'cor' | 'apresentador'
 let cvPotencia = 'auto';      // 'auto' | 'ultra' | 'leve'
 let cvAutoRebaixado = false;  // true se o modo 'auto' detectou notebook fraco e ativou perfil Leve
 let cvLentoCont = 0;          // Contador de quadros lentos consecutivos
@@ -884,14 +933,39 @@ let cvGestoCmd = true;        // Executar comandos no robô ao manter um gesto f
 let gestoAnt = '';
 let gestoCont = 0;
 let ultGestoCmdMs = 0;
+let gestoZonaV = 0;          // -1 esquerda, 0 centro, +1 direita; histerese em coordenadas do vídeo
+let gestoAtivo = null;          // Gesto de movimento ativo no momento ('aberta' | 'punho' | 'v_esq' | 'v_dir')
+let gestoAtivoInicioMs = 0;     // Timestamp de início da movimentação contínua
+let ultGestoValidoMs = 0;       // Timestamp da última leitura válida do gesto (watchdog)
+let gestoWatchdogTimer = null;  // Timer de segurança para perda de mão
+let gestoPausaSeguranca = false;// Trava de proteção de teto máximo contínuo (anti-runaway)
+const GESTO_TIMEOUT_MS = 700;   // Timeout sem detecção para parar o robô (fail-safe 1)
+const GESTO_TETO_MAX_MS = 4500; // Duração máxima contínua sem pausa (fail-safe 2)
+let ultFaceAlvo = null, ultMaoAlvo = null;
+let ultFaceDetectadaMs = 0;
 let autoTrack = false;        // Seguir alvo com Pan/Tilt
-let cvGanho = 20;             // Ganho máximo (graus por ciclo na borda; reduz progressivamente perto do centro)
-const cvDeadzone = 0.075;     // 7.5% de zona morta central de parada (com histerese até 12.5%)
+
+function pararMovimentoGesto(motivo) {
+  if (gestoWatchdogTimer) { clearTimeout(gestoWatchdogTimer); gestoWatchdogTimer = null; }
+  cancelarTesteMotor();
+  drive(0, 0);
+  tx('<M,0,0>');
+  gestoAtivo = null;
+  gestoZonaV = 0;
+  gestoAtivoInicioMs = 0;
+  const lbl = document.getElementById('lblGestoAtivo');
+  if (lbl && motivo) lbl.textContent = motivo;
+}
+let cvGanho = 22;             // Ganho máximo (teto do slider)
+let cvGanhoAuto = true;       // Controlar ganho automaticamente conforme o erro
+let cvCoefAuto = 0.70;        // Coeficiente de variação do ganho (0 = fixo, 0.95 = máxima atenuação no centro)
+const cvDeadzone = 0.07;      // 7% de zona morta central de parada (com histerese até 11.5%)
 let trackTravadoX = false, trackTravadoY = false;
 let ultSinalX = 0, ultSinalY = 0;
 let faceModel = null, faceModelUltra = null, faceModelLeve = null;
 let handModel = null, handModelUltra = null, handModelLeve = null;
 let objModel = null, objModelUltra = null, objModelLeve = null;
+let cvPreparando = false;
 let cvCarregando = false;
 let cvRodando = false;        // Trava estrita contra loops paralelos
 let cvEpoch = 0;              // Token de geração para cancelar awaits antigos
@@ -948,18 +1022,129 @@ async function mudarPotenciaCv(val) {
   }
 }
 
-function carregarScriptCDN(url) {
+// Cache persistente de arquivos públicos da IA; funciona também no HTTP do ESP.
+// Não intercepta comandos, vídeo ou API do robô. Falha de armazenamento usa rede.
+let cacheIaDb = null;
+const fetchIaOriginal = window.fetch ? window.fetch.bind(window) : null;
+function abrirCacheIa() {
+  if (!cacheIaDb) cacheIaDb = new Promise((resolve, reject) => {
+    if (!window.indexedDB) { resolve(null); return; }
+    const req = window.indexedDB.open('rover-ia-assets-v1', 1);
+    req.onupgradeneeded = () => req.result.createObjectStore('assets');
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+    req.onblocked = () => reject(new Error('Cache indisponível'));
+  }).catch(() => null);
+  return cacheIaDb;
+}
+async function cacheIaOperacao(modo, chave, valor) {
+  const db = await abrirCacheIa();
+  if (!db) return null;
   return new Promise((resolve, reject) => {
-    const ex = document.querySelector ? document.querySelector(`script[src="${url}"]`) : null;
+    const tr = db.transaction('assets', modo);
+    const store = tr.objectStore('assets');
+    const req = modo === 'readonly' ? store.get(chave) : store.put(valor, chave);
+    let resultado;
+    req.onsuccess = () => { resultado = req.result; };
+    tr.oncomplete = () => resolve(resultado);
+    tr.onerror = tr.onabort = () => reject(tr.error || new Error('Falha no cache'));
+  });
+}
+async function fetchComCacheIa(input, init) {
+  const endereco = typeof input === 'string' ? input : (input && input.url);
+  const metodo = (init && init.method) || (input && input.method) || 'GET';
+  let u;
+  try { u = new URL(endereco); } catch (_) { return fetchIaOriginal(input, init); }
+  const permitido = ['cdn.jsdelivr.net', 'storage.googleapis.com', 'tfhub.dev', 'www.kaggle.com'].includes(u.hostname);
+  if (u.protocol !== 'https:' || !permitido || metodo.toUpperCase() !== 'GET') return fetchIaOriginal(input, init);
+  try {
+    const registro = await cacheIaOperacao('readonly', u.href);
+    if (registro) {
+      const resposta = new Response(registro.body, {status:200, headers:registro.headers});
+      Object.defineProperty(resposta, 'url', {value:registro.url || u.href});
+      return resposta;
+    }
+  } catch (_) {}
+  const resposta = await fetchIaOriginal(input, init);
+  if (resposta.ok) {
+    try {
+      const copia = resposta.clone();
+      await cacheIaOperacao('readwrite', u.href, {body:await copia.blob(), headers:Array.from(copia.headers.entries()), url:copia.url});
+    } catch (_) {} // Quota/modo privado não impede o uso online.
+  }
+  return resposta;
+}
+if (fetchIaOriginal) window.fetch = fetchComCacheIa;
+
+function carregarScriptCDN(url) {
+  return new Promise(async (resolve, reject) => {
+    const ex = document.querySelector ? document.querySelector(`script[data-rover-src="${url}"]`) : null;
     if (ex && ex.dataset && ex.dataset.ok === '1') { resolve(); return; }
     if (ex && ex.remove) ex.remove();
     const s = document.createElement('script');
-    s.src = url;
-    s.async = true;
-    s.onload = () => { if (s.dataset) s.dataset.ok = '1'; resolve(); };
-    s.onerror = () => { if (s.remove) s.remove(); reject(new Error('Falha CDN')); };
-    document.head.appendChild(s);
+    s.dataset.roverSrc = url;
+    let blobUrl;
+    try {
+      const resposta = await fetchComCacheIa(url);
+      if (!resposta.ok) throw new Error('Falha ao carregar biblioteca IA');
+      blobUrl = URL.createObjectURL(new Blob([await resposta.text()], {type:'text/javascript'}));
+      s.src = blobUrl;
+      s.async = true;
+      s.onload = () => { URL.revokeObjectURL(blobUrl); s.dataset.ok = '1'; resolve(); };
+      s.onerror = () => { URL.revokeObjectURL(blobUrl); s.remove(); reject(new Error('Falha biblioteca IA')); };
+      document.head.appendChild(s);
+    } catch (e) { if (blobUrl) URL.revokeObjectURL(blobUrl); s.remove(); reject(e); }
   });
+}
+
+async function prepararModelos() {
+  if (cvPreparando) return;
+  if (cvCarregando) { document.getElementById('stPreparoIa').textContent = 'Aguarde o carregamento atual antes de preparar.'; return; }
+  setCvModo('off');
+  cvPreparando = true;
+  cvGestoCmd = false;
+  document.getElementById('chkGestoCmd').checked = false;
+  cvPotencia = 'leve'; cvAutoRebaixado = false;
+  document.getElementById('selCvPotencia').value = 'leve';
+  const txt = document.getElementById('stPreparoIa');
+  const controles = Array.from(document.querySelectorAll('#cardCv button, #cardCv select, #cardCv input'));
+  const anteriores = controles.map(el => el.disabled);
+  controles.forEach(el => { el.disabled = true; });
+  try {
+    txt.textContent = 'Carregando modelos de rosto e mão. Comandos desligados.';
+    await garantirModeloFace(true, txt);
+    await garantirModeloMao(true, txt);
+    // Aguarda uma inferência anterior terminar antes de reutilizar o canvas.
+    while (cvRodando) await new Promise(resolve => setTimeout(resolve, 50));
+    const img = document.getElementById('vid');
+    if (!img.complete || !img.naturalWidth || !img.naturalHeight || !pCtx) {
+      txt.textContent = 'Modelos carregados. Abra o vídeo e prepare novamente para aquecer.';
+      return;
+    }
+    const escala = Math.min(1, 224 / Math.max(img.naturalWidth, img.naturalHeight));
+    const sw = Math.max(1, Math.round(img.naturalWidth * escala));
+    const sh = Math.max(1, Math.round(img.naturalHeight * escala));
+    const trocado = rotAtual % 180 !== 0;
+    cvProc.width = trocado ? sh : sw; cvProc.height = trocado ? sw : sh;
+    let viuRosto = false, viuMao = false;
+    for (let i = 0; i < 3; i++) {
+      txt.textContent = 'Aquecendo IA. Mostre rosto e mão; comandos continuam desligados.';
+      await new Promise(resolve => setTimeout(resolve, 100));
+      pCtx.save(); pCtx.translate(cvProc.width / 2, cvProc.height / 2);
+      pCtx.rotate(rotAtual * Math.PI / 180); pCtx.drawImage(img, -sw/2, -sh/2, sw, sh); pCtx.restore();
+      const faces = await faceModelLeve.estimateFaces(cvProc, false);
+      const maos = await handModelLeve.estimateHands(cvProc);
+      viuRosto = viuRosto || faces.length > 0; viuMao = viuMao || maos.length > 0;
+    }
+    txt.textContent = viuRosto && viuMao
+      ? 'PRONTO. Modelos carregados e aquecidos.'
+      : 'Modelos carregados. Mostre rosto e mão para aquecer.';
+  } catch (_) {
+    txt.textContent = 'Falha ao carregar. Confira a internet e tente novamente.';
+  } finally {
+    cvPreparando = false;
+    controles.forEach((el, i) => { el.disabled = anteriores[i]; });
+  }
 }
 
 function atualizarSwatchCor() {
@@ -986,22 +1171,31 @@ function atualizarUiCv() {
   if (hud) hud.style.display = ativo ? 'block' : 'none';
   if (bar) bar.className = ativo ? 'cv-hud-bar active' : 'cv-hud-bar';
   if (btnQ) btnQ.className = ativo ? 'btn-mini active' : 'btn-mini';
-  if (rowG) rowG.style.display = (cvModo === 'gesto') ? 'flex' : 'none';
+  if (rowG) rowG.style.display = (cvModo === 'gesto' || cvModo === 'apresentador') ? 'flex' : 'none';
   if (rowF) rowF.style.display = (cvModo === 'obj') ? 'flex' : 'none';
   if (rowC) rowC.style.display = (cvModo === 'cor') ? 'flex' : 'none';
   atualizarSwatchCor();
 
-  for (const [id, m] of [['btnCvFace','face'],['btnCvGesto','gesto'],['btnCvObj','obj'],['btnCvCor','cor'],['btnCvOff','off']]) {
+  for (const [id, m] of [
+    ['btnCvApres', 'apresentador'],
+    ['btnCvFace', 'face'],
+    ['btnCvGesto', 'gesto'],
+    ['btnCvObj', 'obj'],
+    ['btnCvCor', 'cor'],
+    ['btnCvOff', 'off']
+  ]) {
     const el = document.getElementById(id);
     if (el) {
       el.style.borderColor = (cvModo === m && m !== 'off') ? 'var(--accent)' : 'var(--border)';
       el.style.color = (cvModo === m && m !== 'off') ? 'var(--accent)' : 'var(--text)';
+      if (id === 'btnCvApres') el.style.background = (cvModo === m) ? '#1e3a5f' : '';
     }
   }
   if (pill) {
     const sufixo = usarPerfilLeve() ? ' LEVE' : ' ULTRA';
     pill.className = 'status-pill ' + (ativo ? 'ok' : '');
-    pill.textContent = ativo ? ('IA: ' + cvModo.toUpperCase() + (cvModo === 'cor' ? '' : sufixo)) : 'IA OFF';
+    const nomePill = (cvModo === 'apresentador') ? 'ROSTO+GESTOS' : cvModo.toUpperCase();
+    pill.textContent = ativo ? ('IA: ' + nomePill + (cvModo === 'cor' ? '' : sufixo)) : 'IA OFF';
   }
   atualizarUiAutoTrack();
 }
@@ -1010,13 +1204,13 @@ function atualizarUiAutoTrack() {
   const b1 = document.getElementById('btnAutoTrack');
   const b2 = document.getElementById('btnTrackHud');
   if (b1) {
-    b1.textContent = autoTrack ? '🎯 SEGUINDO ALVO (Pan/Tilt): ON' : '🎯 SEGUIR COM PAN/TILT: OFF';
+    b1.textContent = autoTrack ? ' SEGUINDO ALVO (Pan/Tilt): ON' : ' SEGUIR COM PAN/TILT: OFF';
     b1.style.background = autoTrack ? '#14532d' : '#1c2638';
     b1.style.borderColor = autoTrack ? 'var(--green)' : '#334155';
     b1.style.color = autoTrack ? '#86efac' : 'var(--text)';
   }
   if (b2) {
-    b2.textContent = autoTrack ? '🎯 SEGUINDO: ON' : '🎯 SEGUIR: OFF';
+    b2.textContent = autoTrack ? ' SEGUINDO: ON' : ' SEGUIR: OFF';
     b2.className = autoTrack ? 'btn-track-hud on' : 'btn-track-hud';
   }
 }
@@ -1040,7 +1234,7 @@ async function garantirModeloFace(leve, txt) {
   otimizarBackendTf(leve);
   // Sempre garante o BlazeFace carregado (usado tanto no modo Leve quanto como suporte rápido no Ultra)
   if (!faceModelLeve) {
-    if (txt) txt.textContent = '⏳ Baixando IA Rosto (BlazeFace)...';
+    if (txt) txt.textContent = 'Baixando IA Rosto (BlazeFace)...';
     if (!window.blazeface) {
       try {
         await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/blazeface@0.0.7/dist/blazeface.min.js');
@@ -1052,7 +1246,7 @@ async function garantirModeloFace(leve, txt) {
   }
   if (!leve && !faceModelUltra) {
     try {
-      if (txt) txt.textContent = '⏳ Baixando IA Rosto Ultra (MediaPipe Full-Range 5m)...';
+      if (txt) txt.textContent = 'Baixando IA Rosto Ultra (MediaPipe Full-Range 5m)...';
       if (!window.faceDetection) {
         await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/face-detection@1.0.3/dist/face-detection.min.js');
       }
@@ -1072,7 +1266,7 @@ async function garantirModeloMao(leve, txt) {
   otimizarBackendTf(leve);
   if (!leve && !handModelUltra) {
     try {
-      if (txt) txt.textContent = '⏳ Baixando IA Gestos Ultra (MediaPipe Hands Full 2 Mãos)...';
+      if (txt) txt.textContent = 'Baixando IA Gestos Ultra (MediaPipe Hands Full 2 Mãos)...';
       if (!window.handPoseDetection) {
         await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection@2.0.1/dist/hand-pose-detection.min.js');
       }
@@ -1083,7 +1277,7 @@ async function garantirModeloMao(leve, txt) {
     } catch (_) {}
   }
   if ((leve || !handModelUltra) && !handModelLeve) {
-    if (txt) txt.textContent = '⏳ Baixando IA Gestos Leve (HandPose 21pts)...';
+    if (txt) txt.textContent = 'Baixando IA Gestos Leve (HandPose 21pts)...';
     if (!window.handpose) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/handpose@0.0.7/dist/handpose.min.js');
     handModelLeve = await window.handpose.load({ detectionConfidence: 0.60 });
   }
@@ -1096,18 +1290,19 @@ async function garantirModeloObj(leve, txt) {
   if (!window.cocoSsd) await carregarScriptCDN('https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js');
   if (!leve && !objModelUltra) {
     try {
-      if (txt) txt.textContent = '⏳ Baixando IA Objetos Ultra (COCO-SSD MobileNetV2 Full)...';
+      if (txt) txt.textContent = 'Baixando IA Objetos Ultra (COCO-SSD MobileNetV2 Full)...';
       objModelUltra = await window.cocoSsd.load({ base: 'mobilenet_v2' });
     } catch (_) {}
   }
   if ((leve || !objModelUltra) && !objModelLeve) {
-    if (txt) txt.textContent = '⏳ Baixando IA Objetos Leve (COCO-SSD Lite)...';
+    if (txt) txt.textContent = 'Baixando IA Objetos Leve (COCO-SSD Lite)...';
     objModelLeve = await window.cocoSsd.load({ base: 'lite_mobilenet_v2' });
   }
   objModel = (!leve && objModelUltra) ? objModelUltra : (objModelLeve || objModelUltra);
 }
 
 async function setCvModo(m) {
+  if (cvPreparando) return;
   const myEpoch = ++cvEpoch;
   if (cvTimer) { clearTimeout(cvTimer); cvTimer = null; }
   cvModo = m;
@@ -1115,6 +1310,8 @@ async function setCvModo(m) {
   cvLentoCont = 0;
   cvQuadroIdx = 0;
   gestoAnt = ''; gestoCont = 0;
+  ultFaceAlvo = null; ultMaoAlvo = null; ultFaceDetectadaMs = 0;
+  pararMovimentoGesto();
   if (m === 'off') {
     autoTrack = false;
     cvCarregando = false;
@@ -1123,12 +1320,21 @@ async function setCvModo(m) {
     atualizarUiCv();
     return;
   }
+  if (m === 'apresentador') {
+    autoTrack = true;
+  }
   atualizarUiCv();
   const txt = document.getElementById('cvHudTxt');
   const leve = usarPerfilLeve();
   try {
     cvCarregando = true;
-    if (m === 'face') await garantirModeloFace(leve, txt);
+    if (m === 'apresentador') {
+      if (txt) txt.textContent = 'Baixando IA Rosto (Apresentador)...';
+      await garantirModeloFace(leve, txt);
+      if (myEpoch !== cvEpoch) return;
+      if (txt) txt.textContent = 'Baixando IA Gestos (Apresentador)...';
+      await garantirModeloMao(leve, txt);
+    } else if (m === 'face') await garantirModeloFace(leve, txt);
     else if (m === 'gesto') await garantirModeloMao(leve, txt);
     else if (m === 'obj') await garantirModeloObj(leve, txt);
     if (myEpoch !== cvEpoch) return;
@@ -1138,7 +1344,7 @@ async function setCvModo(m) {
   } catch (err) {
     if (myEpoch !== cvEpoch) return;
     cvCarregando = false;
-    if (txt) txt.textContent = '⚠️ Falha CDN IA -> Modo Cor Offline ativo';
+    if (txt) txt.textContent = ' Falha CDN IA -> Modo Cor Offline ativo';
     cvModo = 'cor';
     atualizarUiCv();
     loopVisao(myEpoch);
@@ -1158,68 +1364,169 @@ function classificarGestoMao(lm) {
   const pol = d(4, 17) > d(2, 17) * 1.14 && d(4, 5) > palma * 0.46;
   const n4 = (ind ? 1 : 0) + (med ? 1 : 0) + (ane ? 1 : 0) + (min ? 1 : 0);
 
-  // Detecta dedo indicador apontando mesmo que os outros dedos estejam apenas semi-dobrados
-  const indDestacado = ind && (d(0, 8) > Math.max(d(0, 12), d(0, 16), d(0, 20)) * 1.14);
+  // MÃO ABERTA (4 ou 5 dedos esticados) -> FRENTE
+  if (n4 >= 4 || (n4 >= 3 && min && pol)) {
+    return { id: 'aberta', label: 'ABERTA: FRENTE', mira: lm[9] };
+  }
 
-  if (n4 === 0 && !indDestacado) {
-    if (d(4, 6) > palma * 0.48 && d(4, 2) > palma * 0.40) {
-      if (lm[4][1] < lm[2][1] - palma * 0.16) return { id: 'joia', label: '👍 JOIA', mira: lm[4] };
-      if (lm[4][1] > lm[2][1] + palma * 0.16) return { id: 'baixo', label: '👎 BAIXO', mira: lm[4] };
+  // NENHUM DEDO ESTICADO -> Pode ser PUNHO, JÓIA (Polegar cima) ou BAIXO (Polegar baixo)
+  if (n4 === 0) {
+    if (d(4, 6) > palma * 0.46 && d(4, 2) > palma * 0.38) {
+      if (lm[4][1] < lm[2][1] - palma * 0.16) return { id: 'joia', label: 'POLEGAR: PARAR', mira: lm[4] };
+      if (lm[4][1] > lm[2][1] + palma * 0.16) return { id: 'baixo', label: 'POLEGAR: PARAR', mira: lm[4] };
     }
-    return { id: 'punho', label: '✊ PUNHO', mira: lm[9] };
+    return { id: 'punho', label: 'FECHADA: RÉ', mira: lm[9] };
   }
-  if ((ind && !med && !ane && !min) || (indDestacado && n4 <= 2 && !min)) {
-    return { id: 'apontar', label: '☝️ APONTAR', mira: lm[8] };
+
+  // PAZ / VITÓRIA: direção definida pela posição horizontal da palma no vídeo
+  if (ind && med && !ane && !min) {
+    return { id: 'paz', label: 'V: DIREÇÃO PELA POSIÇÃO', mira: lm[8] };
   }
-  if (ind && med && !ane && !min)  return { id: 'paz', label: '✌️ PAZ (2)', mira: lm[8] };
-  if (ind && !med && !ane && min)  return { id: 'rock', label: '🤟 ROCK', mira: lm[9] };
-  if (n4 === 3)                    return { id: 'tres', label: '👌 TRÊS (3)', mira: lm[8] };
-  if (n4 >= 4)                     return { id: 'aberta', label: '✋ ABERTA (5)', mira: lm[9] };
-  return { id: 'mao', label: `✋ MÃO (${n4 + (pol ? 1 : 0)})`, mira: ind ? lm[8] : lm[9] };
+
+  // TRÊS (apenas identificação, sem comando de tração; 3 dedos esticados: Indicador, Médio e Anelar esticados, Mínimo dobrado; OU Polegar + Indicador + Médio) -> GIRAR DIREITA
+  const ehTresClassico = (ind && med && ane && !min);
+  const ehTresEuropeu = (pol && ind && med && !ane && !min && d(4, 8) > palma * 0.35);
+  const ehTresOk = (!ind && med && ane && min);
+  if (ehTresClassico || ehTresEuropeu || ehTresOk || (n4 === 3 && !min)) {
+    return { id: 'tres', label: 'TRÊS: SEM COMANDO', mira: lm[8] };
+  }
+
+  // 1 DEDO APONTANDO
+  if ((ind && !med && !ane && !min) || (ind && d(0, 8) > Math.max(d(0, 12), d(0, 16), d(0, 20)) * 1.15)) {
+    return { id: 'apontar', label: ' APONTAR', mira: lm[8] };
+  }
+
+  // ROCK (Indicador e Mínimo esticados)
+  if (ind && !med && !ane && min) {
+    return { id: 'rock', label: ' ROCK', mira: lm[9] };
+  }
+
+  return { id: 'mao', label: ` MÃO (${n4 + (pol ? 1 : 0)})`, mira: ind ? lm[8] : lm[9] };
 }
 
-function processarComandoGesto(gId) {
+// A palma usa o quadro já desrotacionado; offsets mantêm a direção no zoom 2x.
+function direcaoGestoV(x) {
+  if (!Number.isFinite(x) || x < 0 || x > 1) gestoZonaV = 0;
+  else if (x < 0.35) gestoZonaV = -1;
+  else if (x > 0.65) gestoZonaV = 1;
+  else if (gestoZonaV < 0 && x >= 0.42) gestoZonaV = 0;
+  else if (gestoZonaV > 0 && x <= 0.58) gestoZonaV = 0;
+  return gestoZonaV < 0 ? 'v_esq' : gestoZonaV > 0 ? 'v_dir' : 'v_centro';
+}
+
+function processarComandoGesto(gId, maoX = null) {
+  if (gId === 'paz') gId = direcaoGestoV(maoX);
+  else gestoZonaV = 0;
   const lbl = document.getElementById('lblGestoAtivo');
+  const agora = performance.now();
+
+  // 1. Quadro sem nenhuma mão detectada
+  if (!gId) {
+    gestoAnt = ''; gestoCont = 0;
+    if (gestoAtivo && (agora - ultGestoValidoMs >= GESTO_TIMEOUT_MS)) {
+      pararMovimentoGesto(' Parado (Mão ausente/abaixada)');
+    } else if (!gestoAtivo && lbl && !gestoPausaSeguranca) {
+      lbl.textContent = 'Mostre a mão...';
+    }
+    return;
+  }
+
+  // Filtro de consistência (debounce): conta quadros consecutivos com o mesmo gesto
   if (gId === gestoAnt) gestoCont++;
-  else { gestoAnt = gId; gestoCont = 1; }
+  else {
+    gestoAnt = gId;
+    gestoCont = 1;
+  }
 
   if (!cvGestoCmd) {
-    if (lbl) lbl.textContent = 'Ações OFF';
+    if (lbl) lbl.textContent = 'Comandos por Gestos: OFF';
     return;
   }
-  if (gId === 'apontar') {
-    if (lbl) lbl.textContent = '☝️ Seguindo ponta do dedo';
-    return;
-  }
-  // Exige 3 quadros seguidos do mesmo gesto + cooldown de 1.2s para evitar disparos acidentais
-  if (gestoCont < 3) return;
-  const agora = performance.now();
-  if (agora - ultGestoCmdMs < 1200) return;
 
-  if (gId === 'aberta' || gId === 'punho') {
-    cancelarTesteMotor();
-    drive(0, 0);
-    ultGestoCmdMs = agora;
-    if (lbl) lbl.textContent = '🛑 Motores Parados';
-  } else if (gId === 'paz') {
-    centroPT();
-    setLed(2);
-    ultGestoCmdMs = agora;
-    if (lbl) lbl.textContent = '✌️ Centro + Pisca LED';
-  } else if (gId === 'joia') {
+  // O centro para imediatamente, mas não rearma a trava de 4,5 s.
+  if (gId === 'v_centro') {
+    pararMovimentoGesto(gestoPausaSeguranca ? 'Trava: aponte um dedo para rearmar' : 'V NO CENTRO: PARADO');
+    return;
+  }
+
+  // 2. PARADA DE EMERGÊNCIA (polegar para cima ou para baixo)
+  // Sem debounce! Responde instantaneamente no primeiro quadro!
+  if (gId === 'joia' || gId === 'baixo') {
+    gestoPausaSeguranca = false; // Rearma somente com gesto de parada explícito
+    pararMovimentoGesto('PARADO (Polegar)');
+    return;
+  }
+
+  // 3. Gestos informativos ou auxiliares (apontar 1 dedo, rock)
+  if (gId === 'apontar' || gId === 'rock') {
+    gestoPausaSeguranca = false;
+    if (gestoAtivo) pararMovimentoGesto(' Parado');
+    if (lbl) lbl.textContent = (gId === 'rock') ? ' Pisca LED' : ' 1 Dedo Detectado';
+    if (gId === 'rock' && gestoCont === 3) setLed(2);
+    return;
+  }
+
+  // Gestos não reconhecidos não renovam movimento.
+  if (!['aberta', 'punho', 'v_esq', 'v_dir'].includes(gId)) {
+    if (gestoAtivo) pararMovimentoGesto('Parado (Gesto indefinido)');
+    return;
+  }
+  // 4. GESTOS DE MOVIMENTO (Mão aberta, Punho, V à esquerda/direita)
+  // Exige 2 quadros consecutivos do mesmo gesto para evitar acionamentos acidentais durante transição da mão
+  if (gestoCont < 2) return;
+
+  // FAIL-SAFE 2: Trava de Teto Máximo Contínuo (Anti-Runaway / Anti-Queda)
+  if (gestoPausaSeguranca) {
+    if (lbl) lbl.textContent = ' Trava Seg: Aponte um dedo para rearmar!';
+    return;
+  }
+
+  // Se já estava em movimento com este mesmo gesto, verifica se excedeu o teto de 4.5s
+  if (gestoAtivo) {
+    const tempoAndando = agora - gestoAtivoInicioMs;
+    if (tempoAndando >= GESTO_TETO_MAX_MS) {
+      gestoPausaSeguranca = true;
+      pararMovimentoGesto(' PAUSA DE SEGURANÇA (Teto 4.5s) - Aponte um dedo');
+      return;
+    }
+  } else {
+    // Início de um novo movimento
+    gestoAtivoInicioMs = agora;
+  }
+  gestoAtivo = gId;
+
+  // Watchdog Heartbeat: reinicia o tempo enquanto mantiver o gesto ativo
+  ultGestoValidoMs = agora;
+
+  // Agenda watchdog local para parar se a mão sumir
+  if (gestoWatchdogTimer) clearTimeout(gestoWatchdogTimer);
+  gestoWatchdogTimer = setTimeout(() => {
+    const t = performance.now();
+    if (gestoAtivo && (t - ultGestoValidoMs >= GESTO_TIMEOUT_MS)) {
+      pararMovimentoGesto(' Parado (Timeout de Segurança)');
+    }
+  }, GESTO_TIMEOUT_MS);
+
+  const durSeg = ((agora - gestoAtivoInicioMs) / 1000).toFixed(1);
+
+  if (gId === 'aberta') {
+    // FRENTE CONTÍNUA
     setLed(1);
-    testeMotor(120, 120, 400);
-    ultGestoCmdMs = agora;
-    if (lbl) lbl.textContent = '👍 LED ON + Frente 0.4s';
-  } else if (gId === 'baixo') {
+    drive(0.85, 0);
+    if (lbl) lbl.textContent = ` FRENTE (${durSeg}s) | Watchdog ON`;
+  } else if (gId === 'punho') {
+    // RÉ CONTÍNUA
     setLed(0);
-    testeMotor(-120, -120, 400);
-    ultGestoCmdMs = agora;
-    if (lbl) lbl.textContent = '👎 LED OFF + Ré 0.4s';
-  } else if (gId === 'rock') {
-    setLed(2);
-    ultGestoCmdMs = agora;
-    if (lbl) lbl.textContent = '🤟 Pisca LED D13';
+    drive(-0.85, 0);
+    if (lbl) lbl.textContent = ` RÉ (${durSeg}s) | Watchdog ON`;
+  } else if (gId === 'v_esq') {
+    // VIRAR À ESQUERDA
+    drive(0, -0.75);
+    if (lbl) lbl.textContent = ` GIRAR ESQ (${durSeg}s) | Watchdog ON`;
+  } else if (gId === 'v_dir') {
+    // VIRAR À DIREITA
+    drive(0, 0.75);
+    if (lbl) lbl.textContent = ` GIRAR DIR (${durSeg}s) | Watchdog ON`;
   }
 }
 
@@ -1468,13 +1775,14 @@ function converterPredsMao(preds, w, h, offX, offY, scale) {
     const bh = Math.max(12, Math.min(h - y1, (maxY - minY) + padY * 2));
 
     const g = classificarGestoMao(lm);
-    processarComandoGesto(g.id);
+    const maoX = offX + ([0, 5, 9, 13, 17].reduce((sum, i) => sum + lm[i][0], 0) / 5 / w) * scale;
     const ptsNorm = lm.map(pt => [offX + (pt[0] / w) * scale, offY + (pt[1] / h) * scale]);
     const nw = (bw / w) * scale;
     const nh = (bh / h) * scale;
     res.push({
       label: g.label,
       gestoId: g.id,
+      maoX,
       score: sc,
       nx: offX + (x1 / w) * scale,
       ny: offY + (y1 / h) * scale,
@@ -1485,6 +1793,8 @@ function converterPredsMao(preds, w, h, offX, offY, scale) {
       pts: ptsNorm
     });
   }
+  res.sort((a, b) => (b.area * b.score) - (a.area * a.score));
+  if (res.length) processarComandoGesto(res[0].gestoId, res[0].maoX);
   return res;
 }
 
@@ -1561,7 +1871,33 @@ async function loopVisao(epoch) {
       // Permite Zoom Central 2x em quadros alternados quando buscando alvo nos modos Ultra ou Auto rápido
       const podeZoom2x = !leve && (cvPotencia === 'ultra' || cvInfMs < 95) && (cvQuadroIdx % 2 === 0);
 
-      if (cvModo === 'face') {
+      if (cvModo === 'apresentador') {
+        const modFace = (!leve && faceModelUltra) ? faceModelUltra : faceModelLeve;
+        const modMao = (!leve && handModelUltra) ? handModelUltra : (handModelLeve || handModelUltra);
+        const faseRosto = (cvQuadroIdx % 2 === 0);
+
+        if (faseRosto && modFace) {
+          const preds = await modFace.estimateFaces(cvProc, false);
+          const fDets = converterPredsRosto(preds, pw, ph, 0, 0, 1);
+          if (fDets.length > 0) {
+            fDets.sort((a, b) => (b.area * b.score) - (a.area * a.score));
+            ultFaceAlvo = fDets[0];
+            ultFaceDetectadaMs = performance.now();
+          } else {
+            if (performance.now() - ultFaceDetectadaMs > 1200) ultFaceAlvo = null;
+          }
+        } else if (!faseRosto && modMao) {
+          const preds = await modMao.estimateHands(cvProc);
+          const mDets = converterPredsMao(preds, pw, ph, 0, 0, 1);
+          if (mDets.length > 0) {
+            mDets.sort((a, b) => (b.area * b.score) - (a.area * a.score));
+            ultMaoAlvo = mDets[0];
+          } else {
+            ultMaoAlvo = null;
+            processarComandoGesto(null);
+          }
+        }
+      } else if (cvModo === 'face') {
         const modAtivo = (!leve && faceModelUltra) ? faceModelUltra : faceModelLeve;
         if (modAtivo) {
           const preds = await modAtivo.estimateFaces(cvProc, false);
@@ -1594,8 +1930,9 @@ async function loopVisao(epoch) {
           }
           if (dets.length === 0) {
             gestoAnt = ''; gestoCont = 0;
+            processarComandoGesto(null);
             const lbl = document.getElementById('lblGestoAtivo');
-            if (lbl) lbl.textContent = 'Mostre a mão...';
+            if (lbl && !gestoPausaSeguranca) lbl.textContent = 'Mostre a mão...';
           }
         }
       } else if (cvModo === 'obj') {
@@ -1621,7 +1958,7 @@ async function loopVisao(epoch) {
     cvRodando = false;
     if (epoch !== cvEpoch || cvModo === 'off') return;
     const txt = document.getElementById('cvHudTxt');
-    if (txt) txt.textContent = '⚠️ Aguardando stream CORS (:82)...';
+    if (txt) txt.textContent = ' Aguardando stream CORS (:82)...';
     cvTimer = setTimeout(() => loopVisao(epoch), 300);
     return;
   }
@@ -1629,9 +1966,17 @@ async function loopVisao(epoch) {
   cvRodando = false;
   if (epoch !== cvEpoch || cvModo === 'off') return;
 
-  // Ordena pelo maior alvo na tela (prioriza o rosto/objeto principal mais próximo)
-  dets.sort((a, b) => (b.area * b.score) - (a.area * a.score));
-  const alvo = dets.length > 0 ? dets[0] : null;
+  let alvo = null;
+  if (cvModo === 'apresentador') {
+    alvo = ultFaceAlvo;
+    dets = [];
+    if (ultFaceAlvo) dets.push(ultFaceAlvo);
+    if (ultMaoAlvo) dets.push(ultMaoAlvo);
+  } else {
+    // Ordena pelo maior alvo na tela (prioriza o rosto/objeto principal mais próximo)
+    dets.sort((a, b) => (b.area * b.score) - (a.area * a.score));
+    alvo = dets.length > 0 ? dets[0] : null;
+  }
 
   const dtInf = performance.now() - t0;
   // Ignora o pico único de compilação de shaders WebGL nos 2 primeiros quadros para não distorcer a média
@@ -1647,8 +1992,8 @@ async function loopVisao(epoch) {
         cvAutoRebaixado = true;
         cvLentoCont = 0;
         atualizarUiCv();
-        if (cvModo === 'face' && !faceModelLeve) garantirModeloFace(true, null).catch(() => {});
-        else if (cvModo === 'gesto' && !handModelLeve) garantirModeloMao(true, null).catch(() => {});
+        if ((cvModo === 'face' || cvModo === 'apresentador') && !faceModelLeve) garantirModeloFace(true, null).catch(() => {});
+        if ((cvModo === 'gesto' || cvModo === 'apresentador') && !handModelLeve) garantirModeloMao(true, null).catch(() => {});
         else if (cvModo === 'obj' && !objModelLeve) garantirModeloObj(true, null).catch(() => {});
       }
     } else {
@@ -1656,24 +2001,34 @@ async function loopVisao(epoch) {
     }
   }
 
-  // Pausa elástica: garante sempre tempo livre de CPU/GPU para o navegador do notebook nunca travar
-  const pausaBase = (cvModo === 'obj' || cvModo === 'gesto') ? 50 : 38;
-  const pausaMin = Math.max(pausaBase, Math.min(200, Math.round(dtInf * 0.55)));
-  const intervaloAlvo = (cvModo === 'obj' || cvModo === 'gesto') ? 105 : 75;
+  // Pausa elástica: no modo Gestos e Apresentador mantém cadência rápida sem sobrecarregar a CPU
+  const pausaBase = (cvModo === 'obj') ? 48 : (cvModo === 'gesto' ? 26 : (cvModo === 'apresentador' ? 24 : 36));
+  const pausaMin = Math.max(pausaBase, Math.min(180, Math.round(dtInf * 0.50)));
+  const intervaloAlvo = (cvModo === 'obj') ? 100 : (cvModo === 'gesto' ? 65 : (cvModo === 'apresentador' ? 50 : 75));
   const espera = Math.max(pausaMin, intervaloAlvo - Math.round(dtInf));
   cvFps = 1000 / (dtInf + espera);
 
   desenharHudCv(dets, alvo, rawW, rawH, trocado);
-  // Segue o alvo se o Auto-Track estiver ligado OU automaticamente ao apontar 1 dedo no modo Gestos
-  const seguirDedoAuto = (cvModo === 'gesto' && cvGestoCmd && alvo && (alvo.gestoId === 'apontar' || alvo.gestoId === 'mao'));
-  if ((autoTrack || seguirDedoAuto) && alvo) aplicarAutoTrack(alvo);
+  // Segue o alvo se o Auto-Track estiver ligado OU automaticamente no modo Gestos/Apresentador
+  const seguirGestoAuto = (cvModo === 'gesto' && cvGestoCmd && alvo);
+  // Não recentrar a câmera sobre o V: isso alteraria a própria referência de direção.
+  const direcionandoComV = cvModo === 'gesto' && cvGestoCmd && alvo && alvo.gestoId === 'paz';
+  if (!direcionandoComV && (autoTrack || seguirGestoAuto) && alvo) aplicarAutoTrack(alvo);
 
   const txt = document.getElementById('cvHudTxt');
   if (txt) {
-    const mapaNome = { face: 'ROSTO', gesto: 'GESTO', obj: 'OBJ', cor: 'COR' };
-    const tagPot = cvModo === 'cor' ? '' : (usarPerfilLeve() ? '⚡' : '🔥');
+    const mapaNome = { apresentador: 'APRESENTADOR', face: 'ROSTO', gesto: 'GESTO', obj: 'OBJ', cor: 'COR' };
+    const tagPot = cvModo === 'cor' ? '' : (usarPerfilLeve() ? '' : '');
     const nomeModo = (mapaNome[cvModo] || 'IA') + tagPot;
-    const stAlvo = alvo ? `🎯 ${alvo.label} ${Math.round(alvo.score * 100)}%` : 'BUSCANDO...';
+    let stAlvo = 'BUSCANDO...';
+    if (cvModo === 'apresentador') {
+      const temR = !!ultFaceAlvo, temM = !!ultMaoAlvo;
+      if (temR && temM) stAlvo = ` ROSTO + ${ultMaoAlvo.label}`;
+      else if (temR) stAlvo = ` ROSTO (Aguardando Mão)`;
+      else if (temM) stAlvo = ` ${ultMaoAlvo.label} (Sem Rosto)`;
+    } else if (alvo) {
+      stAlvo = ` ${alvo.label} ${Math.round(alvo.score * 100)}%`;
+    }
     const stPt = autoTrack ? ` | P:${Math.round(pan)}° T:${Math.round(tilt)}°` : '';
     txt.textContent = `${nomeModo} | ${stAlvo}${stPt} | ${Math.round(cvInfMs)}ms (${cvFps.toFixed(0)} FPS)`;
   }
@@ -1704,6 +2059,19 @@ function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
   const offY = (ch - visH) / 2;
   const midX = offX + visW / 2;
   const midY = offY + visH / 2;
+
+  if (cvGestoCmd && (cvModo === 'gesto' || cvModo === 'apresentador') && dets.some(d => d.gestoId === 'paz')) {
+    ctx.fillStyle = 'rgba(129,145,171,.10)';
+    ctx.fillRect(offX + visW * .42, offY, visW * .16, visH);
+    ctx.strokeStyle = 'rgba(56,189,248,.45)';
+    ctx.setLineDash([4, 5]);
+    for (const k of [.35, .65]) {
+      ctx.beginPath(); ctx.moveTo(offX + visW * k, offY); ctx.lineTo(offX + visW * k, offY + visH); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#e6edf7'; ctx.font = '600 9px ui-monospace, Consolas, monospace';
+    for (const [x, label] of [[.12, 'ESQ'], [.44, 'PARAR'], [.80, 'DIR']]) ctx.fillText(label, offX + visW * x, offY + visH - 8);
+  }
 
   // Retículo central (zona morta de travamento)
   const dzW = visW * cvDeadzone;
@@ -1793,72 +2161,106 @@ function desenharHudCv(dets, alvo, rawW, rawH, trocado) {
   });
 }
 
+function atualizarLabelGanho(v, vivo) {
+  const out = document.getElementById('outCvGanho');
+  const rowC = document.getElementById('rowCvCoef');
+  if (rowC) rowC.style.opacity = cvGanhoAuto ? '1' : '0.4';
+  if (!out) return;
+  if (cvGanhoAuto) {
+    const val = (typeof vivo === 'number') ? Math.round(vivo) : v;
+    out.value = `Auto ${val}°`;
+  } else {
+    out.value = `${v}°`;
+  }
+}
+
 function aplicarAutoTrack(alvo) {
   const agora = performance.now();
-  // Intervalo de 125ms dá tempo para o servo mover fisicamente e o stream MJPEG entregar o novo quadro atualizado
-  if (agora - ultTrackMs < 125) return;
+  const ehDedo = (cvModo === 'gesto');
+  // Cadência de controle: 85ms para dedo, 110ms para rosto/objeto
+  const intervaloMin = ehDedo ? 85 : 110;
+  if (agora - ultTrackMs < intervaloMin) return;
   if (ptTimer || joyPTTimer) return;   // Prioridade ao toque manual do usuário
 
   // Erro normalizado de -1.0 a +1.0 em relação ao centro do quadro
   const ex = Math.max(-1, Math.min(1, (alvo.cx - 0.5) * 2));
   const ey = Math.max(-1, Math.min(1, (alvo.cy - 0.5) * 2));
 
-  // Filtro exponencial anti-ruído: amortece variações bruscas de caixa/landmark de um quadro para outro
-  errSuaveX = errSuaveX * 0.45 + ex * 0.55;
-  errSuaveY = errSuaveY * 0.45 + ey * 0.55;
+  // Filtro exponencial suave (sem arrasto que gere overshoot)
+  const peso = ehDedo ? 0.70 : 0.60;
+  errSuaveX = errSuaveX * (1 - peso) + ex * peso;
+  errSuaveY = errSuaveY * (1 - peso) + ey * peso;
 
   const magX = Math.abs(errSuaveX);
   const magY = Math.abs(errSuaveY);
 
   // Histerese de zona morta central:
-  // Quando chega perto do centro (< 7.5%), trava em repouso absoluto e só volta a corrigir se sair além de 12.5%
+  // Trava em repouso ao entrar na zona morta (7%) e só volta a corrigir se sair além de 11.5%
   if (magX < cvDeadzone) trackTravadoX = true;
-  else if (magX > 0.125) trackTravadoX = false;
+  else if (magX > 0.115) trackTravadoX = false;
 
   if (magY < cvDeadzone) trackTravadoY = true;
-  else if (magY > 0.125) trackTravadoY = false;
+  else if (magY > 0.115) trackTravadoY = false;
 
   const foraX = !trackTravadoX && magX > cvDeadzone;
   const foraY = !trackTravadoY && magY > cvDeadzone;
-  if (!foraX && !foraY) return;
+  if (!foraX && !foraY) {
+    if (cvGanhoAuto) atualizarLabelGanho(cvGanho, cvGanho * (1 - cvCoefAuto));
+    return;
+  }
 
-  // ex > 0 (alvo à direita) -> gira p/ direita (mesmo sinal do botão ►: stepPan(-1))
-  // ey < 0 (alvo acima)     -> inclina p/ cima (mesmo sinal do botão ▲: stepTilt(1))
+  // Direção de correção do Pan/Tilt
   const sPan = invPan ? 1 : -1;
   const sTilt = invTilt ? -1 : 1;
 
-  // Lei de Controle com Ganho Variável Progressivo:
-  // O ganho efetivo diminui quadraticamente conforme o erro se aproxima de zero (evita loop esquerda-direita!)
   let dPan = 0, dTilt = 0;
-  if (foraX) {
-    const uX = Math.min(1, (magX - cvDeadzone) / (1 - cvDeadzone));
-    const ganhoEfetivoX = cvGanho * (0.15 * uX + 0.85 * uX * uX);
-    const sinalX = Math.sign(errSuaveX);
-    // Se acabou de cruzar o centro (inverteu esquerda <-> direita), freia 70% do passo para cortar oscilação
-    const freioInvX = (ultSinalX !== 0 && sinalX !== ultSinalX) ? 0.30 : 1.0;
-    ultSinalX = sinalX;
-    dPan = sPan * sinalX * ganhoEfetivoX * freioInvX;
-  }
-  if (foraY) {
-    const uY = Math.min(1, (magY - cvDeadzone) / (1 - cvDeadzone));
-    const ganhoEfetivoY = cvGanho * (0.15 * uY + 0.85 * uY * uY);
-    const sinalY = Math.sign(errSuaveY);
-    const freioInvY = (ultSinalY !== 0 && sinalY !== ultSinalY) ? 0.30 : 1.0;
-    ultSinalY = sinalY;
-    dTilt = sTilt * (-sinalY) * ganhoEfetivoY * freioInvY;
+  let ganhoVivo = cvGanho;
+
+  if (cvGanhoAuto) {
+    // FÓRMULA DE GANHO VARIÁVEL CALIBRADA PELO COEFICIENTE (cvCoefAuto):
+    // K_ef = K_base * [ (1 - coef) + coef * (u^2) ]
+    // Quando erro é pequeno (u ~ 0): ganho cai para K_base * (1 - coef) -> calmo, sem tremer
+    // Quando erro é grande (u ~ 1): ganho sobe para K_base * 1.0 -> veloz
+    if (foraX) {
+      const uX = Math.min(1, (magX - cvDeadzone) / (1 - cvDeadzone));
+      const fatorX = (1 - cvCoefAuto) + cvCoefAuto * (uX * uX);
+      const ganhoEfetivoX = cvGanho * fatorX;
+      ganhoVivo = ganhoEfetivoX;
+      const sinalX = Math.sign(errSuaveX);
+      // Freio de 60% se cruzou o centro (reversão) para evitar passar direto (overshoot)
+      const freioX = (ultSinalX !== 0 && sinalX !== ultSinalX) ? 0.40 : 1.0;
+      ultSinalX = sinalX;
+      dPan = sPan * sinalX * ganhoEfetivoX * Math.min(1, magX * 1.2) * freioX;
+    }
+    if (foraY) {
+      const uY = Math.min(1, (magY - cvDeadzone) / (1 - cvDeadzone));
+      const fatorY = (1 - cvCoefAuto) + cvCoefAuto * (uY * uY);
+      const ganhoEfetivoY = cvGanho * fatorY;
+      if (ganhoEfetivoY > ganhoVivo) ganhoVivo = ganhoEfetivoY;
+      const sinalY = Math.sign(errSuaveY);
+      const freioY = (ultSinalY !== 0 && sinalY !== ultSinalY) ? 0.40 : 1.0;
+      ultSinalY = sinalY;
+      dTilt = sTilt * (-sinalY) * ganhoEfetivoY * Math.min(1, magY * 1.2) * freioY;
+    }
+    atualizarLabelGanho(cvGanho, ganhoVivo);
+  } else {
+    // MODO FIXO MANUAL
+    if (foraX) dPan = sPan * errSuaveX * cvGanho * 0.7;
+    if (foraY) dTilt = sTilt * (-errSuaveY) * cvGanho * 0.7;
+    atualizarLabelGanho(cvGanho);
   }
 
-  // Limita o degrau máximo a 22 graus (rápido quando longe, milimétrico quando perto)
-  dPan = Math.max(-22, Math.min(22, dPan));
-  dTilt = Math.max(-22, Math.min(22, dTilt));
+  // Teto seguro de passo por ciclo: máx 9.5° (evita que a câmera dê um pulo gigante e passe direto)
+  const passoMax = 9.5;
+  dPan = Math.max(-passoMax, Math.min(passoMax, dPan));
+  dTilt = Math.max(-passoMax, Math.min(passoMax, dTilt));
 
-  if (Math.abs(dPan) < 0.25 && Math.abs(dTilt) < 0.25) return;
+  if (Math.abs(dPan) < 0.20 && Math.abs(dTilt) < 0.20) return;
 
   pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + dPan));
   tilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + dTilt));
   ultTrackMs = agora;
-  // Comanda em alta velocidade (mínimo 480°/s) para o servo SG90 ir direto ao ponto sem tremer
-  enviarPT(Math.max(velServo, 480));
+  enviarPT(Math.max(velServo, 420));
 }
 
 // ---------------- Lógica dos Joysticks Virtuais ----------------
@@ -1979,6 +2381,8 @@ async function atualizarStats() {
   try {
     const r = await fetch('/api/stats');
     const d = await r.json();
+    const temp = document.getElementById('stTemp');
+    if (temp) temp.textContent = Number.isFinite(d.sys?.temp) ? `ESP ${d.sys.temp.toFixed(1)} °C` : 'ESP -- °C';
     if (d.link) {
       const l = d.link;
       if (l.retorno === false) soIda = true;
@@ -2016,7 +2420,10 @@ async function atualizarStats() {
         atualizarBtnPresetQuick(p);
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    const temp = document.getElementById('stTemp');
+    if (temp) temp.textContent = 'ESP -- °C';
+  }
 }
 
 window.onload = async () => {

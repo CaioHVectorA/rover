@@ -46,6 +46,10 @@ Este documento registra o perfil técnico, tom de voz, ritmo e preferências de 
 
 ## 📝 Histórico de Aprendizados & Ajustes de Estilo
 
+* **2026-11-10 (Pressa na bancada):** Quando houver alternativa física já comprada para simplificar um enlace suspeito, priorizar a substituição controlada e um teste mínimo. Evitar prolongar a investigação do componente anterior; confirmar só a identificação necessária para orientar os fios e a polaridade corretamente.
+
+* **2026-11-10 (Diagnóstico serial com duas USB):** Conferir portas e firmware realmente em execução antes de orientar remontagem. Explicar de forma curta que D0 é compartilhado com o USB do Nano e distinguir comunicação PC → placa de ESP → Nano. Priorizar leitura e identificação com as placas isoladas; quando o usuário não conseguir observar o LED, registrar o teste como pendente, sem presumir sucesso.
+
 * **2026-10-13 (Compras com NF):** Ao preparar compras, limitar a comparação a até três carrinhos em lojas diferentes. Exigir emissão de nota fiscal; no Mercado Livre selecionar envio Full. Priorizar disponibilidade nacional e compatibilidade real, com distinção entre carrinho preparado e pedido finalizado.
 
 * **2026-10-13 (Correção de Escopo das Compras):** Evitar listas de consumíveis e equipamentos básicos já disponíveis no laboratório. O interesse é em componentes que habilitem experimentos de comunicação, dissipação e capacidades futuras; explicar quando uma experiência, como UDP por Wi-Fi, exige apenas software.
@@ -101,3 +105,15 @@ Este documento registra o perfil técnico, tom de voz, ritmo e preferências de 
 
 * **2026-11-08 (Projeto da PCB Dedicada `v2_2esps` no KiCad):** Migração do chassi do Arduino Nano para um segundo ESP32 (`ESP32-DEVKIT-V1` 30 pinos) em PCB compacta (~50×65 mm) para diminuir o volume do chassi 3D em ABS, integrando áudio digital I2S (`MAX98357A` + `INMP441`), OLED 0,96" I2C (`SSD1306`) e sensor `DS18B20` no chassi, eliminando o transistor `BC337` e adotando o "Jeito 1" (stream MJPEG direto da cabeça + WebSocket direto no chassi, com conector universal `J_CAM` de 4 pinos). Conduzir o esquemático `.kicad_sch` e a PCB `.kicad_pcb` estritamente passo a passo.
 
+
+* **2026-11-10 (Painel embarcado):** Usuário aprovou a paleta atual; quer refinamento profissional sem emojis, poucas mudanças estruturais e as mesmas funcionalidades. Preservar responsividade e usar mão aberta/fechada para frente/ré por serem mais fáceis de detectar.
+
+* **2026-11-10 (Giros gestuais):** Usuário aprovou simplificar para um único V com direção pela posição no vídeo; manter faixa central de parada e explicar em termos visuais, sem exigir pose de três dedos.
+
+* **2026-11-10 (Apresentação):** Priorizar estabilidade e fluidez para demonstração ao vivo; usuário aceita baixar modelos antes e quer gestos distintos/fáceis. Antecipar download e aquecimento com ensaio sem comandos, sem prometer que cache resolve limitações de GPU. Evitar acrescentar a compensação pan/chassi antes de validação.
+
+* **2026-11-10 (Escopo do preparo):** Preferir nome funcional PREPARAR MODELOS e mensagens curtas; não transformar o painel num fluxo específico de apresentação, que será usada por pouco tempo.
+
+* **2026-11-10 (Revisão de PCB):** Priorizar placa de cobre em uma face. Mostrar as camadas do arquivo real e localizar defeitos por componente e pino antes de passar para intervenções no editor.
+
+* **2026-11-11 (Visualização mecânica):** Mostrar no 3D os componentes que se montam na PCB e os conectores dos módulos que saem em chicote. Identificar envelopes provisórios e informar o que ainda depende da peça física.

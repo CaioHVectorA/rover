@@ -40,3 +40,7 @@ src/firmware/legado/**/.pio/
 
 # Pastas temporarias
 outputs/
+
+# KiCad backups and history
+*-backups/
+.history/
