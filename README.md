@@ -5,10 +5,10 @@ Robô explorador terrestre com **tração integral 4WD**, cabeça articulada **P
 ---
 
 ### 🟢 Status do Projeto: **Robô montado & Testes práticos em andamento**
-* **Hardware:** Robô montado fisicamente com motores, rodas, suporte Pan/Tilt e eletrônica preliminar.
-* **Estratégia de Eletrônica:** Circuito intermediário em **placa perfurada (perfboard / ilhada)** para validação real antes da fabricação da PCB final (KiCad).
+* **Hardware (V1 Montado):** Robô montado fisicamente (chassi 3D protótipo, rodas de 32 mm com 8 mm de vão livre, placa perfurada concluída).
+* **Próxima Geração (PCB V2):** Transição direta para a PCB definitiva ([`rover_pcb_v2_chassi`](docs/hardware/kicad/rover_pcb_v2_chassi/MONTAGEM_3D.md)) com **ESP32 interno no chassi**, comunicação via **ESP-NOW** e áudio I2S (`INMP441` + `MAX98357A`).
 * **Firmware & Visão:** ESP32-S3 e Nano operacionais com visão computacional (modo apresentador / gestos) em testes práticos.
-* **Próximo passo:** Consolidar a montagem na placa perfurada e validar a movimentação dinâmica no solo.
+* **Próximo passo:** Fabricar/montar a PCB V2, ajustar o chassi 3D para a nova placa e implementar o pipeline de vídeo UDP + servidor de IA.
 
 
 

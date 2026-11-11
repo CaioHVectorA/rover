@@ -977,10 +977,17 @@ Mini 560 mantido. Reserva mecânica visível de 29 × 18 × 5,4 mm no canto supe
 
 Ilhas de U3 e volume de 29 × 18 × 5,4 mm do Mini 560 no canto superior direito. Ligação por quatro fios curtos; a página da RoboCore identifica IN+/IN− e OUT+/OUT−, porém não fornece desenho cotado do passo de encaixe. J1/J2/J3/J6/J7/J9, SW1, amplificador externo U4 e sensor remoto U6 usam solda direta. Somente J4 e J5 entre os chicotes usam headers macho. Os soquetes fêmea dos módulos embarcados continuam no projeto. Roteamento e plano em B.Cu, trilhas simplificadas e mudanças de direção chanfradas. DRC com paridade aprovado, sem conexões pendentes.
 
-### 11/11/2026 — Robô montado, testes práticos de visão e fluxo com placa perfurada
+### 11/11/2026 — Robô V1 montado (placa perfurada concluída) e transição para PCB V2 com ESP-NOW e Servidor de IA via UDP
 
-- **Robô Montado Fisicamente:** O usuário confirmou que o robô já está montado fisicamente em sua estrutura mecânica/chassi, superando a fase anterior de bancada com peças soltas.
-- **Validação de Visão Computacional em Execução:** Testes práticos com o pipeline de visão computacional (detecção facial, mãos/gestos e auto-tracking) já começaram a rodar no ambiente real com o robô montado.
-- **Estratégia de Hardware / Eletrônica:**
-  - Decidido intercalar a montagem e teste prático em **placa perfurada (perfboard / ilhada)** antes de encomendar ou fabricar a placa de circuito impresso (PCB) definitiva.
-  - Isso permite validar na prática a robustez do chicote, conexões elétricas, comportamento de ruído e acomodação real dos componentes no chassi antes de congelar o layout da PCB.
+- **Robô V1 Montado Fisicamente:** O robô atual já está montado e funcional na placa perfurada (V1 concluída; não haverá nova placa perfurada).
+- **Rodas de 32 mm & Vão Livre de 8,0 mm:** O robô montado utiliza rodas de **32 mm** (em vez das StickyMAX de 22 mm). Com isso, o vão livre sob os motores JGA16-050 saltou de 3,0 mm para **8,0 mm** ($16\text{ mm} - 8\text{ mm}$), eliminando o risco de raspar no chão e permitindo rodar em pisos reais com folga confortável.
+- **Chassi 3D Protótipo:** O chassi atual impresso em 3D é não definitivo e mudará para acomodar a PCB V2 (`85 × 65 mm`) e os novos periféricos.
+- **Mecânica Pan/Tilt:** Vibração presente nos movimentos da cabeça com os servos SG90, porém dentro do limite aceitável ("nada demais").
+- **Validação de Visão Computacional & Diretriz de Servidor Remoto / UDP:**
+  - Controle de tração no solo por gestos (mão aberta/punho/giros) validado na prática com sucesso ("foi legal").
+  - **Solução para Resolução vs. FPS e Latência:** Sem alterar o hardware da câmera (`ESP32-S3-CAM` + `OV5640`), o plano é transmitir o vídeo via **UDP** para um **servidor próprio** (LAN ou nuvem) com descarte de quadros atrasados (zero-buffer), mantendo resolução satisfatória para avaliação da IA sem acumular filas de TCP.
+- **Próximo Passo: PCB V2 (`rover_pcb_v2_chassi`) com ESP Interno, Enlace Serial Seguro e Robô Inteligente:**
+  - O próximo passo de hardware é diretamente a **PCB V2**.
+  - **Serial vs ESP-NOW Decidido:** Como o ESP32-S3 da cabeça estará transmitindo centenas de pacotes UDP por segundo via Wi-Fi, usar ESP-NOW causaria disputa pela mesma antena e pelo mesmo canal de rádio 2.4GHz. Na PCB V2, ambos os chips são ESP32 com **lógica nativa de 3.3V**. O enlace via **UART de hardware (Serial direto sem transistores ou divisores de tensão)** a altas taxas (ex: 115200 a 921600 baud) é infinitamente mais confiável, determinístico, com zero jitter e usa apenas 4 fios finos de silicone no chicote (`5V`, `GND`, `TX`, `RX`).
+  - Integração de **microfone I2S (`INMP441`)** e **amplificador I2S (`MAX98357A`)** para conectar o robô a APIs de IA de voz e visão multimodal ("robô inteligente").
+  - **POC UDP Criado e Compilado (`poc_udp_camera`):** Criado firmware dedicado com duplo buffer PSRAM e envio fragmentado UDP (pacotes de 1400 bytes com cabeçalho de 16 bytes), acompanhado da ferramenta Python [`tools/benchmark_udp_camera.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/benchmark_udp_camera.py) com HUD de medição em tempo real (FPS, Mbps, Perda, RTT e alternância de resolução de QVGA até SVGA).
