@@ -217,5 +217,6 @@
 (text "ROVER 4WD  /  CHASSI V2  /  FACE SIMPLES" (at 18 10 0) (effects (font (size 2.6 2.6)) (justify left bottom)) (uuid "3cdffe06-4b1f-5312-b6e3-a1c6c11a002f"))
 (text "U4: chicote para MAX98357A externo. 1=5V, 2=GND, 3/4=NC, 5=DIN (GPIO17), 6=BCLK, 7=WS. Alto-falante no borne do modulo externo." (at 19 241 0) (effects (font (size 1.4 1.4)) (justify left bottom)) (uuid "43edd3fd-3b31-5b65-8c75-83fbfcdeeedd"))
 (text "J2: camera Wi-Fi. J9: OLED externo. U5: microfone interno opcional. J4/J5: 1=GND, 2=5V, 3=sinal." (at 19 248 0) (effects (font (size 1.4 1.4)) (justify left bottom)) (uuid "8529d4e8-0cf8-58c9-aff4-1afbb5fc28a3"))
-(text "Antes da montagem, conferir o passo entre fileiras, a ordem dos pinos e a polaridade nos modulos da bancada." (at 19 255 0) (effects (font (size 1.4 1.4)) (justify left bottom)) (uuid "5c555e76-0d9f-5bc7-8321-26da850425f5"))
+(text "U6: chicote DS18B20 remoto (1 GND, 2 DQ, 3 3V3); R5 fica na PCB. U3: Mini 560 elevado no canto direito, ligado por quatro fios." (at 19 255 0) (effects (font (size 1.4 1.4)) (justify left bottom)) (uuid "5c555e76-0d9f-5bc7-8321-26da850425f5"))
 (sheet_instances (path "/" (page "1"))) (embedded_fonts no))
+

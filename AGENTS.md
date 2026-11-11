@@ -18,8 +18,8 @@ Este documento contém as **diretrizes obrigatórias de comportamento, regras de
 * **Memória Técnica Contínua:** O arquivo [`docs/context.md`](file:///c:/Users/caihe/Documents/develop/rover/docs/context.md) é a memória técnica detalhada de longo prazo. A cada decisão técnica ou avanço prático relevante, atualize este documento organicamente.
 * **Visão Geral Executiva:** O arquivo [`README.md`](file:///c:/Users/caihe/Documents/develop/rover/README.md) é a porta de entrada pública do repositório (status, quickstart, arquitetura limpa e links).
 * **Fidelidade Real ao Status do Projeto:**
-  * **STATUS ATUAL:** **Todos os componentes físicos já chegaram e estão em mãos na bancada de testes.**
-  * O projeto está na fase de **testes ativos de bancada (firmware, comunicação serial e app mobile)** e validação para modelagem CAD 3D do chassi.
+  * **STATUS ATUAL:** **Robô montado fisicamente.** Testes práticos de tração e visão computacional em andamento.
+  * **Estratégia de Eletrônica Atual:** Validação do circuito físico montado primeiro em **placa perfurada (perfboard / ilhada)** antes de avançar para a confecção/fabricação da PCB definitiva (KiCad).
   * Não invente circuitos ou testes que não foram de fato validados.
 
 ---

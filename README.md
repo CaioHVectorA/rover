@@ -4,13 +4,13 @@ Robô explorador terrestre com **tração integral 4WD**, cabeça articulada **P
 
 ---
 
-### 🟢 Status do Projeto: **Testes ativos de bancada**
-* **Hardware:** Todos os componentes recebidos e em mãos na bancada de testes.
-* **Validação em 27/10/2026:** Usuário confirmou o LED D13 pelo enlace IO43 → BC337 → D0 e, separadamente, os motores com PWM direto 120 por 1 segundo no Nano.
-* **Enlace validado:** Usuário confirmou LED e motores juntos pelo par [LED/motores D0](docs/pocs/LED_MOTORES_D0.md).
-* **Firmware em 10/11/2026:** Nano com `rover_d0_nano` confirmado por leitura da flash; painel `rover_d0_esp32` restaurado na COM29 com flash verificada. Logs do ESP informaram Wi-Fi STA e painel em `http://192.168.137.233/`; acesso HTTP pelo PC ainda não confirmado.
-* **Bancada atual:** Usuário confirmou retorno ao caminho pelo BC337. Veja o [diagnóstico serial inicial](docs/pocs/DIAGNOSTICO_SERIAL_2026-11-10.md) e as atualizações em [context.md](docs/context.md).
-* **Próximo passo:** Confirmar D13 pela USB do Nano isolado e revalidar IO43 → BC337 → D0 com a USB do Nano desconectada antes de retomar os atuadores.
+### 🟢 Status do Projeto: **Robô montado & Testes práticos em andamento**
+* **Hardware:** Robô montado fisicamente com motores, rodas, suporte Pan/Tilt e eletrônica preliminar.
+* **Estratégia de Eletrônica:** Circuito intermediário em **placa perfurada (perfboard / ilhada)** para validação real antes da fabricação da PCB final (KiCad).
+* **Firmware & Visão:** ESP32-S3 e Nano operacionais com visão computacional (modo apresentador / gestos) em testes práticos.
+* **Próximo passo:** Consolidar a montagem na placa perfurada e validar a movimentação dinâmica no solo.
+
+
 
 ---
 

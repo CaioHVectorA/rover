@@ -968,3 +968,19 @@ Conectores a conferir antes do novo layout: J4 e J5 levam o sinal no contato cen
 A revisão que sucede a auditoria de 10/11 está no mesmo projeto KiCad. 85 × 65 mm, quatro M3 a 77 × 57 mm entre centros, trilhas e plano em B.Cu, zero vias e zero jumpers. ERC e DRC com paridade aprovados, nenhuma ligação pendente; exportação do Gerber F.Cu vazia. A saída de áudio passou de GPIO23 para GPIO17; GPIO23 ficou livre. J2 da câmera tem somente alimentação. A aba v2_2esps da planilha de pinagem está sincronizada para GPIO17 e para GND, +5 V, sinal em J4/J5. Os scripts geradores históricos de PCB e esquema exportam o desenho antigo em pasta temporária. O preview é gerado da placa nativa.
 
 O OLED (J9) e o amplificador (U4) ficam externamente ao chassi. U4 tem somente o conector 1×7 angular para o chicote I2S, cinco contatos ligados e dois NC. O alto-falante sai pelo borne do módulo externo. U5 representa a opção de microfone interno por encaixe. As referências de montagem, fontes e medidas pendentes estão em [Montagem 3D](hardware/kicad/rover_pcb_v2_chassi/MONTAGEM_3D.md). O retângulo antigo de 11 × 18 mm da alimentação subestimava o Mini 560 adquirido (29 × 18 × 5,4 mm). O STEP do volume real fica disponível para planejamento do chassi; fixação e posição dos terminais não conferidas na peça. O buck comprado segue na arquitetura de alimentação de 5 V.
+
+### 11/11/2026 — Mini 560 no canto superior direito e temperatura remota
+
+Mini 560 mantido. Reserva mecânica visível de 29 × 18 × 5,4 mm no canto superior direito, com a base prevista 6 mm acima da PCB; quatro fios ligam o módulo aos pads elétricos U3 existentes à esquerda. J9 passou a conector angular para o OLED externo. Verificar suporte, isolamento, plugue com cabo e altura livre na tampa antes da fabricação. U6 passou de TO-92 embarcado a conector de três pinos para DS18B20 remoto, com R5 local. Fixação do sensor na câmera permanece em avaliação. J3/ESQ e J6/DIR ficam junto ao TB6612 com identificação na serigrafia; distribuir os chicotes para as respectivas laterais.
+
+### 11/11/2026 — Cobre revisado e chicotes soldados
+
+Ilhas de U3 e volume de 29 × 18 × 5,4 mm do Mini 560 no canto superior direito. Ligação por quatro fios curtos; a página da RoboCore identifica IN+/IN− e OUT+/OUT−, porém não fornece desenho cotado do passo de encaixe. J1/J2/J3/J6/J7/J9, SW1, amplificador externo U4 e sensor remoto U6 usam solda direta. Somente J4 e J5 entre os chicotes usam headers macho. Os soquetes fêmea dos módulos embarcados continuam no projeto. Roteamento e plano em B.Cu, trilhas simplificadas e mudanças de direção chanfradas. DRC com paridade aprovado, sem conexões pendentes.
+
+### 11/11/2026 — Robô montado, testes práticos de visão e fluxo com placa perfurada
+
+- **Robô Montado Fisicamente:** O usuário confirmou que o robô já está montado fisicamente em sua estrutura mecânica/chassi, superando a fase anterior de bancada com peças soltas.
+- **Validação de Visão Computacional em Execução:** Testes práticos com o pipeline de visão computacional (detecção facial, mãos/gestos e auto-tracking) já começaram a rodar no ambiente real com o robô montado.
+- **Estratégia de Hardware / Eletrônica:**
+  - Decidido intercalar a montagem e teste prático em **placa perfurada (perfboard / ilhada)** antes de encomendar ou fabricar a placa de circuito impresso (PCB) definitiva.
+  - Isso permite validar na prática a robustez do chicote, conexões elétricas, comportamento de ruído e acomodação real dos componentes no chassi antes de congelar o layout da PCB.

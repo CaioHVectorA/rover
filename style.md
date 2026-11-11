@@ -117,3 +117,5 @@ Este documento registra o perfil técnico, tom de voz, ritmo e preferências de 
 * **2026-11-10 (Revisão de PCB):** Priorizar placa de cobre em uma face. Mostrar as camadas do arquivo real e localizar defeitos por componente e pino antes de passar para intervenções no editor.
 
 * **2026-11-11 (Visualização mecânica):** Mostrar no 3D os componentes que se montam na PCB e os conectores dos módulos que saem em chicote. Identificar envelopes provisórios e informar o que ainda depende da peça física.
+
+* **PCB:** Preferir trilhas retas com chanfros, sem cotovelos de 90 graus ou efeito de escada. Soldar os fios diretamente, exceto nos servos.
