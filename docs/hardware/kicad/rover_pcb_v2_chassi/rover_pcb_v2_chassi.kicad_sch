@@ -3173,6 +3173,236 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Rover:C_EL"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C"
+				(at 0 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "470uF"
+				(at 0 1.27 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.1 1.1)
+					)
+				)
+			)
+			(property "Footprint" "Rover:C_EL_P35"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C_EL_0_1"
+				(rectangle
+					(start -13.97 0)
+					(end 13.97 -7.62)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "C_EL_1_1"
+				(pin passive line
+					(at 16.51 -2.54 180)
+					(length 2.54)
+					(name "+"
+						(effects
+							(font
+								(size 0.95 0.95)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.9 0.9)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 16.51 -5.08 180)
+					(length 2.54)
+					(name "-"
+						(effects
+							(font
+								(size 0.95 0.95)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.9 0.9)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "Rover:C_CER"
+			(pin_names
+				(offset 0.5)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(in_pos_files yes)
+			(duplicate_pin_numbers_are_jumpers no)
+			(property "Reference" "C"
+				(at 0 3.81 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "100nF"
+				(at 0 1.27 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(effects
+					(font
+						(size 1.1 1.1)
+					)
+				)
+			)
+			(property "Footprint" "Rover:C_CER_P25"
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1 1)
+					)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(show_name no)
+				(do_not_autoplace no)
+				(hide yes)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(symbol "C_CER_0_1"
+				(rectangle
+					(start -13.97 0)
+					(end 13.97 -7.62)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "C_CER_1_1"
+				(pin passive line
+					(at 16.51 -2.54 180)
+					(length 2.54)
+					(name "1"
+						(effects
+							(font
+								(size 0.95 0.95)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 0.9 0.9)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 16.51 -5.08 180)
+					(length 2.54)
+					(name "2"
+						(effects
+							(font
+								(size 0.95 0.95)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 0.9 0.9)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 	)
 	(text "ROVER 4WD  /  CHASSI V2  /  FACE SIMPLES"
 		(exclude_from_sim no)
@@ -3207,7 +3437,7 @@
 		)
 		(uuid "5c555e76-0d9f-5bc7-8321-26da850425f5")
 	)
-	(text "J2: camera Wi-Fi. J9: OLED externo. U5: microfone interno opcional. J4/J5: 1=GND, 2=5V, 3=sinal."
+	(text "J2 (1=GND, 2=5V, 3=CAM-TX/RX2, 4=CAM-RX/D23): camera UART. J9: OLED externo. U5: mic I2S. J4/J5: 1=GND, 2=5V, 3=sinal. C1..C4: filtragem."
 		(exclude_from_sim no)
 		(at 19 248 0)
 		(effects
@@ -3223,8 +3453,12 @@
 		(uuid "04f21e1e-0fbb-5c19-b16c-5e12241eac18")
 	)
 	(no_connect
-		(at 63.5 44.45)
-		(uuid "542a3d99-c424-55fe-b30e-a393998db4af")
+		(at 33.02 26.67)
+		(uuid "1124180e-bd87-5fc7-b895-238715e549a1")
+	)
+	(no_connect
+		(at 33.02 49.53)
+		(uuid "33026e1b-dc49-5f78-a86b-247f3df5ea84")
 	)
 	(no_connect
 		(at 295.91 29.21)
@@ -3239,16 +3473,32 @@
 		(uuid "95d1e709-0dc5-59d8-bb66-3ea3be74f111")
 	)
 	(no_connect
-		(at 63.5 21.59)
-		(uuid "a62ab919-7566-5dd8-ac33-5ef6cf02fc5f")
-	)
-	(no_connect
 		(at 33.02 21.59)
 		(uuid "aa98f894-8b3a-59a5-89dd-6f53c7faf717")
 	)
 	(no_connect
 		(at 63.5 29.21)
 		(uuid "ec9c6520-060c-5377-a228-f09d68b6c393")
+	)
+	(wire
+		(pts
+			(xy 63.5 44.45) (xy 68.58 44.45)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "542a3d99-c424-55fe-b30e-a393998db4af")
+	)
+	(wire
+		(pts
+			(xy 63.5 21.59) (xy 68.58 21.59)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a62ab919-7566-5dd8-ac33-5ef6cf02fc5f")
 	)
 	(wire
 		(pts
@@ -3269,16 +3519,6 @@
 			(type default)
 		)
 		(uuid "077e6658-bccf-561b-9ecb-ef32b54e8025")
-	)
-	(wire
-		(pts
-			(xy 33.02 26.67) (xy 27.94 26.67)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1124180e-bd87-5fc7-b895-238715e549a1")
 	)
 	(wire
 		(pts
@@ -3479,16 +3719,6 @@
 			(type default)
 		)
 		(uuid "32f6afdd-79f2-5152-9082-c91fdf1d8e6a")
-	)
-	(wire
-		(pts
-			(xy 33.02 49.53) (xy 27.94 49.53)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "33026e1b-dc49-5f78-a86b-247f3df5ea84")
 	)
 	(wire
 		(pts
@@ -4751,12 +4981,12 @@
 		(uuid "9e11f8e1-f6ad-5d78-bf8d-7b29cbd17bae")
 	)
 	(label "CAM-TX"
-		(at 27.94 49.53 180)
+		(at 68.58 44.45 0)
 		(effects
 			(font
 				(size 1.05 1.05)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "9f1406dc-8a62-4217-ba59-7b3c2bb6f96a")
 	)
@@ -4901,12 +5131,12 @@
 		(uuid "d1e86169-c94b-5e30-8c4d-735d6c9e81db")
 	)
 	(label "CAM-RX"
-		(at 27.94 26.67 180)
+		(at 68.58 21.59 0)
 		(effects
 			(font
 				(size 1.05 1.05)
 			)
-			(justify right bottom)
+			(justify left bottom)
 		)
 		(uuid "d6cf3780-a388-4e21-9442-f52083b79514")
 	)
@@ -6594,6 +6824,474 @@
 			(project "rover_pcb_v2_chassi"
 				(path "/75189d85-85e8-4ffc-a2ba-b0260569204c"
 					(reference "U1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(wire
+		(pts
+			(xy 214.63 210.82) (xy 219.71 210.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1e23ce02-cc26-44aa-92e5-568fe6d375a7")
+	)
+	(wire
+		(pts
+			(xy 214.63 213.36) (xy 219.71 213.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a25fce0e-469d-4cf8-83eb-7404e1149b06")
+	)
+	(wire
+		(pts
+			(xy 295.91 210.82) (xy 300.99 210.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "55800916-d476-41f0-a761-519adcd2c593")
+	)
+	(wire
+		(pts
+			(xy 295.91 213.36) (xy 300.99 213.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "99e1b8a0-a5b7-45c3-91a6-0cd1953d6a3c")
+	)
+	(wire
+		(pts
+			(xy 295.91 124.46) (xy 300.99 124.46)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9b000b83-3c91-4a61-a610-09713bd98bd3")
+	)
+	(wire
+		(pts
+			(xy 295.91 127) (xy 300.99 127)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ff520089-3cd7-4c02-a093-c76aa7eb1220")
+	)
+	(wire
+		(pts
+			(xy 54.61 210.82) (xy 59.69 210.82)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8c9eff54-69c5-4a9f-8d52-0325eec7d811")
+	)
+	(wire
+		(pts
+			(xy 54.61 213.36) (xy 59.69 213.36)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "cb21c148-4c26-450d-afd7-8ade63ae76b3")
+	)
+	(label "+5V"
+		(at 219.71 210.82 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "2b8a6e75-dd74-4921-9ceb-9eeec5b9e2a0")
+	)
+	(label "GND"
+		(at 219.71 213.36 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "335ecf52-9c94-482e-b72c-a7097cd94365")
+	)
+	(label "VCC_BAT"
+		(at 300.99 210.82 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "bca44489-ed3e-498c-b0a3-f57369ab252c")
+	)
+	(label "GND"
+		(at 300.99 213.36 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "2403aad3-7149-4091-b63a-43613b9d9254")
+	)
+	(label "VBAT-SENSE"
+		(at 300.99 124.46 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "8649f494-627f-4cd4-81eb-ac9d9693fd75")
+	)
+	(label "GND"
+		(at 300.99 127 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "17909d4d-0c4b-4c4c-a692-e74dcf95b1d2")
+	)
+	(label "+3V3"
+		(at 59.69 210.82 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "52a95c35-76b7-4c46-bb0e-a98243e65081")
+	)
+	(label "GND"
+		(at 59.69 213.36 0)
+		(effects
+			(font
+				(size 1.05 1.05)
+			)
+			(justify left bottom)
+		)
+		(uuid "fecb9e81-5a0c-45ea-89f2-81a3b1664b38")
+	)
+	(symbol
+		(lib_id "Rover:C_EL")
+		(at 198.12 208.28 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "d1dc632f-7006-411a-a4c7-cabd45971295")
+		(property "Reference" "C1"
+			(at 198.12 204.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.5 1.5)
+				)
+			)
+		)
+		(property "Value" "470uF 16V"
+			(at 198.12 206.68 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.15 1.15)
+				)
+			)
+		)
+		(property "Footprint" "Rover:C_EL_P35"
+			(at 198.12 208.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 198.12 208.28 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 198.12 208.28 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "ed418796-2857-4a16-8471-a52ef8c2c391")
+		)
+		(pin "2"
+			(uuid "f6179dae-3980-45a1-b6c9-cd03a4ac7b72")
+		)
+		(instances
+			(project "rover_pcb_v2_chassi"
+				(path "/75189d85-85e8-4ffc-a2ba-b0260569204c"
+					(reference "C1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Rover:C_EL")
+		(at 279.4 208.28 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "228fce32-999a-48ab-9382-83f2df49ea66")
+		(property "Reference" "C2"
+			(at 279.4 204.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.5 1.5)
+				)
+			)
+		)
+		(property "Value" "470uF 25V"
+			(at 279.4 206.68 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.15 1.15)
+				)
+			)
+		)
+		(property "Footprint" "Rover:C_EL_P35"
+			(at 279.4 208.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 208.28 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 279.4 208.28 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "dc02a6ab-1d65-4ed0-9494-0524595804a6")
+		)
+		(pin "2"
+			(uuid "6b784bf2-2afe-44c2-acd0-46401377572c")
+		)
+		(instances
+			(project "rover_pcb_v2_chassi"
+				(path "/75189d85-85e8-4ffc-a2ba-b0260569204c"
+					(reference "C2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Rover:C_CER")
+		(at 279.4 121.92 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "ddc293e4-724f-43d6-863e-b0cbfb7c893b")
+		(property "Reference" "C3"
+			(at 279.4 117.77 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.5 1.5)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 279.4 120.32 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.15 1.15)
+				)
+			)
+		)
+		(property "Footprint" "Rover:C_CER_P25"
+			(at 279.4 121.92 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 279.4 121.92 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 279.4 121.92 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "960968a2-f703-4409-9706-c380ec19d73c")
+		)
+		(pin "2"
+			(uuid "5c0980f7-c3e6-4aee-9a44-9223beeca827")
+		)
+		(instances
+			(project "rover_pcb_v2_chassi"
+				(path "/75189d85-85e8-4ffc-a2ba-b0260569204c"
+					(reference "C3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Rover:C_CER")
+		(at 38.1 208.28 0)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(uuid "ea8ee3a7-fa71-4433-b0f3-8fc54754015a")
+		(property "Reference" "C4"
+			(at 38.1 204.13 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.5 1.5)
+				)
+			)
+		)
+		(property "Value" "100nF"
+			(at 38.1 206.68 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.15 1.15)
+				)
+			)
+		)
+		(property "Footprint" "Rover:C_CER_P25"
+			(at 38.1 208.28 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1 1)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 38.1 208.28 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" ""
+			(at 38.1 208.28 0)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "56b0c0df-96bd-4131-a95b-4dc069e9728a")
+		)
+		(pin "2"
+			(uuid "87347642-2803-4628-8767-c079b170484c")
+		)
+		(instances
+			(project "rover_pcb_v2_chassi"
+				(path "/75189d85-85e8-4ffc-a2ba-b0260569204c"
+					(reference "C4")
 					(unit 1)
 				)
 			)

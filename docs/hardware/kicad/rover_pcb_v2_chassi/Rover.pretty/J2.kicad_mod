@@ -1,1 +1,101 @@
-(footprint "J2" (version 20260206) (generator "pcbnew") (generator_version "10.0") (layer "F.Cu") (descr "Ilhas THT para solda direta dos fios") (property "Reference" "REF**" (at 2.54 -2.54 0) (layer "F.SilkS") (uuid "3fbe95cd-650f-4ed8-a166-539ecb5d7756") (effects (font (size 1 1) (thickness 0.15)))) (property "Value" "Camera 5V" (at 1.27 3 0) (layer "F.Fab") (uuid "cf91cf72-dae8-4ce4-a3ac-cabf2cf63f65") (effects (font (size 0.9 0.9) (thickness 0.15)))) (property "Datasheet" "" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "6326a393-bf68-446e-ab25-1e4158f0b8b8") (effects (font (size 1.27 1.27)))) (property "Description" "" (at 0 0 0) (layer "F.Fab") (hide yes) (uuid "96f60b78-875c-4229-8de2-f89c2454aeed") (effects (font (size 1.27 1.27)))) (attr through_hole) (duplicate_pad_numbers_are_jumpers no) (pad "1" thru_hole rect (at 0 0) (size 1.8 1.8) (drill 1) (layers "*.Cu" "B.Mask") (remove_unused_layers yes) (keep_end_layers no) (uuid "5d7c861c-c803-41ea-a2d7-d99591ab8faa")) (pad "2" thru_hole circle (at 2.54 0) (size 1.8 1.8) (drill 1) (layers "*.Cu" "B.Mask") (remove_unused_layers yes) (keep_end_layers no) (uuid "4c06921f-e8a6-49d1-878a-a5c083301b4d")) (embedded_fonts no))
+(footprint "J2"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(descr "Ilhas THT 4 vias para chicote da camera (1=GND, 2=+5V, 3=CAM-TX, 4=CAM-RX)")
+	(property "Reference" "REF**"
+		(at 3.81 2.7 180)
+		(layer "F.SilkS")
+		(uuid "3fbe95cd-650f-4ed8-a166-539ecb5d7756")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Value" "Camera UART 5V"
+		(at 3.81 -2.5 180)
+		(layer "F.Fab")
+		(uuid "cf91cf72-dae8-4ce4-a3ac-cabf2cf63f65")
+		(effects
+			(font
+				(size 0.9 0.9)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "6326a393-bf68-446e-ab25-1e4158f0b8b8")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "96f60b78-875c-4229-8de2-f89c2454aeed")
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+		)
+	)
+	(attr through_hole)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_rect
+		(start -1.27 -1.27)
+		(end 8.89 1.27)
+		(stroke
+			(width 0.12)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.SilkS")
+		(uuid "afea209a-b0fc-460d-947a-d93e126a2a46")
+	)
+	(pad "1" thru_hole rect
+		(at 0 0)
+		(size 1.8 1.8)
+		(drill 1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "5d7c861c-c803-41ea-a2d7-d99591ab8faa")
+	)
+	(pad "2" thru_hole circle
+		(at 2.54 0)
+		(size 1.8 1.8)
+		(drill 1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "4c06921f-e8a6-49d1-878a-a5c083301b4d")
+	)
+	(pad "3" thru_hole circle
+		(at 5.08 0)
+		(size 1.8 1.8)
+		(drill 1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "77d5185c-d43c-4233-b480-91c0a65862d3")
+	)
+	(pad "4" thru_hole circle
+		(at 7.62 0)
+		(size 1.8 1.8)
+		(drill 1)
+		(layers "*.Cu" "B.Mask")
+		(remove_unused_layers yes)
+		(keep_end_layers no)
+		(uuid "b93fd389-0867-4484-a834-2d73f425b47e")
+	)
+	(embedded_fonts no)
+)
