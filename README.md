@@ -6,7 +6,7 @@ Robô explorador terrestre com **tração integral 4WD**, cabeça articulada **P
 
 ### 🟢 Status do Projeto: **Robô montado & Testes práticos em andamento**
 * **Hardware (V1 Montado):** Robô montado fisicamente (chassi 3D protótipo, rodas de 32 mm com 8 mm de vão livre, placa perfurada concluída).
-* **Próxima Geração (PCB V2):** Transição direta para a PCB definitiva ([`rover_pcb_v2_chassi`](docs/hardware/kicad/rover_pcb_v2_chassi/MONTAGEM_3D.md)) com **ESP32 interno no chassi**, comunicação via **ESP-NOW** e áudio I2S (`INMP441` + `MAX98357A`).
+* **Próxima Geração (PCB V2):** Transição direta para a PCB definitiva ([`rover_pcb_v2_chassi`](docs/hardware/kicad/rover_pcb_v2_chassi/MONTAGEM_3D.md)) com **ESP32 interno no chassi**, comunicação via **UART Serial Direta 3.3V** e áudio I2S (`INMP441` + `MAX98357A`).
 * **Firmware & Visão:** ESP32-S3 e Nano operacionais com visão computacional (modo apresentador / gestos) em testes práticos.
 * **Próximo passo:** Fabricar/montar a PCB V2, ajustar o chassi 3D para a nova placa e implementar o pipeline de vídeo UDP + servidor de IA.
 
@@ -143,14 +143,14 @@ pio device monitor -e poc5_nano --port COM18
 | Componente | Modelo / Especificação | Função no Rover |
 | :--- | :--- | :--- |
 | **Motores de Tração** | 4x **JGA16-050** (16mm, redução metálica, eixo D 3mm) | Tração 4WD com torque elevado |
-| **Rodas** | 4x **StickyMAX S20 Macia (22mm)** com cubo alumínio CNC | Pneu de mini-sumô de altíssima aderência |
-| **Placa de Visão** | **ESP32-S3-CAM N16R8** (16MB Flash, 8MB PSRAM, OV5640 5MP) | Câmera, Wi-Fi e WebSocket Server |
-| **Placa de Potência** | **Arduino Nano V3** (ATmega328P, 5V nativo) | Comanda TB6612, servos, buzzer e lê bateria |
+| **Rodas** | 4x **Rodas 32 mm** com cubo de fixação | Diâmetro externo de 32 mm elevando o vão livre para 8,0 mm |
+| **Placa de Visão** | **ESP32-S3-CAM N16R8** (16MB Flash, 8MB PSRAM, OV5640 5MP) | Câmera, Wi-Fi e Streaming UDP Zero-Buffer |
+| **Placa de Potência** | **Arduino Nano V3** (ATmega328P, 5V nativo) -> Migrando para **ESP32 DevKit V2** | Comanda TB6612, servos, buzzer e lê bateria |
 | **Driver de Motores** | **TB6612FNG** (Ponte H MOSFET dupla, 1.2A/canal contínuo) | Controle de velocidade PWM e sentido 4WD |
 | **Mecanismo Pan/Tilt** | 2x Micro Servos **SG90 9g** (Torque 1.6 kgf·cm) | Orientação horizontal e vertical da câmera |
 | **Regulador de Tensão** | Step-Down **Mini 560** (5V fixos / até 5A) | Linha de 5V estável para placas e servos |
 | **Bateria** | Li-Ion **2S 7.4V 2500mAh** com placa BMS integrada | Alimentação geral do robô |
 
-> 📌 **Vão Livre ao Solo (Ground Clearance):**
-> $$\text{Raio da Roda (11 mm)} - \text{Raio do Motor JGA (8 mm)} = \mathbf{3{,}0\text{ mm}}$$
-> *O chassi plástico não pode ter assoalho sob os motores; o motor deve ser abraçado por cima e laterais.*
+> 📌 **Vão Livre ao Solo (Ground Clearance Real):**
+> $$\text{Raio da Roda (16 mm)} - \text{Raio do Motor JGA (8 mm)} = \mathbf{8{,}0\text{ mm}}$$
+> *A elevação para rodas de 32 mm resolveu o vão livre crítico de 3 mm das rodas de 22 mm anteriores, permitindo rodar em pisos reais sem raspar o motor.*

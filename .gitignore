@@ -33,6 +33,7 @@ _autosave-*
 /scratch/
 
 # Credenciais de Wi-Fi dos firmwares (modelo: credenciais.exemplo.h)
+.env
 src/firmware/comum/credenciais.h
 
 # Lixo de build dentro de sketches legados

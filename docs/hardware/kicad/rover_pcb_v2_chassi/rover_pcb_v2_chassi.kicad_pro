@@ -490,7 +490,7 @@
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.2,
+        "track_width": 1.0,
         "tuning_profile": "",
         "via_diameter": 0.6,
         "via_drill": 0.3,
@@ -514,14 +514,8 @@
     },
     "page_layout_descr_file": ""
   },
-  "project": {
-    "files": [
-      "rover_pcb_v2_chassi.kicad_sch",
-      "rover_pcb_v2_chassi.kicad_pcb"
-    ]
-  },
   "schematic": {
-    "annotate_start_num": 1,
+    "annotate_start_num": 0,
     "annotation": {
       "method": 0,
       "sort_order": 0
@@ -618,8 +612,8 @@
       "operating_point_overlay_v_precision": 3,
       "operating_point_overlay_v_range": "~V",
       "overbar_offset_ratio": 1.23,
-      "pin_symbol_size": 0.0,
-      "text_offset_ratio": 0.08
+      "pin_symbol_size": 25.0,
+      "text_offset_ratio": 0.15
     },
     "legacy_lib_dir": "",
     "legacy_lib_list": [],
