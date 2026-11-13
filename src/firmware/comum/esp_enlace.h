@@ -26,6 +26,9 @@ struct EnlaceStats {
   // ping
   uint32_t pings = 0, acks = 0, rttMinUs = 0xFFFFFFFF, rttMaxUs = 0, rttUltUs = 0;
   uint64_t rttSomaUs = 0;
+  // telemetria do fluxo Pan/Tilt (<S>) emitido na UART
+  uint32_t sTx = 0, sUltTxMs = 0, sDtMs = 0;
+  long sUltPan10 = 900, sUltTilt10 = 900, sUltVel10 = 0, sDeltaMax10 = 0;
 };
 
 class EnlaceNano {
@@ -117,6 +120,18 @@ class EnlaceNano {
     out[k++] = '\n';
     Serial2.write((const uint8_t *)out, k);
     st.tx++;
+    if (cmd == 'S' && a != nullptr && n >= 2) {
+      uint32_t agora = millis();
+      if (st.sUltTxMs) st.sDtMs = agora - st.sUltTxMs;
+      st.sUltTxMs = agora;
+      long dp = labs(a[0] - st.sUltPan10);
+      long dt = labs(a[1] - st.sUltTilt10);
+      st.sDeltaMax10 = dp > dt ? dp : dt;
+      st.sUltPan10 = a[0];
+      st.sUltTilt10 = a[1];
+      st.sUltVel10 = (n >= 3) ? a[2] : 0;
+      st.sTx++;
+    }
   }
 
   void tratar(const ProtoFrame &f, uint32_t agora) {

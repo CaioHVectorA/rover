@@ -29,7 +29,7 @@
 #ifndef POC_ECO_APOS_S
 #define POC_ECO_APOS_S 0           // 0 = modo eco desligado (POC 3: so assistindo); POC 4/6 definem 8
 #endif
-#define CAM_CFG_VERSAO 3
+#define CAM_CFG_VERSAO 4
 
 enum ModoCam : uint8_t { MODO_ATIVO = 0, MODO_ECO, MODO_DORMINDO, MODO_TERMICO };
 static const char *MODO_NOME[] = {"ATIVO", "ECO", "DORMINDO", "TERMICO"};
@@ -51,6 +51,7 @@ struct CamConfig {
   uint8_t tempAlerta = 68, tempCorte = 80;   // graus C (chip ESP32-S3)
   uint8_t governor = 1, espelho = 0, inverte = 0;
   int8_t  brilho = 0;
+  int8_t  aeLevel = 0;                  // compensacao de exposicao (-2..2; negativo reduz motion blur)
   uint16_t rotacao = 90;                // 0, 90, 180, 270 graus (camera deitada = 90 ou 270)
 };
 
@@ -85,6 +86,7 @@ static void camClamp() {
   camCfg.tempAlerta = constrain(camCfg.tempAlerta, 45, 95);
   camCfg.tempCorte = constrain(camCfg.tempCorte, camCfg.tempAlerta + 3, 100);
   camCfg.brilho = constrain(camCfg.brilho, -2, 2);
+  camCfg.aeLevel = constrain(camCfg.aeLevel, -2, 2);
   camCfg.governor = camCfg.governor ? 1 : 0;
   camCfg.espelho = camCfg.espelho ? 1 : 0;
   camCfg.inverte = camCfg.inverte ? 1 : 0;
@@ -164,6 +166,7 @@ static void camReaplicar() {
     s->set_hmirror(s, camCfg.espelho);
     s->set_vflip(s, camCfg.inverte);
     s->set_brightness(s, camCfg.brilho);
+    if (s->set_ae_level) s->set_ae_level(s, camCfg.aeLevel);
     if (!camEst.dormindo) {
       uint8_t mhz = camXclkDoModo(camEst.modo);
       if (mhz != camEst.xclkAtual) { s->set_xclk(s, LEDC_TIMER_0, mhz); camEst.xclkAtual = mhz; }
@@ -317,32 +320,33 @@ static void camIniciarServidor() {
 
 // ---------------------------------------------------------------- API HTTP de configuracao (porta 80)
 static String camCfgJson() {
-  char b[450];
+  char b[512];
   snprintf(b, sizeof(b),
     "{\"res\":\"%s\",\"rot\":%u,\"q\":%u,\"xclk\":%u,\"xclk_eco\":%u,\"xclk_t\":%u,\"fps\":%u,\"fps_eco\":%u,\"fps_t\":%u,"
-    "\"sleep_s\":%u,\"eco_s\":%u,\"t_alerta\":%u,\"t_corte\":%u,\"gov\":%u,\"hmirror\":%u,\"vflip\":%u,\"bright\":%d}",
+    "\"sleep_s\":%u,\"eco_s\":%u,\"t_alerta\":%u,\"t_corte\":%u,\"gov\":%u,\"hmirror\":%u,\"vflip\":%u,\"bright\":%d,\"ae_level\":%d}",
     RES_NOME[camCfg.res], camCfg.rotacao, camCfg.qualidade, camCfg.xclkAtivo, camCfg.xclkEco, camCfg.xclkTermico,
     camCfg.fpsAtivo, camCfg.fpsEco, camCfg.fpsTermico, camCfg.dormirApos_s, camCfg.ecoApos_s,
-    camCfg.tempAlerta, camCfg.tempCorte, camCfg.governor, camCfg.espelho, camCfg.inverte, camCfg.brilho);
+    camCfg.tempAlerta, camCfg.tempCorte, camCfg.governor, camCfg.espelho, camCfg.inverte, camCfg.brilho, camCfg.aeLevel);
   return String(b);
 }
 
 static String camStatsJson() {
-  char b[380];
+  char b[440];
   snprintf(b, sizeof(b),
     "{\"ok\":%d,\"ov5640\":%d,\"modo\":\"%s\",\"dormindo\":%d,\"forcado\":%d,\"clientes\":%d,\"fps\":%.1f,\"kbps\":%.0f,"
-    "\"kb_frame\":%.1f,\"cap_ms\":%.1f,\"xclk\":%u,\"res\":\"%s\",\"res_px\":\"%s\",\"rot\":%u,\"teto_fps\":%u,\"frames\":%lu}",
+    "\"kb_frame\":%.1f,\"cap_ms\":%.1f,\"xclk\":%u,\"res\":\"%s\",\"res_px\":\"%s\",\"rot\":%u,\"teto_fps\":%u,\"ae_level\":%d,\"frames\":%lu}",
     camEst.ok, camEst.ov5640, MODO_NOME[camEst.modo], camEst.dormindo, camEst.forcadoTermico, camEst.clientes,
     camEst.fps, camEst.kbps, camEst.ultFrameBytes / 1024.0f, camEst.capUs / 1000.0f, camEst.xclkAtual,
-    RES_NOME[camCfg.res], RES_DESC[camCfg.res], camCfg.rotacao, camFpsDoModo(camEst.modo), (unsigned long)camEst.frames);
+    RES_NOME[camCfg.res], RES_DESC[camCfg.res], camCfg.rotacao, camFpsDoModo(camEst.modo), camCfg.aeLevel, (unsigned long)camEst.frames);
   return String(b);
 }
 
 static void camPreset(const String &n) {
-  if (n == "frio")            { camCfg.res = 2; camCfg.qualidade = 26; camCfg.xclkAtivo = 8;  camCfg.xclkEco = 6; camCfg.fpsAtivo = 12; camCfg.fpsEco = 3; }
-  else if (n == "equilibrado"){ camCfg.res = 4; camCfg.qualidade = 20; camCfg.xclkAtivo = 12; camCfg.xclkEco = 8; camCfg.fpsAtivo = 15; camCfg.fpsEco = 5; }
-  else if (n == "qualidade")  { camCfg.res = 5; camCfg.qualidade = 12; camCfg.xclkAtivo = 16; camCfg.xclkEco = 8; camCfg.fpsAtivo = 15; camCfg.fpsEco = 5; }
-  else if (n == "maximo")     { camCfg.res = 6; camCfg.qualidade = 10; camCfg.xclkAtivo = 20; camCfg.xclkEco = 10; camCfg.fpsAtivo = 15; camCfg.fpsEco = 5; }
+  if (n == "frio")            { camCfg.res = 2; camCfg.qualidade = 26; camCfg.xclkAtivo = 8;  camCfg.xclkEco = 6; camCfg.fpsAtivo = 12; camCfg.fpsEco = 3; camCfg.aeLevel = 0; }
+  else if (n == "cv_rapida")  { camCfg.res = 2; camCfg.qualidade = 24; camCfg.xclkAtivo = 16; camCfg.xclkEco = 8; camCfg.fpsAtivo = 24; camCfg.fpsEco = 5; camCfg.aeLevel = -1; }
+  else if (n == "equilibrado"){ camCfg.res = 4; camCfg.qualidade = 20; camCfg.xclkAtivo = 12; camCfg.xclkEco = 8; camCfg.fpsAtivo = 15; camCfg.fpsEco = 5; camCfg.aeLevel = 0; }
+  else if (n == "qualidade")  { camCfg.res = 5; camCfg.qualidade = 12; camCfg.xclkAtivo = 16; camCfg.xclkEco = 8; camCfg.fpsAtivo = 15; camCfg.fpsEco = 5; camCfg.aeLevel = 0; }
+  else if (n == "maximo")     { camCfg.res = 6; camCfg.qualidade = 10; camCfg.xclkAtivo = 20; camCfg.xclkEco = 10; camCfg.fpsAtivo = 15; camCfg.fpsEco = 5; camCfg.aeLevel = 0; }
   camClamp();
 }
 
@@ -378,6 +382,7 @@ static void camRotas(WebServer &w) {
     if (w.hasArg("hmirror"))  camCfg.espelho     = w.arg("hmirror").toInt();
     if (w.hasArg("vflip"))    camCfg.inverte     = w.arg("vflip").toInt();
     if (w.hasArg("bright"))   camCfg.brilho      = w.arg("bright").toInt();
+    if (w.hasArg("ae_level")) camCfg.aeLevel     = w.arg("ae_level").toInt();
     camClamp();
     camReaplicar();
     if (w.hasArg("save")) camSalvar();

@@ -256,7 +256,7 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
   .header-mode-switch {
     display: inline-flex !important;
   }
-  #btnHdrDiag {
+  #btnHdrDiag, #btnHdrEstudo {
     display: inline-block !important;
   }
   .controls-grid {
@@ -331,6 +331,8 @@ header .title { font-weight: 700; font-size: 14px; color: var(--accent); }
     transform: translateX(-50%) !important;
     width: 90% !important;
     max-width: 440px !important;
+    max-height: calc(100vh - 80px) !important;
+    overflow-y: auto !important;
     z-index: 50 !important;
     box-shadow: 0 8px 24px rgba(0,0,0,0.85) !important;
   }
@@ -356,8 +358,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-v
 }
 .cam-btn-overlay { left: 90px; }
 select { min-width: 0; max-width: 100%; }
-#cardCv > div, #cardCv > div > div { min-width: 0; max-width: 100%; }
-#cardCv > div > div { flex-wrap: wrap; }
+#cardCv > div, #cardCv > div > div, #cardEstudo > div, #cardEstudo > div > div { min-width: 0; max-width: 100%; }
+#cardCv > div > div, #cardEstudo > div > div { flex-wrap: wrap; }
 #rowGestoCfg > div:first-child { flex-wrap: wrap; gap: 4px; }
 #lblGestoAtivo { overflow-wrap: anywhere; }
 .slider-item input[type=range] { min-width: 0; width: 0; }
@@ -384,6 +386,7 @@ select { min-width: 0; max-width: 100%; }
     </div>
     <div style="display:flex;gap:5px;align-items:center">
       <button class="btn-cfg" id="btnHdrDiag" onclick="toggleDiag()" title="Diagnóstico de Bancada" style="display:none">Diag</button>
+      <button class="btn-cfg" id="btnHdrEstudo" onclick="toggleEstudo()" title="Estudo de Caso: Jitter Pan/Tilt" style="display:none">Jitter</button>
       <span class="status-pill" id="stNano">NANO</span>
       <span id="stBat" style="font-weight:700;color:var(--green)">-- V</span>
       <span class="status-pill" id="stWs">WS</span>
@@ -489,6 +492,14 @@ select { min-width: 0; max-width: 100%; }
         <input type="range" id="rngCvCoef" min="0" max="95" step="5" value="70" oninput="cvCoefAuto=parseInt(this.value)/100; outCvCoef.value=this.value+'%'; atualizarLabelGanho(cvGanho)">
         <output id="outCvCoef" style="min-width:38px;text-align:right">70%</output>
       </div>
+      <div style="display:flex;gap:6px;width:100%;align-items:center;">
+        <span style="font-size:10px;color:var(--sub);white-space:nowrap">Modo Track:</span>
+        <select id="selTrackModo" onchange="mudarTrackModo(this.value)" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:11px">
+          <option value="suave" selected>Suave (Vel. Casada)</option>
+          <option value="sacada">Sacada Anti-Blur (Move + Pausa)</option>
+          <option value="original">Original (Passos 420°/s)</option>
+        </select>
+      </div>
     </div>
   </details>
 
@@ -514,6 +525,99 @@ select { min-width: 0; max-width: 100%; }
       <div style="display:flex;gap:6px;width:100%;align-items:center;">
         <span style="font-size:10px;color:var(--sub);white-space:nowrap">Fio TX ESP &rarr; Nano:</span>
         <button id="btnTxInv" class="btn-preset" style="flex:1;font-size:10px" onclick="alternarTxInv()">Polaridade: carregando...</button>
+      </div>
+    </div>
+  </details>
+
+  <!-- Estudo de Caso: Jitter Pan/Tilt & Motion Blur (retrátil) -->
+  <details class="ctrl-card diag-card" id="cardEstudo" style="width:100%;padding:6px 10px;">
+    <summary style="display:flex;justify-content:space-between;align-items:center;width:100%;cursor:pointer;list-style:none;">
+      <span class="ctrl-title">Estudo Jitter Pan/Tilt ▾</span>
+      <span id="stEstudo" class="status-pill">PARADO</span>
+    </summary>
+    <div style="width:100%;margin-top:6px;display:flex;flex-direction:column;gap:7px;">
+      <div id="lblTxPT" style="font:600 10px ui-monospace,Consolas,monospace;color:var(--sub);background:#101622;border:1px solid var(--border);border-radius:4px;padding:4px 6px;">Fio &lt;S&gt;: aguardando... | Cam: --</div>
+
+      <div style="background:#101622;border:1px solid var(--border);border-radius:5px;padding:6px;display:flex;flex-direction:column;gap:5px;">
+        <span style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;">1. Teste Isolado no ESP32 (zero Wi-Fi)</span>
+        <div style="display:flex;gap:4px;width:100%;">
+          <select id="selEstModo" style="flex:2;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:10.5px">
+            <option value="1">1. Pulso 1x Ida/Volta (puro)</option>
+            <option value="2" selected>2. Radar Extremos (1 cmd/trecho)</option>
+            <option value="3">3. Radar Bug 90ms (vel 420°/s)</option>
+            <option value="4">4. Radar Passos Casados (continuo)</option>
+          </select>
+          <select id="selEstEixo" style="flex:0.8;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:10.5px">
+            <option value="0" selected>Pan</option>
+            <option value="1">Tilt</option>
+          </select>
+        </div>
+        <div class="slider-item" style="gap:5px">
+          <label style="width:60px;font-size:10px">Vel. Teste</label>
+          <input type="range" id="rngEstVel" min="20" max="420" step="10" value="60" oninput="outEstVel.value=this.value+'°/s'">
+          <output id="outEstVel" style="min-width:48px">60°/s</output>
+        </div>
+        <div class="slider-item" style="gap:5px">
+          <label style="width:60px;font-size:10px">Amplitude</label>
+          <input type="range" id="rngEstAmpl" min="20" max="100" step="10" value="60" oninput="outEstAmpl.value=this.value+'°'">
+          <output id="outEstAmpl" style="min-width:38px">60°</output>
+        </div>
+        <div class="slider-item" style="gap:5px">
+          <label style="width:60px;font-size:10px">Cadência</label>
+          <input type="range" id="rngEstPasso" min="40" max="200" step="10" value="90" oninput="outEstPasso.value=this.value+'ms'">
+          <output id="outEstPasso" style="min-width:42px">90ms</output>
+        </div>
+        <div style="display:flex;gap:5px;width:100%;">
+          <button id="btnEstIniciar" class="btn-preset" style="flex:1.2;background:#1e3a5f;color:#38bdf8;font-weight:700" onclick="iniciarEstudo()">Iniciar no ESP</button>
+          <button class="btn-preset" style="flex:1;background:#3f1d1d;color:#fca5a5;font-weight:700" onclick="pararEstudo()">Parar Teste</button>
+          <button class="btn-preset" style="flex:0.8" onclick="centroPT()">Centro 90°</button>
+        </div>
+      </div>
+
+      <div style="background:#101622;border:1px solid var(--border);border-radius:5px;padding:6px;display:flex;flex-direction:column;gap:5px;">
+        <span style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;">2. Tracking &amp; Câmera Anti-Blur</span>
+        <div style="display:flex;gap:5px;width:100%;align-items:center;">
+          <span style="font-size:10px;color:var(--sub);white-space:nowrap">Estratégia:</span>
+          <select id="selEstTrackModo" onchange="mudarTrackModo(this.value)" style="flex:1;background:#1c2638;color:#fff;border:1px solid var(--border);padding:4px;border-radius:4px;font-size:10.5px">
+            <option value="suave" selected>Suave (Vel. Casada)</option>
+            <option value="sacada">Sacada Anti-Blur (Move + Pausa)</option>
+            <option value="original">Original (Passos 420°/s)</option>
+          </select>
+        </div>
+        <div class="slider-item" style="gap:5px">
+          <label style="width:74px;font-size:10px">Piso Vel. Track</label>
+          <input type="range" id="rngTrackVelMin" min="25" max="150" step="5" value="50" oninput="cvTrackVelMin=parseInt(this.value); outTrackVelMin.value=this.value+'°/s'">
+          <output id="outTrackVelMin" style="min-width:46px">50°/s</output>
+        </div>
+        <div style="display:flex;gap:4px;width:100%;">
+          <button class="btn-preset" style="flex:1" onclick="camTesteBlur('frio')">Cam Frio 8MHz</button>
+          <button class="btn-preset" style="flex:1.2;border-color:var(--accent);color:var(--accent)" onclick="camTesteBlur('cv_rapida')">CV Anti-Blur 16MHz</button>
+          <button class="btn-preset" style="flex:1" onclick="camTesteBlur('turbo')">Turbo 20MHz</button>
+        </div>
+      </div>
+
+      <div style="background:#101622;border:1px solid var(--border);border-radius:5px;padding:6px;display:flex;flex-direction:column;gap:5px;">
+        <span style="font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;">3. Sintonia Nano ao Vivo (&lt;C,2..4&gt;)</span>
+        <div style="display:flex;gap:4px;width:100%;">
+          <button class="btn-preset" style="flex:1" onclick="aplicarNanoPreset(15,870,2)">Padrão Nano</button>
+          <button class="btn-preset" style="flex:1.1;border-color:var(--green);color:#86efac" onclick="aplicarNanoPreset(45,1400,4)">Anti Stick-Slip</button>
+          <button class="btn-preset" style="flex:1" onclick="aplicarNanoPreset(25,350,4)">Macio</button>
+        </div>
+        <div class="slider-item" style="gap:5px">
+          <label style="width:68px;font-size:10px">Piso Min (C2)</label>
+          <input type="range" id="rngNanoVmin" min="0" max="120" step="5" value="15" oninput="outNanoVmin.value=this.value+'°/s'" onchange="aplicarNanoParam(2,this.value)">
+          <output id="outNanoVmin" style="min-width:44px">15°/s</output>
+        </div>
+        <div class="slider-item" style="gap:5px">
+          <label style="width:68px;font-size:10px">Acel. (C3)</label>
+          <input type="range" id="rngNanoAcc" min="150" max="2400" step="50" value="870" oninput="outNanoAcc.value=this.value" onchange="aplicarNanoParam(3,this.value)">
+          <output id="outNanoAcc" style="min-width:44px">870</output>
+        </div>
+        <div class="slider-item" style="gap:5px">
+          <label style="width:68px;font-size:10px">Banda (C4)</label>
+          <input type="range" id="rngNanoDead" min="1" max="12" step="1" value="2" oninput="outNanoDead.value=this.value+'us'" onchange="aplicarNanoParam(4,this.value)">
+          <output id="outNanoDead" style="min-width:38px">2us</output>
+        </div>
       </div>
     </div>
   </details>
@@ -719,16 +823,121 @@ function setModo(m) {
   }
 }
 
+function fecharFlutuantesPaisagem(excetoId) {
+  if (!(window.innerWidth && window.innerHeight && window.innerWidth > window.innerHeight)) return;
+  for (const id of ['cardCv', 'cardDiag', 'cardEstudo']) {
+    if (id === excetoId) continue;
+    const el = document.getElementById(id);
+    if (el) el.open = false;
+  }
+}
+
 function toggleDiag() {
   const d = document.getElementById('cardDiag');
-  if (d) d.open = !d.open;
+  if (!d) return;
+  d.open = !d.open;
+  if (d.open) fecharFlutuantesPaisagem('cardDiag');
+}
+
+function toggleEstudo() {
+  const e = document.getElementById('cardEstudo');
+  if (!e) return;
+  e.open = !e.open;
+  if (e.open) fecharFlutuantesPaisagem('cardEstudo');
 }
 
 function toggleCardCv() {
   const c = document.getElementById('cardCv');
   if (!c) return;
   c.open = !c.open;
-  if (c.open && cvModo === 'off') setCvModo('face');
+  if (c.open) {
+    fecharFlutuantesPaisagem('cardCv');
+    if (cvModo === 'off') setCvModo('face');
+  }
+}
+
+let estudoAtivo = false;
+function atualizarEstudoUi(est) {
+  const p = document.getElementById('stEstudo');
+  if (!p) return;
+  if (est && est.ativo) {
+    estudoAtivo = true;
+    p.className = 'status-pill ok';
+    p.textContent = `${(est.nome || 'ATIVO').toUpperCase()} (${est.ciclos || 0})`;
+  } else {
+    estudoAtivo = false;
+    p.className = 'status-pill';
+    p.textContent = 'PARADO';
+  }
+}
+
+async function iniciarEstudo() {
+  autoTrack = false;
+  atualizarUiAutoTrack();
+  stopPT();
+  drive(0, 0);
+  const modo = document.getElementById('selEstModo').value;
+  const eixo = document.getElementById('selEstEixo').value;
+  const vel = document.getElementById('rngEstVel').value;
+  const ampl = document.getElementById('rngEstAmpl').value;
+  const passo = document.getElementById('rngEstPasso').value;
+  try {
+    const r = await fetch(`/api/estudo/start?modo=${modo}&eixo=${eixo}&vel=${vel}&ampl=${ampl}&passo=${passo}&pausa=250`);
+    if (r && r.json) {
+      const d = await r.json();
+      atualizarEstudoUi(d);
+    }
+  } catch (e) {}
+}
+
+async function pararEstudo() {
+  estudoAtivo = false;
+  atualizarEstudoUi(null);
+  try { await fetch('/api/estudo/stop'); } catch (e) {}
+}
+
+async function camTesteBlur(perfil) {
+  let uri = '/api/cam/preset?n=frio';
+  if (perfil === 'cv_rapida') uri = '/api/cam/set?res=qvga&q=24&xclk=16&fps=24&ae_level=-1';
+  else if (perfil === 'turbo') uri = '/api/cam/set?res=qvga&q=22&xclk=20&fps=25&ae_level=-2';
+  try { await fetch(uri); } catch (e) {}
+  recarregarVideo();
+  setTimeout(atualizarStats, 250);
+}
+
+function aplicarNanoParam(id, val) {
+  const n = Math.round(Number(val));
+  if (!Number.isFinite(n)) return;
+  tx(`<C,${id},${n}>`);
+}
+
+function aplicarNanoPreset(vmin, acc, dead) {
+  const r2 = document.getElementById('rngNanoVmin'), o2 = document.getElementById('outNanoVmin');
+  const r3 = document.getElementById('rngNanoAcc'), o3 = document.getElementById('outNanoAcc');
+  const r4 = document.getElementById('rngNanoDead'), o4 = document.getElementById('outNanoDead');
+  if (r2) r2.value = vmin;
+  if (o2) o2.value = vmin + '°/s';
+  if (r3) r3.value = acc;
+  if (o3) o3.value = acc;
+  if (r4) r4.value = dead;
+  if (o4) o4.value = dead + 'us';
+  tx(`<C,2,${vmin}>`);
+  tx(`<C,3,${acc}>`);
+  tx(`<C,4,${dead}>`);
+}
+
+function mudarTrackModo(m) {
+  cvTrackModo = m || 'suave';
+  cvPausaAteMs = 0;
+  cvSacadaLimparEma = false;
+  ultTrackMs = 0;
+  errSuaveX = 0; errSuaveY = 0;
+  trackTravadoX = false; trackTravadoY = false;
+  ultSinalX = 0; ultSinalY = 0;
+  const s1 = document.getElementById('selTrackModo');
+  const s2 = document.getElementById('selEstTrackModo');
+  if (s1) s1.value = cvTrackModo;
+  if (s2) s2.value = cvTrackModo;
 }
 
 const presetsCam = ['frio', 'equilibrado', 'qualidade'];
@@ -856,6 +1065,15 @@ function parada() {
     autoTrack = false;
     atualizarUiAutoTrack();
   }
+  if (typeof cvPausaAteMs !== 'undefined') {
+    cvPausaAteMs = 0;
+    cvSacadaLimparEma = false;
+  }
+  if (typeof estudoAtivo !== 'undefined' && estudoAtivo) {
+    estudoAtivo = false;
+    atualizarEstudoUi(null);
+    if (window.fetch) fetch('/api/estudo/stop').catch(() => {});
+  }
   window.dispatchEvent(new Event('roverstop'));
   stopPT();
   if (joyDriveTimer) { clearInterval(joyDriveTimer); joyDriveTimer = null; }
@@ -973,6 +1191,10 @@ let cvTimer = null;
 let ultTrackMs = 0;
 let cvFps = 0, cvInfMs = 0;
 let errSuaveX = 0, errSuaveY = 0;
+let cvTrackModo = 'suave';
+let cvTrackVelMin = 50;
+let cvPausaAteMs = 0;
+let cvSacadaLimparEma = false;
 
 // Canvas GPU principal (sem willReadFrequently) para WebGL rápido
 const cvProc = document.createElement ? document.createElement('canvas') : { width: 0, height: 0, getContext: () => null };
@@ -1219,6 +1441,9 @@ async function toggleAutoTrack() {
   errSuaveX = 0; errSuaveY = 0;
   trackTravadoX = false; trackTravadoY = false;
   ultSinalX = 0; ultSinalY = 0;
+  ultTrackMs = 0;
+  cvPausaAteMs = 0;
+  cvSacadaLimparEma = false;
   if (cvModo === 'off') {
     autoTrack = true;
     atualizarUiAutoTrack();
@@ -1309,6 +1534,12 @@ async function setCvModo(m) {
   cvInfMs = 0;
   cvLentoCont = 0;
   cvQuadroIdx = 0;
+  ultTrackMs = 0;
+  errSuaveX = 0; errSuaveY = 0;
+  trackTravadoX = false; trackTravadoY = false;
+  ultSinalX = 0; ultSinalY = 0;
+  cvPausaAteMs = 0;
+  cvSacadaLimparEma = false;
   gestoAnt = ''; gestoCont = 0;
   ultFaceAlvo = null; ultMaoAlvo = null; ultFaceDetectadaMs = 0;
   pararMovimentoGesto();
@@ -2177,25 +2408,39 @@ function atualizarLabelGanho(v, vivo) {
 function aplicarAutoTrack(alvo) {
   const agora = performance.now();
   const ehDedo = (cvModo === 'gesto');
-  // Cadência de controle: 85ms para dedo, 110ms para rosto/objeto
-  const intervaloMin = ehDedo ? 85 : 110;
-  if (agora - ultTrackMs < intervaloMin) return;
-  if (ptTimer || joyPTTimer) return;   // Prioridade ao toque manual do usuário
+  if (ptTimer || joyPTTimer) return;   // Prioridade ao toque manual do usuario
+  if (cvTrackModo === 'sacada' && agora < cvPausaAteMs) return; // Ignora quadros borrados durante salto+acomodacao
 
-  // Erro normalizado de -1.0 a +1.0 em relação ao centro do quadro
+  // Cadencia de controle: 85ms para dedo, 110ms para rosto/objeto
+  const intervaloMin = ehDedo ? 85 : 110;
+  if (cvTrackModo !== 'sacada' && (agora - ultTrackMs < intervaloMin)) return;
+
+  // Erro normalizado de -1.0 a +1.0 em relacao ao centro do quadro
   const ex = Math.max(-1, Math.min(1, (alvo.cx - 0.5) * 2));
   const ey = Math.max(-1, Math.min(1, (alvo.cy - 0.5) * 2));
 
-  // Filtro exponencial suave (sem arrasto que gere overshoot)
-  const peso = ehDedo ? 0.70 : 0.60;
-  errSuaveX = errSuaveX * (1 - peso) + ex * peso;
-  errSuaveY = errSuaveY * (1 - peso) + ey * peso;
+  const dtSec = ultTrackMs > 0 ? Math.max(0.05, Math.min(0.35, (agora - ultTrackMs) / 1000)) : 0.11;
+
+  if (cvTrackModo === 'sacada' && cvSacadaLimparEma) {
+    errSuaveX = ex;
+    errSuaveY = ey;
+    cvSacadaLimparEma = false;
+  } else if (cvTrackModo === 'suave') {
+    const dv = Math.hypot(ex - errSuaveX, ey - errSuaveY);
+    const peso = Math.max(0.24, Math.min(0.60, 0.24 + dv * 0.72));
+    errSuaveX = errSuaveX * (1 - peso) + ex * peso;
+    errSuaveY = errSuaveY * (1 - peso) + ey * peso;
+  } else {
+    const peso = (cvTrackModo === 'sacada') ? (ehDedo ? 0.55 : 0.45) : (ehDedo ? 0.70 : 0.60);
+    errSuaveX = errSuaveX * (1 - peso) + ex * peso;
+    errSuaveY = errSuaveY * (1 - peso) + ey * peso;
+  }
 
   const magX = Math.abs(errSuaveX);
   const magY = Math.abs(errSuaveY);
 
   // Histerese de zona morta central:
-  // Trava em repouso ao entrar na zona morta (7%) e só volta a corrigir se sair além de 11.5%
+  // Trava em repouso ao entrar na zona morta (7%) e so volta a corrigir se sair alem de 11.5%
   if (magX < cvDeadzone) trackTravadoX = true;
   else if (magX > 0.115) trackTravadoX = false;
 
@@ -2209,26 +2454,24 @@ function aplicarAutoTrack(alvo) {
     return;
   }
 
-  // Direção de correção do Pan/Tilt
+  // Direcao de correcao do Pan/Tilt
   const sPan = invPan ? 1 : -1;
   const sTilt = invTilt ? -1 : 1;
 
   let dPan = 0, dTilt = 0;
   let ganhoVivo = cvGanho;
+  const freioRev = (cvTrackModo === 'suave') ? 0.38 : 0.40;
 
   if (cvGanhoAuto) {
-    // FÓRMULA DE GANHO VARIÁVEL CALIBRADA PELO COEFICIENTE (cvCoefAuto):
+    // FORMULA DE GANHO VARIAVEL CALIBRADA PELO COEFICIENTE (cvCoefAuto):
     // K_ef = K_base * [ (1 - coef) + coef * (u^2) ]
-    // Quando erro é pequeno (u ~ 0): ganho cai para K_base * (1 - coef) -> calmo, sem tremer
-    // Quando erro é grande (u ~ 1): ganho sobe para K_base * 1.0 -> veloz
     if (foraX) {
       const uX = Math.min(1, (magX - cvDeadzone) / (1 - cvDeadzone));
       const fatorX = (1 - cvCoefAuto) + cvCoefAuto * (uX * uX);
       const ganhoEfetivoX = cvGanho * fatorX;
       ganhoVivo = ganhoEfetivoX;
       const sinalX = Math.sign(errSuaveX);
-      // Freio de 60% se cruzou o centro (reversão) para evitar passar direto (overshoot)
-      const freioX = (ultSinalX !== 0 && sinalX !== ultSinalX) ? 0.40 : 1.0;
+      const freioX = (ultSinalX !== 0 && sinalX !== ultSinalX) ? freioRev : 1.0;
       ultSinalX = sinalX;
       dPan = sPan * sinalX * ganhoEfetivoX * Math.min(1, magX * 1.2) * freioX;
     }
@@ -2238,19 +2481,58 @@ function aplicarAutoTrack(alvo) {
       const ganhoEfetivoY = cvGanho * fatorY;
       if (ganhoEfetivoY > ganhoVivo) ganhoVivo = ganhoEfetivoY;
       const sinalY = Math.sign(errSuaveY);
-      const freioY = (ultSinalY !== 0 && sinalY !== ultSinalY) ? 0.40 : 1.0;
+      const freioY = (ultSinalY !== 0 && sinalY !== ultSinalY) ? freioRev : 1.0;
       ultSinalY = sinalY;
       dTilt = sTilt * (-sinalY) * ganhoEfetivoY * Math.min(1, magY * 1.2) * freioY;
     }
     atualizarLabelGanho(cvGanho, ganhoVivo);
   } else {
-    // MODO FIXO MANUAL
     if (foraX) dPan = sPan * errSuaveX * cvGanho * 0.7;
     if (foraY) dTilt = sTilt * (-errSuaveY) * cvGanho * 0.7;
     atualizarLabelGanho(cvGanho);
   }
 
-  // Teto seguro de passo por ciclo: máx 9.5° (evita que a câmera dê um pulo gigante e passe direto)
+  if (cvTrackModo === 'sacada') {
+    dPan *= 0.70;
+    dTilt *= 0.70;
+    const passoMax = 14.0;
+    dPan = Math.max(-passoMax, Math.min(passoMax, dPan));
+    dTilt = Math.max(-passoMax, Math.min(passoMax, dTilt));
+    if (Math.hypot(dPan, dTilt) < 0.55) return;
+    const novoPan = Math.max(limites.panMin, Math.min(limites.panMax, pan + dPan));
+    const novoTilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + dTilt));
+    const movReal = Math.hypot(novoPan - pan, novoTilt - tilt);
+    if (movReal < 0.1) return;
+    pan = novoPan;
+    tilt = novoTilt;
+    const velSacada = Math.max(180, Math.min(320, velServo));
+    const pausa = Math.max(220, Math.min(550, Math.round((movReal / velSacada) * 1000 + 80 + 150)));
+    ultTrackMs = agora;
+    cvPausaAteMs = agora + pausa;
+    cvSacadaLimparEma = true;
+    enviarPT(velSacada);
+    return;
+  }
+
+  if (cvTrackModo === 'suave') {
+    const passoMax = 7.5;
+    dPan = Math.max(-passoMax, Math.min(passoMax, dPan));
+    dTilt = Math.max(-passoMax, Math.min(passoMax, dTilt));
+    const passoTotal = Math.hypot(dPan, dTilt);
+    if (passoTotal < 0.45) return;
+    const novoPan = Math.max(limites.panMin, Math.min(limites.panMax, pan + dPan));
+    const novoTilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + dTilt));
+    const movReal = Math.hypot(novoPan - pan, novoTilt - tilt);
+    if (movReal < 0.1) return;
+    pan = novoPan;
+    tilt = novoTilt;
+    const velCmd = Math.round(Math.max(cvTrackVelMin, Math.min(240, (movReal / dtSec) * 1.15)));
+    ultTrackMs = agora;
+    enviarPT(velCmd);
+    return;
+  }
+
+  // Modo 'original' (referencia A/B: passo ate 9.5 deg com velocidade minima 420 deg/s)
   const passoMax = 9.5;
   dPan = Math.max(-passoMax, Math.min(passoMax, dPan));
   dTilt = Math.max(-passoMax, Math.min(passoMax, dTilt));
@@ -2364,14 +2646,16 @@ function joyPTTick() {
   const dt = 0.06;
   const dirPan = (invPan ? -1 : 1) * curPTX;
   const dirTilt = (invTilt ? -1 : 1) * curPTY;
-  
-  // Taxa contínua proporcional à deflexão do joystick
+  const mag = Math.min(1, Math.hypot(dirPan, dirTilt));
+  const velJoy = Math.round(Math.max(25, Math.min(600, mag * velServo * 1.15)));
+
+  // Taxa continua proporcional a deflexao do joystick com velocidade casada
   pan = Math.max(limites.panMin, Math.min(limites.panMax, pan + dirPan * velServo * dt));
   tilt = Math.max(limites.tiltMin, Math.min(limites.tiltMax, tilt + dirTilt * velServo * dt));
-  enviarPT();
+  enviarPT(velJoy);
 }
 
-// ---------------- Proteção Global de Toque ----------------
+// ---------------- Protecao Global de Toque ----------------
 window.addEventListener('pointerup', () => { stopPT(); if (modoAtual === 'dpad') drive(0, 0); });
 window.addEventListener('pointercancel', () => { stopPT(); if (modoAtual === 'dpad') drive(0, 0); });
 window.addEventListener('blur', parada);
@@ -2419,6 +2703,17 @@ async function atualizarStats() {
         sel.value = p;
         atualizarBtnPresetQuick(p);
       }
+    }
+    if (d.estudo !== undefined) atualizarEstudoUi(d.estudo);
+    const lblTx = document.getElementById('lblTxPT');
+    if (lblTx) {
+      const ptTxt = d.pt_tx
+        ? `Fio <S> #${d.pt_tx.n ?? 0} | dt:${d.pt_tx.dt ?? 0}ms | d:${d.pt_tx.dp ?? 0}° | v:${d.pt_tx.v ?? 0}°/s`
+        : 'Fio <S>: aguardando...';
+      const camTxt = (d.cam && d.cam.res)
+        ? `Cam:${String(d.cam.res).toUpperCase()} ${d.cam.xclk ?? '--'}MHz ${Number.isFinite(d.cam.fps) ? d.cam.fps.toFixed(0) : '--'}fps ae:${d.cam.ae_level ?? 0}`
+        : 'Cam:--';
+      lblTx.textContent = `${ptTxt} | ${camTxt}`;
     }
   } catch (e) {
     const temp = document.getElementById('stTemp');

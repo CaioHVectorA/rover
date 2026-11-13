@@ -207,3 +207,96 @@ function movimentos(a) { return a.enviados.filter(s=>s.startsWith('<M,') && s!==
   assert.equal(result[0].cx, .375);
   console.log('OK: V por posição, centro, histerese, zoom, coordenadas inválidas, 700 ms, trava e três dedos neutro.');
 }
+
+// Estudo Pan/Tilt: velocidade casada no joystick, estrategias suave/sacada/original, presets <C,2..4> e telemetria.
+(async () => {
+  const ultimoS = a => a.enviados.filter(s => s.startsWith('<S,')).at(-1);
+  const velDeS = cmd => Number(cmd.replace(/[<>]/g, '').split(',')[3]);
+
+  // 1. Joystick Pan/Tilt proporcional casa a velocidade (evita tiros de 420 deg/s para micro-deflexoes)
+  {
+    const a = ambiente();
+    a.run('velServo = 150; curPTX = 0.2; curPTY = 0; joyPTTick();');
+    const cmdFraco = ultimoS(a);
+    assert.ok(cmdFraco, 'Joystick deve emitir <S>');
+    assert.equal(velDeS(cmdFraco), 350, 'Deflexao 20% deve enviar vel casada ~35 deg/s (350)');
+    a.run('curPTX = 1.0; curPTY = 0; joyPTTick();');
+    assert.equal(velDeS(ultimoS(a)), 1730, 'Deflexao 100% deve enviar ~173 deg/s (1730)');
+  }
+
+  // 2. aplicarAutoTrack: original vs suave vs sacada
+  {
+    const a = ambiente();
+    a.run('velServo = 150; pan = 90; tilt = 90; cvGanhoAuto = false;');
+    a.run("mudarTrackModo('original');");
+    a.advance(120);
+    a.run('aplicarAutoTrack({cx: 0.85, cy: 0.5});');
+    assert.equal(velDeS(ultimoS(a)), 4200, "Modo 'original' deve forcar minimo de 420 deg/s (4200)");
+
+    a.run("mudarTrackModo('suave'); pan = 90; tilt = 90;");
+    a.advance(120);
+    a.run('aplicarAutoTrack({cx: 0.72, cy: 0.5});');
+    const vSuave = velDeS(ultimoS(a));
+    assert.ok(vSuave >= 500 && vSuave <= 2400, `Modo 'suave' deve enviar vel casada [500..2400], veio ${vSuave}`);
+    a.run("mudarTrackModo('suave');");
+    const totalAntesRuido = a.enviados.filter(s => s.startsWith('<S,')).length;
+    a.advance(120);
+    a.run('aplicarAutoTrack({cx: 0.525, cy: 0.48});');
+    assert.equal(a.enviados.filter(s => s.startsWith('<S,')).length, totalAntesRuido, 'Ruido na deadzone nao deve emitir <S>');
+    a.run('cvGanho = 3; cvGanhoAuto = false;');
+    a.advance(120);
+    a.run('aplicarAutoTrack({cx: 0.60, cy: 0.5});');
+    a.advance(120);
+    a.run('aplicarAutoTrack({cx: 0.60, cy: 0.5});');
+    assert.equal(a.enviados.filter(s => s.startsWith('<S,')).length, totalAntesRuido, 'Micropasso menor que 0.45 deg nao deve emitir <S>');
+    a.run('cvGanho = 22;');
+
+    a.run("mudarTrackModo('sacada'); pan = 90; tilt = 90;");
+    a.advance(120);
+    a.run('aplicarAutoTrack({cx: 0.88, cy: 0.5});');
+    const nPosSalto = a.enviados.filter(s => s.startsWith('<S,')).length;
+    assert.equal(nPosSalto, totalAntesRuido + 1, "Modo 'sacada' deve emitir 1 salto inicial");
+    assert.equal(a.run('cvSacadaLimparEma'), true, 'Sacada deve armar limpeza de EMA pos-acomodacao');
+    a.advance(100);
+    a.run('aplicarAutoTrack({cx: 0.99, cy: 0.99});');
+    assert.equal(a.enviados.filter(s => s.startsWith('<S,')).length, nPosSalto, 'Quadros borrados durante pausa da sacada devem ser ignorados');
+    a.advance(500);
+    a.run('aplicarAutoTrack({cx: 0.50, cy: 0.50});');
+    assert.equal(a.run('cvSacadaLimparEma'), false, 'Primeiro quadro nitido deve limpar EMA antiga');
+    assert.equal(a.enviados.filter(s => s.startsWith('<S,')).length, nPosSalto, 'Alvo ja centrado pos-sacada permanece imovel e nitido');
+  }
+
+  // 3. Presets Nano <C,2..4> e ciclo do estudo + telemetria
+  {
+    const a = ambiente();
+    a.run('aplicarNanoPreset(45, 1400, 4);');
+    assert.ok(a.enviados.includes('<C,2,45>') && a.enviados.includes('<C,3,1400>') && a.enviados.includes('<C,4,4>'),
+      'Preset Anti Stick-Slip deve enviar <C,2>, <C,3> e <C,4>');
+  }
+  {
+    const a = ambiente();
+    a.run(`var _httpLog = []; fetch = window.fetch = uri => {
+      _httpLog.push(uri);
+      if (uri.startsWith('/api/estudo/start')) return Promise.resolve({json: async () => ({ativo:1, modo:2, nome:'extremos', ciclos:3})});
+      if (uri === '/api/stats') return Promise.resolve({json: async () => ({
+        sys:{temp:42.5}, link:{retorno:true, hb_age:100, led:1},
+        pt_tx:{n:42, dt:90, dp:5.4, v:64},
+        estudo:{ativo:1, modo:4, nome:'passos_casados', ciclos:2},
+        cam:{res:'qvga', xclk:16, fps:24.2, ae_level:-1}
+      })});
+      return Promise.resolve({json: async () => ({})});
+    };`);
+    await a.run('iniciarEstudo()');
+    assert.ok(a.run('_httpLog').some(u => u.startsWith('/api/estudo/start?modo=')), 'iniciarEstudo deve chamar /api/estudo/start');
+    assert.equal(a.run('estudoAtivo'), true);
+    assert.equal(a.document.getElementById('stEstudo').textContent, 'EXTREMOS (3)');
+    await a.run('atualizarStats()');
+    assert.equal(a.document.getElementById('stEstudo').textContent, 'PASSOS_CASADOS (2)');
+    assert.match(a.document.getElementById('lblTxPT').textContent, /#42.*dt:90ms.*d:5\.4°.*16MHz.*ae:-1/);
+    a.run('parada()');
+    assert.equal(a.run('estudoAtivo'), false);
+    assert.ok(a.run('_httpLog').includes('/api/estudo/stop'), 'parada() deve interromper estudo ativo no ESP');
+    assert.equal(a.enviados.at(-1), '<X>');
+  }
+  console.log('OK: estudo pan/tilt (joy proporcional, tracking suave/sacada/original, presets C2-C4 e telemetria).');
+})().catch(e => { console.error(e); process.exitCode = 1; });

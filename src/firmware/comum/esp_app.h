@@ -35,6 +35,10 @@
 #include "esp_enlace.h"
 static EnlaceNano enlace;
 #endif
+#if POC_SERVO
+#include "esp_estudo_pt.h"
+static EspEstudoPT estudoPT;
+#endif
 
 static WebServer web(80);
 static WebSocketsServer wsServer(81);
@@ -88,6 +92,14 @@ static void apiStats() {
   s += ",\"rtt_ult\":" + String(e.rttUltUs);
   s += ",\"nano_up\":" + String(e.nanoUp) + "}";
 #endif
+#if POC_SERVO
+  s += ",\"pt_tx\":{\"n\":" + String(e.sTx) + ",\"dt\":" + String(e.sDtMs) +
+       ",\"p\":" + String(e.sUltPan10 / 10.0f, 1) +
+       ",\"t\":" + String(e.sUltTilt10 / 10.0f, 1) +
+       ",\"v\":" + String(e.sUltVel10 / 10.0f, 0) +
+       ",\"dp\":" + String(e.sDeltaMax10 / 10.0f, 1) + "}";
+  s += ",\"estudo\":" + estudoPT.json();
+#endif
 #if POC_CAM
   s += ",\"cam\":" + camStatsJson();
 #endif
@@ -105,7 +117,12 @@ static bool tratarQuadro(const char *txt, size_t n, const char *origem) {
   static ProtoParser p;
   ProtoFrame f;
   bool ok = false;
-  for (size_t i = 0; i < n; i++) if (p.feed(txt[i], f)) { ok = enlace.despachar(f) || ok; }
+  for (size_t i = 0; i < n; i++) if (p.feed(txt[i], f)) {
+#if POC_SERVO
+    if (f.cmd == 'S' || f.cmd == 'X') estudoPT.parar();
+#endif
+    ok = enlace.despachar(f) || ok;
+  }
   if (ok) {
 #if POC_CAM
     camNotificarAtividade();
@@ -125,6 +142,9 @@ static void aoEventoWS(uint8_t num, WStype_t type, uint8_t *payload, size_t len)
       break;
     case WStype_DISCONNECTED:
       Serial.printf("[WS] cliente %u saiu\n", num);
+#if POC_SERVO
+      if (wsServer.connectedClients() == 0) estudoPT.parar();
+#endif
 #if POC_MOTOR
       if (wsServer.connectedClients() == 0) enlace.parar();      // perdeu o controle -> para
 #endif
@@ -166,6 +186,29 @@ void setup() {
     web.send(200, "application/json", String("{\"tx_inv\":") + (enlace.txInvertido ? 1 : 0) + "}");
   });
 #endif
+#if POC_SERVO
+  web.on("/api/estudo/start", []() {
+    Serial.printf("[WEB RX HTTP %lu ms] /api/estudo/start modo=%s eixo=%s ampl=%s vel=%s passo=%s\n",
+      (unsigned long)millis(), web.arg("modo").c_str(), web.arg("eixo").c_str(),
+      web.arg("ampl").c_str(), web.arg("vel").c_str(), web.arg("passo").c_str());
+    uint8_t m = web.hasArg("modo") ? (uint8_t)web.arg("modo").toInt() : 1;
+    uint8_t ax = web.hasArg("eixo") ? (uint8_t)web.arg("eixo").toInt() : 0;
+    long ampl = web.hasArg("ampl") ? web.arg("ampl").toInt() : 60;
+    long vel = web.hasArg("vel") ? web.arg("vel").toInt() : 60;
+    uint16_t passo = web.hasArg("passo") ? (uint16_t)web.arg("passo").toInt() : 90;
+    uint16_t pausa = web.hasArg("pausa") ? (uint16_t)web.arg("pausa").toInt() : 250;
+    estudoPT.iniciar(m, ax, ampl, vel, passo, pausa, enlace, millis());
+#if POC_CAM
+    camNotificarAtividade();
+#endif
+    web.send(200, "application/json", estudoPT.json());
+  });
+  web.on("/api/estudo/stop", []() {
+    Serial.printf("[WEB RX HTTP %lu ms] /api/estudo/stop\n", (unsigned long)millis());
+    estudoPT.parar();
+    web.send(200, "application/json", estudoPT.json());
+  });
+#endif
 #if POC_CAM
   camRotas(web);
   camIniciarServidor();
@@ -180,6 +223,9 @@ void loop() {
   uint32_t agora = millis();
   web.handleClient();
   wsServer.loop();
+#if POC_SERVO
+  estudoPT.loop(agora, enlace);
+#endif
 #if POC_USA_NANO
   enlace.loop(agora);
 #endif

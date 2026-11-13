@@ -112,3 +112,13 @@ Nenhum download manual é necessário no fluxo implementado. Sem armazenamento
 local disponível, a carga depende de internet.
 
 Atualização gravada no ESP pela COM29 em 10/11/2026, com hash da flash verificado. Nano preservado. Último endereço conhecido: http://192.168.137.233/; o acesso HTTP após este upload não foi confirmado pelo PC.
+
+## Estudo de caso: Jitter no Pan/Tilt e Motion Blur (branch `exp/estudo-jitter-pantilt`)
+
+Preparado exclusivamente no firmware do ESP32 (`rover_d0_esp32` + módulos `comum/`), mantendo 100% de compatibilidade com o `rover_d0_nano` atual (sem regravar o Nano):
+
+- **Gerador determinístico no ESP32 (`esp_estudo_pt.h`):** reproduz no `loop()` do ESP (sem variação de Wi-Fi/navegador) 4 ensaios: `Pulso 1x` (`<S>` único por trecho), `Radar Extremos`, `Radar Bug 90ms (420°/s)` e `Radar Passos Casados` (horizonte à frente + velocidade casada). Rotas `/api/estudo/start` e `/api/estudo/stop`.
+- **Telemetria do fluxo `<S>` e Câmera (`esp_enlace.h`, `esp_camera_frio.h`, `esp_app.h`):** `/api/stats` expõe `pt_tx` (`n`, `dt`, `dp`, `v`), estado de `estudo` e `cam.ae_level` (`-2..2`) + preset `cv_rapida` (`QVGA`, `XCLK 16MHz`, `fps=24`, `ae_level=-1`).
+- **Painel de bancada (`esp_painel.h`):** card retrátil **Estudo Jitter Pan/Tilt** (acessível também pelo botão `Jitter` em paisagem), controle ao vivo de `C2`/`C3`/`C4` (`velMin`, `acc`, `deadUs` já aceitos pelo Nano), joystick Pan/Tilt com velocidade proporcional à deflexão e 3 estratégias de Auto-Tracking para comparação A/B (`Suave` com velocidade casada, `Sacada Anti-Blur` move+pausa para visão nítida, e `Original` 420°/s).
+- **Status de verificação:** suíte JS (`tools/verificar_joysticks_rover.cjs`) e checagem de sintaxe/estado em C++ executadas no ambiente virtual; compilação PlatformIO (`pio run -e rover_d0_esp32`) e ensaios físicos em bancada pendentes de execução local no robô.
+
