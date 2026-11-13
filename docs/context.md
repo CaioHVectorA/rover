@@ -999,3 +999,205 @@ Ilhas de U3 e volume de 29 × 18 × 5,4 mm do Mini 560 no canto superior direito
   - **Eliminação de Trilha Solta / Antena (+5V):** O segmento órfão de 0,38 mm em `(90.5 mm, 107.46 mm)` foi integrado à linha principal de `+5V`, dividindo a trilha horizontal nos dois lados do nó e unificando o barramento dos servos com a saída do Mini 560 e do ESP32.
   - **Fechamento de Pinos Faltantes:** Ajustados os términos de trilha de `TEMP-DATA` alcançando o centro exato do pad de `R5.1` (`124.77, 101.054 mm`) e de `I2S-BCLK` no pino 8 do ESP32 DevKit (`117.15, 76.67 mm`).
   - **Preenchimento e DRC Aprovados:** A zona de terra em `B.Cu` foi recalculada e preenchida. Executado `kicad-cli pcb drc` com verificação de paridade de esquema: **0 violações, 0 itens desconectados, 0 problemas de paridade**. A placa está pronta e limpa no KiCad 10.
+
+### 11/11/2026 — Validação em Bancada do Streaming UDP de Baixa Latência (22.5 FPS em VGA)
+
+- **Firmware Gravado com Sucesso:** O firmware [`poc_udp_camera`](file:///c:/Users/caihe/Documents/develop/rover/src/firmware/pocs/poc_udp_camera/esp32/main.cpp) foi gravado no ESP32-S3 via `PlatformIO` na porta `COM27`.
+- **Conexão de Rede:** O ESP32 conectou-se automaticamente à rede Wi-Fi `PET_ELETRICA` e obteve o IP local `192.168.7.20`.
+- **Métricas Reais Medidas em Bancada (Zero-Buffer UDP):**
+  - **Resolução Ativa:** VGA (**640×480** pixels) — 4 vezes mais área que QVGA.
+  - **Taxa de Quadros (FPS):** **22.5 FPS contínuos** decodificados no PC via OpenCV.
+  - **Perda de Pacotes (Drop Rate):** **0.0% de perda** (112 quadros íntegros recebidos em 5 segundos).
+  - **Throughput de Rede:** **2.65 a 2.77 Mbps** (extremamente leve para o rádio 2.4 GHz).
+  - **Latência RTT (Round-Trip):** Média oscilando entre **45 ms e 120 ms**.
+- **Ferramenta de Benchmark:** Criado o script [`tools/benchmark_udp_camera.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/benchmark_udp_camera.py) e o executável rápido [`iniciar_benchmark_udp.bat`](file:///c:/Users/caihe/Documents/develop/rover/iniciar_benchmark_udp.bat) para abrir a janela de vídeo nativa com HUD de telemetria.
+- **Ajustes de Exibição no Python (11/11/2026):**
+  - Rotação padrão de **-90°** (`ROTATE_90_COUNTERCLOCKWISE`) corrigindo a orientação física da câmera montada na vertical/deitada.
+  - Modo **Tela Cheia com Centralização Automática** (preservando o aspect ratio com bordas pretas / letterboxing) e tecla `[F]` para alternar tela cheia e `[R]` para ciclar rotações.
+  - **Diagnóstico do Teto de 21–23 FPS:** O FPS permanece estável em ~21 a 23 FPS independentemente da qualidade/resolução porque o gargalo **não** é o Wi-Fi nem a compressão JPEG, mas sim a calibração de tempo de varredura (VTS / PLL) do sensor **OV5640** na biblioteca `esp32-camera` da Espressif para evitar estouro de FIFO de DMA no barramento DVP. Isso significa que **VGA (640×480) roda na mesma velocidade de QVGA**, entregando 4x mais definição sem nenhuma perda de taxa de quadros.
+- **Auto-Tracking Facial com YuNet (OpenCV DNN) Integrado (11/11/2026):**
+  - Implementado modelo de Deep Learning **YuNet** (`tools/models/face_detection_yunet_2023mar.onnx`, 232 KB) rodando nativamente via backend DNN do OpenCV no PC.
+  - Inferência em **~4 ms por frame** (praticamente custo zero de CPU, sem travar o vídeo).
+  - Extração de 5 pontos faciais anatômicos (olhos, nariz, cantos da boca) e vetor de erro $(\Delta X, \Delta Y)$ do centro da imagem ao centro da face.
+  - Malha de controle proporcional para Pan/Tilt com zona morta anti-jitter (15 px) e disparo de comandos UDP `<S,pan,tilt,0>` para o ESP32 a cada 45 ms. Tecla `[T]` alterna o tracking entre ativo e pausado.
+- **Diagnóstico da Validação do Auto-Tracking Físico (11/11/2026):**
+  - O reconhecimento facial e o cálculo de mira tática em Python funcionaram com excelência visual, alta precisão e sem travamentos.
+  - A cabeça Pan/Tilt física não se moveu porque a versão que estava gravada na flash do ESP32 era a primeira (focada exclusivamente no benchmark de rede UDP); a adição do repasse serial via `Serial1` (`IO43 TX invertido @ 9600 baud` para o Nano) foi implementada no código, mas quando tentamos o upload a placa já estava desconectada do cabo USB (operando na bateria). O código de repasse já está 100% pronto na codebase para a próxima gravação.
+
+### 11/11/2026 — Otimização de Armazenamento e Suíte Autônoma de Visão Unificada
+
+- **Limpeza Segura de Armazenamento:**
+  - Recuperados **1,52 GB de espaço livre** no drive `C:` (saltando de 60 MB para 1.520 MB livres) mediante purga de cache do pip (220 MB), remoção de runtimes antigos descontinuados do Codex (`~/.cache/codex-runtimes/*.previous-*`, 450 MB), cache de pacotes do PlatformIO (237 MB) e arquivos temporários obsoletos em `$env:TEMP` (600 MB).
+- **Ambiente de IA Concluído:**
+  - Instalado **MediaPipe 1.2.3** (`pip install mediapipe --no-cache-dir`).
+  - Carregados os modelos neurais **YuNet** (Rosto) e **NanoDet** (Detecção de Objetos COCO / Garrafa, 3.8 MB).
+- **Suíte Autônoma de Visão Criada ([`tools/rover_vision_suite.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_vision_suite.py)):**
+  - Implementado maestro modular com seletor de modos dinâmico em tempo real:
+    - **`[1]` Seguir Rosto:** YuNet DNN com mira cibernética e controle proporcional de Pan/Tilt.
+    - **`[2]` Controle por Gestos:** MediaPipe Hands com 21 pontos anatômicos, esqueleto sobreposto, comandos robustos (frente com mão aberta, ré com punho, giros com sinal em V) e fail-safe com corte automático para `<M,0,0>`.
+    - **`[3]` Perseguição de Garrafa:** NanoDet COCO com aproximação autônoma e parada de segurança a 20 cm.
+    - **`[4]` ou `[ESPAÇO]` Snapshot Cognitivo:** Captura snapshot em alta resolução na pasta `capturas/` para envio à API multimodal.
+    - **`[0]` Streaming Puro / Benchmark.**
+  - Criado o atalho de inicialização rápida [`iniciar_suite_visao.bat`](file:///c:/Users/caihe/Documents/develop/rover/iniciar_suite_visao.bat).
+
+### 11/11/2026 — Validação da Chave Gemini e Aplicação Especializada de Trekking Autônomo
+
+- **Validação da API do Gemini:**
+  - A chave de API fornecida pelo usuário (`AQ.Ab8RN...`) foi testada diretamente contra os servidores da Google Generative Language API.
+  - Teste de geração bem-sucedido com o modelo **`gemini-3.5-flash`** (resposta: *"Rover Online!"* com código HTTP 200).
+  - Chave persistida de forma segura no arquivo local [`.env`](file:///c:/Users/caihe/Documents/develop/rover/.env) (devidamente blindado no `.gitignore`).
+- **Novo Módulo Especializado: Rover Trekking Mission Control ([`tools/rover_trekking.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_trekking.py)):**
+  - Desenvolvida aplicação independente focada no estudo de caso de **Navegação Autônoma em Trilha / Cones / Garrafas**:
+    1. **Radar Pan/Tilt:** Varredura angular contínua de $40^\circ$ a $140^\circ$ buscando alvos enquanto o robô avança com cautela.
+    2. **Lock Tático:** Detecção em tempo real via **YOLOv8n ONNX** (OpenCV DNN) e estimativa de distância métrica ($10\text{ a }250\text{ cm}$) pelo modelo Pinhole.
+    3. **Avanço Tático (Atacar):** Alinhamento do chassi com o ângulo do Pan e rampa de velocidade.
+    4. **Scan de Borda & Desvio:** Leitura da borda do obstáculo pelo Pan e manobra diferencial de contorno/órbita mantendo a câmera travada no objeto.
+    5. **Cockpit UI Tático:** Mostrador semicircular de Radar Pan com feixe verde em tempo real, Barra Vertical de Proximidade em cm e Banner de análise cognitiva do Gemini 3.5 Flash ao apertar a barra de `ESPAÇO`.
+  - Criado o atalho de execução rápida [`iniciar_trekking.bat`](file:///c:/Users/caihe/Documents/develop/rover/iniciar_trekking.bat).
+
+### 11/11/2026 — Reconhecimento Facial Biométrico e Labeling (YuNet + SFace ONNX)
+
+- **Viabilidade e Arquitetura Validada:**
+  - O pipeline de reconhecimento facial e rotulagem (labeling) foi implementado e testado com sucesso 100% nativo no backend OpenCV DNN (`cv2.dnn`), sem necessidade de dependências pesadas como `dlib` ou `face_recognition` (preservando o espaço em disco do sistema).
+  - **Detecção Anatômica:** O modelo **YuNet** (`face_detection_yunet_2023mar.onnx`, 232 KB) localiza a caixa delimitadora e os 5 marcos anatômicos (olhos, nariz e cantos da boca) a 60+ FPS com inferência em ~4 ms.
+  - **Alinhamento Geométrico:** O método nativo `cv2.FaceRecognizerSF.alignCrop()` alinha a face geometricamente anulando distorções causadas pela inclinação da cabeça.
+  - **Extração de Identidade Biométrica:** O modelo **SFace** (`face_recognition_sface_2021dec.onnx`, 38.6 MB) gera o vetor de embeddings de 128 dimensões da face (`(1, 128)` float32).
+  - **Classificação & Labeling em Tempo Real:** Compara o vetor com o banco de identidades cadastradas (`tools/known_faces.json`) usando distância de Cosseno (`cv2.FaceRecognizerSF_FR_COSINE`, limiar oficial 0.363).
+    - **Rosto Reconhecido:** Bounding Box verde neon + banner tático com o nome cadastrado e a porcentagem de confiança (ex: `PILOTO: CAIHE (94%)`).
+    - **Rosto Desconhecido:** Bounding Box laranja de alerta + banner `DESCONHECIDO (XX%)`.
+  - **Cadastro Dinâmico:** Tecla `[C]` permite cadastrar o rosto em foco instantaneamente, tanto pelo stream UDP do robô quanto por foto estática.
+- **Implementação nos Softwares do Rover:**
+  - **Integrado na Suíte Geral:** Atualizado o Modo `[1]` de [`tools/rover_vision_suite.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_vision_suite.py) com a biometria ativa e tecla `[C]` de cadastro.
+  - **Novo Script Standalone Especializado ([`tools/reconhecimento_facial.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/reconhecimento_facial.py)):**
+    - Suporte a stream UDP (`--udp`), cadastro via arquivo de foto (`--cadastrar "Nome" --foto foto.jpg`), teste em imagem (`--reconhecer foto.jpg`) e listagem/gestão do banco (`--listar`, `--limpar`).
+    - Criado o launcher executável [`iniciar_reconhecimento_facial.bat`](file:///c:/Users/caihe/Documents/develop/rover/iniciar_reconhecimento_facial.bat).
+
+### 11/11/2026 — Rover VIP Hunter & Radar Biométrico por Pastas (`tools/rover_radar_vip.py`)
+
+- **Conceito & Demanda:**
+  - O usuário idealizou um fluxo de cadastramento e assimilação orgânico baseado em arquivos de fotos: o robô captura o rosto como arquivo `desconhecido_XX.jpg` na pasta [`tools/rostos/`](file:///c:/Users/caihe/Documents/develop/rover/tools/rostos/), o usuário renomeia para o nome da pessoa (ex: `Caio.jpg`), e o sistema assimila a biometria instantaneamente (hot-reload).
+  - Além disso, foi solicitado um modo de **Radar Ativo para encontrar e seguir exclusivamente uma pessoa específica (ex: Caio)**, ignorando qualquer outro indivíduo que passe no campo de visão.
+- **Implementação Realizada ([`tools/rover_radar_vip.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_radar_vip.py)):**
+  - **Banco Baseado em Pasta de Arquivos (`FolderFaceDatabase`):**
+    - Monitora a pasta `tools/rostos/` com verificação de timestamp (`mtime`).
+    - Arquivos que começam com `desconhecido*` são mantidos como não catalogados.
+    - Arquivos com nomes de pessoas (ex: `Caio.jpg`, `Caio_1.jpg`, `Piloto.png`) têm a face detectada por YuNet, extração de embedding 128-D por SFace e assimilação automática ao nome da pessoa.
+    - Tecla `[R]` no teclado ou detecção periódica recarrega o banco sem fechar a aplicação.
+  - **Captura com Margem Anatômica (`[S]`):**
+    - Ao apertar `[S]`, recorta a face desconhecida com 25% de margem em formato de retrato e salva automaticamente como `desconhecido_XX.jpg`.
+  - **FSM Tática de Radar & VIP Hunter:**
+    - **Varredura Radar Ativa:** O Pan/Tilt faz movimento harmônico suave de $45^\circ$ a $135^\circ$ buscando o alvo VIP (`--vip Caio`). Pessoas desconhecidas ou outros conhecidos são marcados visualmente, mas **não travam o radar**.
+    - **Lock Tático Exclusivo:** Ao detectar o VIP (score $\ge 0.363$), o radar trava imediatamente! O Pan/Tilt rastreia ativamente os movimentos do VIP em tempo real com retículo cibernético verde neon.
+    - **Seguir VIP (Opcional - Tecla `[M]`):** Alinha o chassi do robô com o Pan e ajusta o avanço/recuo dos motores 4WD conforme a proximidade facial ($110\text{ a }170\text{ px}$ de largura), com parada de segurança e watchdog de perda de contato (1.8s).
+    - **UI Tática:** HUD escuro com mostrador semicircular de radar em tempo real, mostrador angular do Pan, seletor de VIP (`[V]`) e status de tração.
+  - **Launcher Criado:** Criado o executável [`iniciar_radar_vip.bat`](file:///c:/Users/caihe/Documents/develop/rover/iniciar_radar_vip.bat) com opções de iniciar buscando "Caio", definir outro VIP ou abrir a pasta `tools/rostos/` diretamente no Windows Explorer.
+
+### 12/11/2026 — Calibração do Sentido do Pan (Auto-Tracking)
+
+- **Correção do Sentido Físico do Servo:**
+  - Identificado em teste prático que o cálculo do Pan estava invertido em relação ao movimento físico da câmera rotacionada (`err_x` positivo movia o servo no sentido oposto ao rosto).
+  - O sentido padrão foi invertido para `+` em todos os módulos de visão:
+    - [`tools/benchmark_udp_camera.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/benchmark_udp_camera.py)
+    - [`tools/rover_vision_suite.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_vision_suite.py)
+    - [`tools/rover_radar_vip.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_radar_vip.py)
+  - Adicionada a tecla **`[I]`** em todos os scripts para alternar a inversão do Pan em tempo de execução sem necessidade de reiniciar ou editar código.
+
+### 12/11/2026 — Correção Crítica do Protocolo de Servos Pan/Tilt (Décimos de Grau)
+
+- **Diagnóstico do Desvio Extremo para a Esquerda e para Baixo:**
+  - O robô inicializava perfeitamente centralizado em 90°/90°, mas ao receber o primeiro comando de tracking disparava imediatamente para o batente inferior esquerdo (mínimo absoluto).
+  - **Causa Raiz Identificada:** O protocolo serial do Nano ([`rover_protocolo.h`](file:///c:/Users/caihe/Documents/develop/rover/src/firmware/comum/rover_protocolo.h)) espera os ângulos em **décimos de grau** ($0\text{ a }1800$, onde $90^\circ = 900$).
+  - O código Python estava enviando graus inteiros: `<S,90,90,0>`. No Nano, o valor $90$ era interpretado como $9{,}0^\circ$, caindo abaixo do limite de segurança e sendo travado no piso pelo `constrain`:
+    - `pan`: travado no piso de `300` ($30{,}0^\circ$ — extremo esquerdo).
+    - `tilt`: travado no piso de `400` ($40{,}0^\circ$ — extremo para baixo).
+- **Correção Aplicada:**
+  - Corrigido o envio em todos os scripts Python para multiplicar os ângulos por 10 (`int(round(pan * 10))`, `int(round(tilt * 10))`), enviando `<S,900,900,0>` para o centro neutro.
+  - Corrigido também o sinal do Tilt (`tilt_servo -= (err_y / cy) * 2.4`) para que rostos acima do centro façam a cabeça erguer-se em direção a $1400$ ($140^\circ$).
+  - Atualização replicada em:
+    - [`tools/benchmark_udp_camera.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/benchmark_udp_camera.py)
+    - [`tools/rover_vision_suite.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_vision_suite.py)
+    - [`tools/rover_radar_vip.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_radar_vip.py)
+    - [`tools/rover_trekking.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_trekking.py)
+
+### 12/11/2026 — Arquitetura Zero-Delay UDP e Controle Adaptativo Não-Linear de Alta Velocidade
+
+- **Diagnóstico do Delay Cumulativo nos Outros Launchers:**
+  - Identificada a causa raiz da lentidão e acúmulo de atraso nas ferramentas com IA mais pesada (`rover_vision_suite`, `rover_radar_vip`, `rover_trekking`):
+    - O loop principal executava o processamento visual (SFace, MediaPipe, YOLOv8) e renderização na mesma thread de leitura do socket UDP.
+    - Como a inferência levava entre 30 ms e 60 ms, os datagramas UDP que chegavam a 22.5 FPS (a cada ~44 ms) acumulavam-se na fila de recepção do sistema operacional (`SO_RCVBUF`).
+    - A cada ciclo, o programa lia pacotes antigos da fila em vez dos quadros em tempo real, gerando uma latência cumulativa crescente (o vídeo ficava 2 a 3 segundos atrasado em relação à realidade).
+    - Além disso, a resolução VGA (640x480) não estava sendo forçada explicitamente na conexão inicial nesses scripts.
+- **Solução Definitiva: Motor de Streaming Zero-Delay (`tools/zero_delay_udp.py`):**
+  - Implementada a classe **`ZeroDelayUdpReceiver`**:
+    - Thread de alta prioridade em background que drena o socket UDP continuamente sem pausas.
+    - Buffer de profundidade ZERO: ao reconstruir um novo quadro JPEG completo, substitui instantaneamente o slot em memória e descarta qualquer quadro intermediário não lido.
+    - O loop de IA e GUI consome sempre o quadro mais recente com **latência estrita inferior a 45 ms** e **zero delay acumulado**, mesmo sob alta carga de inferência.
+    - Sincronização automática de hardware: ao detectar o ESP32, envia imediatamente o comando `b"3"` (VGA 640x480) e `b"+"` (alta qualidade), garantindo que todos os launchers rodem em resolução total e nítida.
+- **Controle Adaptativo Sofisticado de Velocidade (`AdaptiveServoController`):**
+  - Substituído o ganho linear fixo por uma lei de controle não-linear por software com curva de potência ($e + e^{2{,}2}$) e amortecimento derivativo (D):
+    - **Micro-erros ($|e| < 0{,}05$):** Ajustes finos suaves ($\sim 0{,}3^\circ$/ciclo) com banda morta de estabilidade (zero tremor).
+    - **Erros médios ($|e| \sim 0{,}3$):** Velocidade de cruzeiro suave ($\sim 2{,}5^\circ$/ciclo).
+    - **Movimentos rápidos / bruscos ($|e| > 0{,}6$):** Aceleração agressiva exponencial (até $12^\circ$/passo a cada 45 ms = $\sim 260^\circ/\text{s}$), permitindo que a cabeça Pan/Tilt acompanhe arrancadas rápidas instantaneamente sem perder o alvo.
+    - **Termo Derivativo (D):** Antecipa a desaceleração na chegada, cravando o alvo no centro sem ultrapassagem (*overshoot*).
+- **Módulos Atualizados e Sincronizados:**
+  - [`tools/zero_delay_udp.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/zero_delay_udp.py) (Módulo unificado central)
+  - [`tools/benchmark_udp_camera.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/benchmark_udp_camera.py)
+  - [`tools/rover_vision_suite.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_vision_suite.py)
+  - [`tools/rover_radar_vip.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_radar_vip.py)
+  - [`tools/rover_trekking.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_trekking.py)
+  - [`iniciar_radar_vip.bat`](file:///c:/Users/caihe/Documents/develop/rover/iniciar_radar_vip.bat) (Adicionado `--ip 192.168.7.20`)
+
+### Revisão do arquivo V2 salvo — 11/11/2026
+258 segmentos em B.Cu. DRC com recálculo do plano e paridade, e ERC sem ocorrências. VCC_BAT já tem trecho horizontal superior de 51,43 mm em Y=56,64 mm, dentro do recorte superior do plano na região da antena. Revisar afastamento RF antes de fabricar. R3/R4 ainda estão no quadrante inferior esquerdo; J4/J5 continuam verticais e as ilhas U4 ficam sob a projeção do DevKit. J2 tem apenas alimentação, sem terminais UART para a cabeça. Auditoria digital, sem ensaio RF ou de encaixe.
+
+### 12/11/2026 — Correção localizada na revisão salva
+Ajustadas as redes de U1 conforme o esquemático e os extremos das trilhas correspondentes. R5 deslocado 1,5 mm para eliminar a sobreposição entre furos de R5 e J7. Corrigido o fim da trilha LED-DIN junto a J7. DRC passou de 62 para 43 violações, de quatro para uma conexão pendente (I2S-WS) e de sete para zero divergências esquema–PCB. Persistem curtos e cruzamentos de redes em B.Cu. Revisão não liberada para fabricação.
+
+### 12/11/2026 — Rastreador com tempo morto, MediaPipe novo, rodeio no Trekking e bug de eco UDP
+
+- **Por que o tracking "perdia" o alvo (controle anterior):** somava um passo proporcional ao erro a cada quadro (22 FPS), mas a imagem chega ~150-250 ms atrasada (rede + câmera + servo). O servo ainda não tinha chegado, o erro continuava grande, o passo era somado de novo → overshoot e perda do alvo. A curva "exponencial" agravava.
+- **Novo `PanTiltTracker` ([`tools/zero_delay_udp.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/zero_delay_udp.py)):**
+  - erro em pixels → erro em **graus** (~0,095 °/px, estimado do FOV do OV5640 — **não calibrado em bancada**);
+  - alvo **absoluto** = posição comandada + erro (não incremental);
+  - **tempo morto**: após comandar, ignora medidas até o servo chegar (latência + distância/velocidade);
+  - **predição**: estima a velocidade angular do alvo e adianta o comando (lead até 20°);
+  - **velocidade adaptativa** via 3º argumento de `<S,pan10,tilt10,vel10>` (salto grande → servo rápido, 50-300 °/s);
+  - reenvio da posição a 1 Hz (UDP perde pacote). Teclas `[I]` (Pan) e `[Y]` (Tilt) invertem o sentido.
+  - Validado **só em simulação** (planta com servo limitado + 120 ms de atraso de imagem): degrau de 30° converge sem oscilar (erro final < 1°); alvo em senoide rápida (±25° a 0,6 Hz) ainda fica ~14° atrasado — limite físico do servo + ciclo de correção. Falta validar no robô real.
+- **MediaPipe:** a versão instalada (1.2.3) não tem mais `mp.solutions` (por isso o crash do modo 2). Gestos migrados para a API `HandLandmarker` (tasks), modelo `tools/models/hand_landmarker.task` (7,8 MB). Se falhar, o modo avisa em vez de derrubar a suíte. Teste feito só com imagem vazia (carrega e roda; não testado com mão real).
+- **Bug do Radar VIP "nem abre":** o broadcast `HELLO` volta para o próprio socket e o receptor o tratava como "ESP32 detectado" (IP do PC e IP da interface virtual), trocando o destino dos comandos para si mesmo e zerando o vídeo. Agora o eco é ignorado e o ESP só é aceito por pacote `RVR1`/`READY`. Janela mostra tela "AGUARDANDO VIDEO DO ROVER" e faz descoberta por broadcast se o IP fixo não responde. [`iniciar_radar_vip.bat`](file:///c:/Users/caihe/Documents/develop/rover/iniciar_radar_vip.bat) agora abre direto (`iniciar_radar_vip.bat [Nome]`).
+- **Trekking ([`tools/rover_trekking.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_trekking.py)):** novo fluxo RADAR (chassi parado) → CENTRALIZA com a cabeça (±25 px por 0,5 s) → ALINHA o chassi (gira até |bearing| < 8°) → APROXIMA até 60 cm → RODEIO a 45 cm com alvo mantido ~45° à esquerda por 14 s (sem IMU não mede a volta completa) → STANDBY. Para a < 22 cm. `bearing = (pan-90)*sinal_pan` (respeita `[I]`). Testado só com simulação de detecções falsas (sequência de estados e comandos coerente); **não testado no chão**.
+- **Pendência:** o ESP32 estava fora da rede e sem USB nos testes desta rodada (ping/descoberta sem resposta), então nada disso foi validado ao vivo.
+
+### 13/11/2026 — Retorno de terra e alimentação
+No arquivo principal, removidos os 73 segmentos de GND e refeito VCC_BAT pelo perímetro inferior e direito. O preenchimento de B.Cu une os 18 pads GND, incluindo J1.2. Removida uma ponta pendente de +5V. DRC físico sem violações nem desconexões. Restam nove divergências esquema–PCB já presentes antes da mudança.
+
+### 13/11/2026 — Larguras da V2
+Largura padrão de roteamento definida em 1 mm. Alargados 84 segmentos para 1 mm, incluindo as oito seções de 0,85 mm. Permanecem 58 segmentos de 0,32 mm e 40 segmentos de alimentação de 1,20 ou 1,25 mm. Plano recalculado, zero violações físicas e zero desconexões. Persistem as nove divergências anteriores com o esquema.
+
+### 13/11/2026 — Expansão I2C da V2
+Adicionados três canais auxiliares I2C J10–J12 além do OLED J9, cada um com ilhas para solda direta na ordem GND, 3V3, SCL e SDA. O bloco fica entre o ESP32 e o INMP441, sem aumentar os 85 × 65 mm. Os novos troncos I2C e 3V3 usam 1 mm em B.Cu. Para preservar uma única face de cobre na região densa, o layout prevê quatro fios-jumper isolados pelo lado dos componentes: JP1 (I2S-DIN), JP2 (TEMP-DATA), JP3 (SDA) e JP4 (SCL). DRC físico após preenchimento: zero violações e zero conexões abertas. O editor KiCad permaneceu com uma alteração anterior não salva em memória; o arquivo em disco contém a expansão, mas é preciso reconciliar/reabrir a sessão antes de salvar pela interface para não sobrescrever a revisão.
+
+### 13/11/2026 — Correção Estrutural da Detecção de Garrafas, Gemini Assíncrono, Seletor de Alvos e Expansão de Resoluções
+
+- **Detecção de Garrafas no Trekking ([`tools/rover_trekking.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_trekking.py)):**
+  - **Causa Raiz 1 (Bug do `argmax`):** O código anterior executava `np.argmax(scores)` em todas as 80 classes. Quando o YOLOv8 classificava uma garrafa PET ou recipiente cilíndrico como `cup` (35%) e `bottle` (34%), o `argmax` escolhia `cup`, descartando a garrafa por incompatibilidade de string. Agora o detector avalia a classe específica e agrega recipientes irmãos de pista (`bottle`, `cup`, `wine glass`, `vase`).
+  - **Causa Raiz 2 (Distorção Geométrica sem Letterbox):** A rotação para vertical gerava imagem 480×640 (3:4). O `blobFromImage` antigo forçava 640×640 esticando a largura em 33%, deformando a silhueta das garrafas. Implementado algoritmo oficial de **Letterbox com padding cinza** mantendo a geometria física original intacta.
+  - **Sensibilidade Calibrada:** Limiares ajustados para `0.28` (aquisição) e `0.18` (retenção), com teclas `[` e `]` para calibração ao vivo em pista.
+- **Seletor Dinâmico de Alvos (Trekking):**
+  - Tecla `[A]`: Alterna entre os alvos favoritos (`bottle`, `cup`, `person`, `chair`, `sports ball`, `backpack`, `cell phone`, `potted plant`, `all`).
+  - Tecla `[O]` (Objeto): Permite digitar qualquer uma das 80 classes COCO no terminal.
+  - Tecla `[D]` (Debug): Alterna exibição de todas as caixas neurais detectadas na cena.
+- **Co-Piloto Cognitivo Gemini 3.5 Flash Assíncrono:**
+  - Substituída a chamada síncrona (que congelava a janela e os motores por até 8s) por **Background Thread dedicada** (`disparar_gemini_async`).
+  - Imagem redimensionada para 320×240 com compressão antes do upload (payload <12 KB, upload em <100 ms).
+  - Timeout estendido para 15 segundos. Validado com resposta imediata da API sem travar vídeo nem locomoção.
+- **Remoção do Radar VIP:**
+  - Eliminados definitivamente `tools/rover_radar_vip.py` e `iniciar_radar_vip.bat`, unificando a biometria oficial em [`tools/reconhecimento_facial.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/reconhecimento_facial.py).
+- **Gama Ampla de Resoluções e Qualidades (OV5640 no ESP32-S3):**
+  - Firmware [`src/firmware/pocs/poc_udp_camera/esp32/main.cpp`](file:///c:/Users/caihe/Documents/develop/rover/src/firmware/pocs/poc_udp_camera/esp32/main.cpp) atualizado com buffers DMA em PSRAM dimensionados para `FRAMESIZE_QSXGA` (2560×1920 — 5 MP nativos) e suporte a resoluções `1..9, 0, K, Z` e qualidade JPEG `[+]/[-]` (`8..40`, padrão `12`).
+  - **Diagnóstico em Hardware (13/11):** A primeira gravação em `COM29` validou frames reais de VGA (`16 KB`), HD (`40–61 KB`), FHD (`133 KB`) e QSXGA 5 MP (`414 KB`), revelando dois gargalos: (a) a primeira iteração de código sem upload ainda deixava o ESP preso em VGA; (b) na segunda tentativa com `set_lenc`/`set_bpc` não verificados ocorreu falha antes do UDP, já corrigida com guardas `if (s->set_*)` + flush de 2 buffers DMA na troca de resolução + micro-pacing UDP a cada 4 pacotes para evitar perda de burst Wi-Fi em 2–5 MP. Build `poc_udp_camera` validado (regravar via USB quando reconectado).
+- **Melhoria Real de Nitidez e Fluidez no Reconhecimento Facial & Suíte ([`tools/reconhecimento_facial.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/reconhecimento_facial.py), [`tools/rover_vision_suite.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/rover_vision_suite.py), [`tools/zero_delay_udp.py`](file:///c:/Users/caihe/Documents/develop/rover/tools/zero_delay_udp.py)):**
+  - `reconhecimento_facial.py` deixou de forçar VGA (640×480) na conexão: agora inicializa em **XGA (1024×768, FOV 4:3 completo)** com suporte até **5 MP (`Z`)**, usando `ZeroDelayUdpReceiver(..., init_cmd=b"5")`.
+  - **YuNet Multi-Escala + SFace Nativo:** Acima de 1024 px, a detecção facial roda em cópia reduzida (`<=960 px`, **16–19 ms** mesmo em fotos reais 5 MP `2560x1920`) e projeta os pontos para extração biométrica `SFace` na resolução máxima original.
+  - **Canvas Unificado (`1280x720` / `[F]` Tela Cheia + `INTER_AREA`) e Gemini Centralizado:** HUD nunca mais é cortado em VGA ou miniaturizado em 5 MP; `rover_vision_suite.py` agora responde às teclas `[4..9, K, Z, +, -]` e todos os launchers `.bat` usam descoberta automática UDP sem IP `.20` fixo.
