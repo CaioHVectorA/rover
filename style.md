@@ -50,6 +50,11 @@ Este documento registra o perfil técnico, tom de voz, ritmo e preferências de 
 
 * **2026-11-10 (Diagnóstico serial com duas USB):** Conferir portas e firmware realmente em execução antes de orientar remontagem. Explicar de forma curta que D0 é compartilhado com o USB do Nano e distinguir comunicação PC → placa de ESP → Nano. Priorizar leitura e identificação com as placas isoladas; quando o usuário não conseguir observar o LED, registrar o teste como pendente, sem presumir sucesso.
 
+* **2026-11-09 (Visão computacional):** Interesse em testar reconhecimento e tracking de rosto pelo navegador. Ao explicar, distinguir acompanhamento da posição do rosto, identificação da pessoa e head-tracking por giroscópio; preservar a diferença entre código existente e experimento proposto.
+  Nesta experiência, pediu adaptar o painel existente com processamento no navegador e seguimento autônomo do Pan/Tilt por cálculo de erros. Manter o teste executável no painel e explicar como abrir e ativar os modos.
+
+* **2026-11-09 (Revisão da PCB):** Ao pedir para puxar do GitHub e conversar sobre melhorias, revisar o arquivo real e apresentar primeiro os problemas prioritários, com evidência visual e distinção entre erro confirmado e validação pendente. Discutir mudanças de hardware por etapas; a revisão não implica redesenhar automaticamente a placa.
+
 * **2026-10-13 (Compras com NF):** Ao preparar compras, limitar a comparação a até três carrinhos em lojas diferentes. Exigir emissão de nota fiscal; no Mercado Livre selecionar envio Full. Priorizar disponibilidade nacional e compatibilidade real, com distinção entre carrinho preparado e pedido finalizado.
 
 * **2026-10-13 (Correção de Escopo das Compras):** Evitar listas de consumíveis e equipamentos básicos já disponíveis no laboratório. O interesse é em componentes que habilitem experimentos de comunicação, dissipação e capacidades futuras; explicar quando uma experiência, como UDP por Wi-Fi, exige apenas software.
